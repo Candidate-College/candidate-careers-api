@@ -1,0 +1,38 @@
+{
+	"name": "express-typescript-boilerplate",
+	"version": "1.0.0",
+	"description": "A boilerplate code of JSON REST API for common backend application.",
+	"main": "src/app.ts",
+	"scripts": {
+		"start": "node dist/app.js",
+		"build": "tsc && tsc-alias",
+		"dev": "nodemon",
+		"db": "knex --knexfile src/config/database/init.ts"
+	},
+	"dependencies": {
+		"bcrypt": "^5.1.1",
+		"cookie-parser": "^1.4.7",
+		"cors": "^2.8.5",
+		"dotenv": "^16.5.0",
+		"express": "^5.1.0",
+		"express-validator": "^7.2.1",
+		"jsonwebtoken": "^9.0.2",
+		"knex": "^3.1.0",
+		"mailtrap": "^4.1.0",
+		"multer": "1.4.5-lts.2",
+		"nodemailer": "^6.10.1",
+		"objection": "^3.1.5",
+		"objection-softdelete": "^3.0.1",
+		"pg": "^8.15.6",
+		"uuid": "^11.1.0"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.1",
+		"@types/node": "^22.15.2",
+		"nodemon": "^3.1.10",
+		"ts-node": "^10.9.2",
+		"tsc-alias": "^1.8.15",
+		"tsconfig-paths": "^4.2.0",
+		"typescript": "^5.8.3"
+	}
+}

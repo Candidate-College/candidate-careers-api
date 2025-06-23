@@ -1,21 +1,132 @@
-MIT License
+# PROPRIETARY SOFTWARE LICENSE AGREEMENT
 
-Copyright (c) 2025 Candidate College
+## CANDIDATE CAREERS BACKEND SYSTEM
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+**Copyright (c) 2025 Candidate College. All Rights Reserved.**
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## 1. OWNERSHIP AND PROPRIETARY RIGHTS
+
+This software, including all source code, object code, documentation, algorithms, user interfaces, look and feel, and all intellectual property rights therein (collectively, the "Software"), is the exclusive property of Candidate College ("Company"). The Software contains proprietary and confidential information that is protected by applicable copyright laws, trade secret laws, and other intellectual property rights.
+
+## 2. SCOPE OF LICENSE
+
+This license grants you a limited, non-exclusive, non-transferable, and revocable right to access and use the Software solely for the purpose of:
+- Contributing to the development and maintenance of the Candidate Careers platform
+- Performing authorized work as an employee, contractor, or authorized representative of Candidate College
+- Conducting authorized testing, debugging, and quality assurance activities
+
+## 3. RESTRICTIONS AND PROHIBITIONS
+
+You are expressly prohibited from:
+
+### 3.1 Distribution and Sharing
+- Distributing, sharing, or making available the Software or any portion thereof to any third party
+- Publishing, posting, or uploading the Software to any public or private code repository, website, or platform
+- Sharing access credentials, source code, or any derivative works with unauthorized individuals
+- Creating or maintaining copies of the Software outside of authorized development environments
+
+### 3.2 Modification and Derivative Works
+- Modifying, adapting, or creating derivative works based on the Software without explicit written authorization
+- Reverse engineering, decompiling, disassembling, or attempting to derive the source code from any compiled portions
+- Removing, altering, or obscuring any copyright notices, proprietary legends, or identification marks
+
+### 3.3 Commercial Use
+- Using the Software for any commercial purpose outside of authorized Company business
+- Licensing, sublicensing, selling, or otherwise commercializing the Software or access thereto
+- Incorporating the Software or any portion thereof into other software products or services
+
+### 3.4 Competitive Activities
+- Using the Software to develop competing products or services
+- Analyzing the Software for competitive intelligence purposes
+- Sharing insights, methodologies, or technical approaches derived from the Software with competitors
+
+## 4. CONFIDENTIALITY OBLIGATIONS
+
+You acknowledge that the Software contains trade secrets and confidential information of significant value to the Company. You agree to:
+- Maintain the confidentiality of all Software components, documentation, and related materials
+- Implement reasonable security measures to protect against unauthorized access or disclosure
+- Immediately notify the Company of any actual or suspected unauthorized access, use, or disclosure
+- Return or destroy all copies of the Software upon termination of your authorized access
+
+## 5. COMPLIANCE WITH LAWS AND REGULATIONS
+
+You agree to use the Software in compliance with:
+- All applicable local, national, and international laws and regulations
+- Company policies, procedures, and security requirements
+- Industry standards and best practices for software development and data protection
+- Privacy laws and regulations, including but not limited to GDPR and applicable data protection statutes
+
+## 6. TERM AND TERMINATION
+
+### 6.1 Term
+This license remains in effect until terminated by the Company or until your authorized relationship with the Company ends, whichever occurs first.
+
+### 6.2 Termination
+The Company reserves the right to terminate this license immediately and without notice if:
+- You breach any term or condition of this agreement
+- Your employment or contractual relationship with the Company is terminated
+- The Company determines that termination is necessary to protect its interests
+
+### 6.3 Effect of Termination
+Upon termination, you must immediately:
+- Cease all use of the Software
+- Delete all copies of the Software from your devices and storage systems
+- Return any Company-provided hardware or media containing the Software
+- Provide written certification of compliance with these termination obligations
+
+## 7. WARRANTIES AND DISCLAIMERS
+
+### 7.1 Company Warranties
+The Company warrants that it has the right to grant this license and that the Software does not knowingly infringe upon the intellectual property rights of third parties.
+
+### 7.2 Disclaimer of Warranties
+EXCEPT AS EXPRESSLY STATED HEREIN, THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. THE COMPANY DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND TITLE.
+
+## 8. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE COMPANY BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, INCURRED BY YOU OR ANY THIRD PARTY, WHETHER IN AN ACTION IN CONTRACT OR TORT, EVEN IF THE COMPANY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+## 9. INDEMNIFICATION
+
+You agree to indemnify, defend, and hold harmless the Company and its officers, directors, employees, and agents from and against any claims, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising from or relating to:
+- Your breach of this license agreement
+- Your unauthorized use or distribution of the Software
+- Your violation of any applicable laws or regulations
+- Any claims that your use of the Software infringes upon the rights of third parties
+
+## 10. INTELLECTUAL PROPERTY ASSIGNMENT
+
+Any modifications, improvements, or derivative works you create based on or incorporating the Software shall automatically become the exclusive property of the Company. You hereby assign all right, title, and interest in such works to the Company and agree to execute any documents necessary to perfect such assignment.
+
+## 11. EXPORT CONTROL COMPLIANCE
+
+You acknowledge that the Software may be subject to export control laws and regulations. You agree not to export, re-export, or transfer the Software to any country, entity, or individual prohibited by applicable export control laws without proper authorization.
+
+## 12. GOVERNING LAW AND JURISDICTION
+
+This license agreement shall be governed by and construed in accordance with the laws of [Your Jurisdiction], without regard to conflict of law principles. Any disputes arising under this agreement shall be subject to the exclusive jurisdiction of the courts located in [Your Jurisdiction].
+
+## 13. SEVERABILITY
+
+If any provision of this license agreement is held to be invalid, illegal, or unenforceable, the remaining provisions shall continue in full force and effect, and the invalid provision shall be replaced with a valid provision that most closely approximates the intent of the original provision.
+
+## 14. ENTIRE AGREEMENT
+
+This license agreement constitutes the entire agreement between you and the Company regarding the Software and supersedes all prior or contemporaneous communications, agreements, and understandings, whether written or oral, relating to the subject matter herein.
+
+## 15. MODIFICATION
+
+This license agreement may only be modified by a written instrument signed by an authorized representative of the Company. No verbal agreements or representations shall modify the terms of this agreement.
+
+---
+
+**By accessing, downloading, or using the Software, you acknowledge that you have read, understood, and agree to be bound by all terms and conditions of this license agreement.**
+
+**For questions regarding this license or to request permissions not expressly granted herein, please contact:**
+
+**Candidate College Legal Department**  
+Email: legal@candidatecollege.com 
+
+**Last Updated: June 23, 2025**
