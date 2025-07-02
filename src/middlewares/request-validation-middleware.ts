@@ -61,13 +61,13 @@ import { JsonResponse } from '@/types/express-extension';
 type FieldType = // primitives
                  'string' | 'number' | 'bigint' | 'boolean' |
                  // string derivatives
-                 'text' | 'email' |
+                 'text' | 'email' | 'url' |
                  // date & time
                  'timestamp' | 'date' |
                  // blobs
                  'image' | 'audio' | 'video' | 'document' |
                  // semi-structured
-                 'json' | 'xml';
+                 'object' | 'array' | 'xml';
 
 type RequestLocation = 'body' | 'query' | 'param';
 
@@ -83,7 +83,8 @@ interface ValidationConfig {
     only?: string[];
     except?: string[];
   };
-  nested?: ValidationSchema;
+  fields?: ValidationSchema;
+  items?: ValidationSchema | ValidationSchema[];
   value?: {
     only?: string | string[];
     except?: string | string[];
@@ -93,187 +94,249 @@ interface ValidationConfig {
 interface ValidationOption {
   optional?: boolean;
   only?: string | string[];
-  without?: string | string[];
+  except?: string | string[];
 }
 
 const locationMap = { body, query, param };
 
-module.exports = function requestValidator(
+/**
+ * Request validation chain by type
+ */
+const validateSchema = (
+  schema: ValidationSchema,
+  chains: ValidationChain[],
+  path: string = '',
+): ValidationChain[] => {
+  for (const [fieldName, config] of Object.entries(schema)) {
+    const field = path ? `${path}.${fieldName}` : fieldName;
+    const location = config.in ?? 'body';
+
+    let validator = locationMap[location](field);
+
+    // Handle optional and required fields
+    const isLocationQuery = location === 'query' && !config.optional;
+    if (config.optional || isLocationQuery) {
+      validator = validator.optional();
+    } else {
+      validator = validator.exists().withMessage(`${field} is required`);
+    }
+
+    // Run schema validation
+    switch (config.type) {
+      // primitives //
+      case 'string':
+      const min = config.min || 0;
+      const max = config.max || 255;
+
+      validator = validator
+        .isString()
+        .withMessage(`${field} must be a valid string`,)
+        .isLength({ min, max });
+
+      if (config.min) validator = validator
+        .withMessage(`${field} must be more than ${min} characters`);
+
+      if (config.max) validator = validator
+        .withMessage(`${field} must be less than ${max} characters`);
+      break;
+
+    case 'number':
+      validator = validator
+        .isNumeric()
+        .withMessage(`${field} must be a valid number`);
+
+      if (config.min !== undefined) {
+        validator = validator
+          .isFloat({ min: config.min })
+          .withMessage(`${field} must be more than ${config.min}`);
+      }
+
+      if (config.max !== undefined) {
+        validator = validator
+          .isFloat({ max: config.max })
+          .withMessage(`${field} must be less than ${config.max}`);
+      }
+      break;
+
+    case 'bigint':
+      break;
+    
+    case 'boolean':
+      validator = validator
+        .isBoolean()
+        .withMessage(`${field} must be a valid boolean`);
+      break;
+
+      // string derivatives //
+      case 'text':
+        validator = validator
+          .isString()
+          .withMessage(`${field} must be a valid text`);
+        break;
+
+      case 'email':
+        validator = validator
+          .isEmail()
+          .withMessage(`${field} must be a valid email`);
+        break;
+
+      case 'url':
+        validator = validator
+          .isURL()
+          .withMessage(`${field} must be a valid URL`);
+        break;
+
+      // date & time //
+      case 'timestamp':
+        validator = validator.isISO8601().withMessage(
+          `${field} must be a valid timestamp format (Y-m-d H:i:s)`,
+        );
+        break;
+
+      case 'date':
+        validator = validator.matches(/^\d{4}-\d{2}-\d{2}$/).withMessage(
+          `${field} must be in date format (Y-m-d)`,
+        );
+        break;
+
+      // blobs //
+      case 'image':
+        const fileValidator = validator.custom((value, { req }) => {
+          const file = req.file || (req.files && req.files[field]);
+          if (!file || !config.mime) return true;
+      
+          const mime = file.mimetype;
+      
+          if (config.mime.only && !config.mime.only.includes(mime)) {
+            return false;
+          }
+      
+          if (config.mime.except && config.mime.except.includes(mime)) {
+            return false;
+          }
+      
+          return true;
+        }).withMessage(
+          config.mime?.only
+            ? `${field} must be of type: ${config.mime.only.join(', ')}`
+            : `${field} must not be of type: ${config.mime?.except?.join(', ')}`
+        );
+      
+        chains.push(fileValidator);
+      
+        if (config.min || config.max) {
+          const sizeValidator = locationMap[location](field).custom((value, { req }) => {
+            const file = req.file || (req.files && req.files[field]);
+            if (!file) return true;
+      
+            const size = file.size / 1024; // kb
+            const min = config.min || 0; // kb
+            const max = config.max || 5120; // kb
+      
+            return !(size < min || size > max);
+          }).withMessage(
+            `${field} must be between ${config.min || 0}KB and ${config.max || 5120}KB`
+          );
+      
+          chains.push(sizeValidator);
+        }
+        break;
+
+      case 'audio':
+        break;
+      
+      case 'video':
+        break;
+
+      case 'document':
+        break;
+
+      // semi-structured //
+      case 'object':
+        validator = validator.isObject().withMessage(
+          `${field} must be a valid object`,
+        );
+
+        if (config.fields) {
+          validateSchema(config.fields, chains, field);
+        }
+        break;
+      
+      case 'array':
+        validator = validator.isArray().withMessage(
+          `${field} must be a valid array`,
+        );
+
+        // determine if array rule is for tuple or list
+        if (config.items) {
+          if (Array.isArray(config.items)) {
+            config.items.forEach((itemSchema, index) => {
+              validateSchema(itemSchema, chains, `${field}[${index}]`);
+            });
+          } else {
+            validateSchema(config.items, chains, `${field}[]`);
+          }
+        }
+        break;
+
+      case 'xml':
+        break;
+
+      default:
+        // handleBlobTypes(validator, field, config, chains);
+        throw new Error(`Unknown type for field: ${field}`);
+    }
+
+    chains.push(validator);
+  }
+
+  return chains;
+};
+
+/**
+ * Request validation engine
+ */
+module.exports = function validate(
   schema: ValidationSchema,
   options: ValidationOption,
 ) {
   return async (req: Request, res: JsonResponse, next: NextFunction) => {
-    const chains: ValidationChain[] = [];
+    // Determine which locations to apply the validation to (ValidationOption)
 
-    // Determine which locations to apply the validation to
+    // Only accept certain fields (if defined)
     const applyOnly = options?.only
       ? Array.isArray(options.only)
         ? options.only
         : [options.only]
       : [];
-    const applyWithout = options?.without
-      ? Array.isArray(options.without)
-        ? options.without
-        : [options.without]
-      : [];
-
-    for (const [field, config] of Object.entries(schema)) {
-      const loc = config.in ?? 'body';
-
-      // Applies validation based on options.apply
-      if (applyWithout.length) {
-        if (applyWithout.includes(loc)) continue;
+    if (applyOnly.length) {
+      for (const key of Object.keys(schema)) {
+        if (!applyOnly.includes(key)) {
+          delete schema[key];
+        }
       }
-
-      if (applyOnly.length) {
-        if (!applyOnly.includes(loc)) continue;
-      }
-
-      let validator = locationMap[loc](field);
-
-      const isDefaultQuery = loc === 'query' && !config.optional;
-      if (config.optional || options?.optional || isDefaultQuery) {
-        validator = validator.optional();
-      } else {
-        validator = validator.exists().withMessage(`${field} is required`);
-      }
-
-      switch (config.type) {
-        // primitives //
-        case 'string':
-          const min = config.min || 0;
-          const max = config.max || 255;
-
-          validator = validator
-            .isString()
-            .withMessage(`${field} must be a valid string`,)
-            .isLength({ min, max });
-
-          if (config.min) validator = validator
-            .withMessage(`${field} must be more than ${min} characters`);
-
-          if (config.max) validator = validator
-            .withMessage(`${field} must be less than ${max} characters`);
-          break;
-
-        case 'number':
-          validator = validator
-            .isNumeric()
-            .withMessage(`${field} must be a valid number`);
-
-          if (config.min !== undefined) {
-            validator = validator
-              .isFloat({ min: config.min })
-              .withMessage(`${field} must be more than ${config.min}`);
-          }
-
-          if (config.max !== undefined) {
-            validator = validator
-              .isFloat({ max: config.max })
-              .withMessage(`${field} must be less than ${config.max}`);
-          }
-          break;
-
-        case 'bigint':
-          break;
-        
-        case 'boolean':
-          validator = validator
-            .isBoolean()
-            .withMessage(`${field} must be a valid boolean`);
-          break;
-
-        // string derivatives //
-        case 'text':
-          validator = validator
-            .isString()
-            .withMessage(`${field} must be a valid text`);
-          break;
-
-        case 'email':
-          validator = validator
-            .isEmail()
-            .withMessage(`${field} must be a valid email`);
-          break;
-
-        // date & time //
-        case 'timestamp':
-          validator = validator.isISO8601().withMessage(
-            `${field} must be a valid timestamp format (Y-m-d H:i:s)`,
-          );
-          break;
-
-        case 'date':
-          validator = validator.matches(/^\d{4}-\d{2}-\d{2}$/).withMessage(
-            `${field} must be in date format (Y-m-d)`,
-          );
-          break;
-
-        // blobs //
-        case 'image':
-          const fileValidator = validator.custom((value, { req }) => {
-            const file = req.file || (req.files && req.files[field]);
-            if (!file || !config.mime) return true;
-        
-            const mime = file.mimetype;
-        
-            if (config.mime.only && !config.mime.only.includes(mime)) {
-              return false;
-            }
-        
-            if (config.mime.except && config.mime.except.includes(mime)) {
-              return false;
-            }
-        
-            return true;
-          }).withMessage(
-            config.mime?.only
-              ? `${field} must be of type: ${config.mime.only.join(', ')}`
-              : `${field} must not be of type: ${config.mime?.except?.join(', ')}`
-          );
-        
-          chains.push(fileValidator);
-        
-          if (config.min || config.max) {
-            const sizeValidator = locationMap[loc](field).custom((value, { req }) => {
-              const file = req.file || (req.files && req.files[field]);
-              if (!file) return true;
-        
-              const size = file.size / 1024; // kb
-              const min = config.min || 0; // kb
-              const max = config.max || 5120; // kb
-        
-              return !(size < min || size > max);
-            }).withMessage(
-              `${field} must be between ${config.min || 0}KB and ${config.max || 5120}KB`
-            );
-        
-            chains.push(sizeValidator);
-          }
-          break;
-
-        case 'audio':
-          break;
-        
-        case 'video':
-          break;
-
-        case 'document':
-          break;
-
-        // semi-structured //
-        case 'json':
-          break;
-
-        case 'xml':
-          break;
-
-        default:
-          throw new Error(`Unknown type for field: ${field}`);
-      }
-
-      chains.push(validator);
     }
+
+    // Accept all except certain fields (if defined)
+    const applyExcept = options?.except
+      ? Array.isArray(options.except)
+        ? options.except
+        : [options.except]
+      : [];
+    for (const field of applyExcept) {
+      delete schema[field];
+    }
+
+    // Set the entire field as optional (if defined)
+    if (options?.optional) {
+      for (const field of Object.keys(schema)) {
+        schema[field].optional = true;
+      }
+    }
+
+    // Run schema validation
+    let chains: ValidationChain[] = []
+    chains = validateSchema(schema, chains);
 
     // Run all validation chains
     for (const chain of chains) {
