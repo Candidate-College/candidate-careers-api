@@ -1,0 +1,35 @@
+openapi: 3.0.4
+info:
+  title: Candidate Careers API Documentation
+  description: REST API Documentation for Candidate Careers Application
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Local development server
+  - url: https://careers.candidatecollege.org/api/v1
+    description: Remote production server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      # description: hello
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Invalid input
