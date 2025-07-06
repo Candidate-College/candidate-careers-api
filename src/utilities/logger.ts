@@ -1,4 +1,4 @@
-const logEnabled = (process.env.ENABLE_LOG || 'false') === 'true';
+const logEnabled = (process.env.ENABLE_LOG || 'true') === 'true';
 
 const string = require('./string');
 
