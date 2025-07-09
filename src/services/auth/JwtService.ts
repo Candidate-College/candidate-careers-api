@@ -44,8 +44,14 @@ export interface RefreshResult {
  * @throws Error if payload is invalid or generation fails
  */
 exports.generateAccessToken = (payload: object): TokenResult => {
-  if (!payload || typeof payload !== "object") {
-    throw new Error("Token payload must be a valid object");
+  // More robust payload validation - reject arrays and null objects
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    Array.isArray(payload) ||
+    payload.constructor !== Object
+  ) {
+    throw new Error("Token payload must be a valid object (not array or null)");
   }
 
   try {
@@ -70,15 +76,23 @@ exports.generateAccessToken = (payload: object): TokenResult => {
  * @throws Error if payload is invalid or generation fails
  */
 exports.generateRefreshToken = (payload: object): TokenResult => {
-  if (!payload || typeof payload !== "object") {
-    throw new Error("Token payload must be a valid object");
+  // More robust payload validation - reject arrays and null objects
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    Array.isArray(payload) ||
+    payload.constructor !== Object
+  ) {
+    throw new Error("Token payload must be a valid object (not array or null)");
   }
 
   try {
     const token = jwt.refresh.sign(payload);
 
-    // Calculate expiration time for 7 days
-    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    // Use JWT library's expiration mechanism instead of hardcoded calculation
+    const expiresAt = jwt.refresh.getExpiration
+      ? jwt.refresh.getExpiration()
+      : Date.now() + 7 * 24 * 60 * 60 * 1000;
 
     return {
       token,
@@ -214,15 +228,23 @@ exports.extractUserIdFromToken = (
  * @returns TokenResult containing verification token
  */
 exports.generateVerificationToken = (payload: object): TokenResult => {
-  if (!payload || typeof payload !== "object") {
-    throw new Error("Token payload must be a valid object");
+  // More robust payload validation - reject arrays and null objects
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    Array.isArray(payload) ||
+    payload.constructor !== Object
+  ) {
+    throw new Error("Token payload must be a valid object (not array or null)");
   }
 
   try {
     const token = jwt.verification.sign(payload);
 
-    // Calculate expiration time for 30 minutes
-    const expiresAt = Date.now() + 30 * 60 * 1000;
+    // Use JWT library's expiration mechanism if available, otherwise fallback to calculation
+    const expiresAt = jwt.verification.getExpiration
+      ? jwt.verification.getExpiration()
+      : Date.now() + 30 * 60 * 1000;
 
     return {
       token,
