@@ -32,12 +32,11 @@ const signToken = (
   }
 
   try {
+    // Let the JWT library handle exp claim automatically via expiresIn option
+    // Remove manual exp calculation to prevent conflicts
     const tokenPayload = {
       ...payload,
       iat: Math.floor(Date.now() / 1000),
-      ...(expiresIn && {
-        exp: Math.floor(Date.now() / 1000) + parseExpirationTime(expiresIn),
-      }),
     };
 
     if (expiresIn) {
@@ -85,34 +84,6 @@ const verifyToken = (token: string, secret: string): any => {
 };
 
 /**
- * Parse expiration time string to seconds
- *
- * @param expiresIn - Expiration time (e.g., '15m', '7d', '1h')
- * @returns Number of seconds
- */
-const parseExpirationTime = (expiresIn: string | number): number => {
-  if (typeof expiresIn === "number") {
-    return expiresIn;
-  }
-
-  const value = parseInt(expiresIn);
-  const unit = expiresIn.replace(/[0-9]/g, "");
-
-  switch (unit) {
-    case "s":
-      return value;
-    case "m":
-      return value * 60;
-    case "h":
-      return value * 60 * 60;
-    case "d":
-      return value * 24 * 60 * 60;
-    default:
-      return 3600; // Default to 1 hour
-  }
-};
-
-/**
  * Access token.
  */
 exports.access = {
@@ -154,7 +125,15 @@ exports.access = {
 exports.refresh = {
   sign: (payload: object, exp?: number): string => {
     if (exp) {
-      return signToken({ ...payload, exp }, jwtConfig.refresh.secret);
+      // Convert Unix timestamp to seconds from now for expiresIn
+      const currentTime = Math.floor(Date.now() / 1000);
+      const expiresIn = exp - currentTime;
+
+      if (expiresIn <= 0) {
+        throw new Error("Expiration time must be in the future");
+      }
+
+      return signToken(payload, jwtConfig.refresh.secret, expiresIn);
     } else {
       return signToken(
         payload,
