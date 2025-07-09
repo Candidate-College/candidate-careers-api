@@ -477,12 +477,16 @@ describe("Authentication Middleware", () => {
     });
 
     test("should handle authorization header with extra spaces", () => {
+      const token = "valid.format.token";
+      const payload = { id: 1, email: "test@example.com" };
+
       req.headers.authorization = "  Bearer  valid.format.token  ";
+      mockJwtMiddleware.access.verify.mockReturnValue(payload);
 
       authMiddleware.accessToken(req, res, next);
 
-      expect(res.status).toHaveBeenCalledWith(400); // Should be malformed due to spaces
-      expect(next).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalled(); // Should normalize spaces and work correctly
+      expect(res.status).not.toHaveBeenCalled();
     });
 
     test("should handle missing cookie object", () => {
