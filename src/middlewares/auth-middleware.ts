@@ -226,6 +226,15 @@ exports.refreshToken = (
   next: NextFunction
 ): void => {
   try {
+    // Ensure cookies object exists
+    if (!req.cookies || typeof req.cookies !== "object") {
+      const error = createAuthError(
+        AuthErrorType.NO_TOKEN,
+        "No cookies available"
+      );
+      return sendAuthError(res, error);
+    }
+
     const refreshToken = req.cookies["refresh_token"];
 
     if (!refreshToken) {
@@ -308,19 +317,43 @@ exports.verificationToken = (
   res: JsonResponse,
   next: NextFunction
 ): void => {
-  const { token: verificationToken } = req.body;
-
-  if (!verificationToken) {
-    res.error(401, "Token is required!");
-    return;
-  }
-
   try {
+    const { token: verificationToken } = req.body;
+
+    if (!verificationToken) {
+      const error = createAuthError(
+        AuthErrorType.NO_TOKEN,
+        "Verification token is required"
+      );
+      return sendAuthError(res, error);
+    }
+
+    // Verify token format
+    if (!isValidTokenFormat(verificationToken)) {
+      const error = createAuthError(AuthErrorType.MALFORMED_TOKEN);
+      return sendAuthError(res, error);
+    }
+
     const payload = jwt.verification.verify(verificationToken);
     req.user = payload;
     next();
   } catch (error: any) {
-    res.error(401, "Invalid or expired verification token");
-    return; // Properly handle the exception by stopping execution
+    let authError: AuthError;
+
+    if (error.message.includes("expired")) {
+      authError = createAuthError(AuthErrorType.EXPIRED_TOKEN);
+    } else if (
+      error.message.includes("invalid") ||
+      error.message.includes("signature")
+    ) {
+      authError = createAuthError(AuthErrorType.INVALID_TOKEN);
+    } else {
+      authError = createAuthError(
+        AuthErrorType.TOKEN_VERIFICATION_FAILED,
+        error.message
+      );
+    }
+
+    return sendAuthError(res, authError);
   }
 };
