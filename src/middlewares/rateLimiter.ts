@@ -136,15 +136,32 @@ exports.strictRateLimit = rateLimit({
 let failedAttempts: Map<string, { count: number; lastAttempt: number }> =
   new Map();
 
+// Maximum number of entries to prevent memory leaks
+const MAX_FAILED_ATTEMPTS_ENTRIES = 10000;
+
 /**
  * Clean up old failed attempts (run this periodically)
  */
 const cleanupFailedAttempts = (): void => {
   const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  let cleanedCount = 0;
 
   for (const [key, data] of failedAttempts.entries()) {
     if (data.lastAttempt < oneHourAgo) {
       failedAttempts.delete(key);
+      cleanedCount++;
+    }
+  }
+
+  // If we still have too many entries, remove oldest ones
+  if (failedAttempts.size > MAX_FAILED_ATTEMPTS_ENTRIES) {
+    const entries = Array.from(failedAttempts.entries()).sort(
+      (a, b) => a[1].lastAttempt - b[1].lastAttempt
+    );
+
+    const toRemove = failedAttempts.size - MAX_FAILED_ATTEMPTS_ENTRIES;
+    for (let i = 0; i < toRemove; i++) {
+      failedAttempts.delete(entries[i][0]);
     }
   }
 };
@@ -161,9 +178,11 @@ exports.progressiveAuthRateLimit = (
   const now = Date.now();
   const attempts = failedAttempts.get(key) || { count: 0, lastAttempt: 0 };
 
-  // Clean up old attempts periodically
-  if (Math.random() < 0.1) {
-    // 10% chance to trigger cleanup
+  // Clean up old attempts periodically (increased frequency)
+  if (
+    Math.random() < 0.2 ||
+    failedAttempts.size > MAX_FAILED_ATTEMPTS_ENTRIES * 0.8
+  ) {
     cleanupFailedAttempts();
   }
 
@@ -200,6 +219,15 @@ exports.progressiveAuthRateLimit = (
  * Record a failed authentication attempt
  */
 exports.recordFailedAttempt = (key: string): void => {
+  if (!key || typeof key !== "string") {
+    return; // Skip invalid keys
+  }
+
+  // Prevent memory exhaustion
+  if (failedAttempts.size >= MAX_FAILED_ATTEMPTS_ENTRIES) {
+    cleanupFailedAttempts();
+  }
+
   const attempts = failedAttempts.get(key) || { count: 0, lastAttempt: 0 };
   attempts.count += 1;
   attempts.lastAttempt = Date.now();
