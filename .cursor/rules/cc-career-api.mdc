@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+---
+
+## 1. Memory discipline
+
+Begin every task with a review of `memory.md` in root if it exists. After finishing a feature, capture new or changed items inside `memory.md`, including important decisions that were made, solutions to recurring problems, etc.
+
+## 2. Task flow via `todo.md`
+
+A `todo.md` must sit in the project root; if missing, ask the user to add it. Work exclusively on the first open item; large items should be split. Mark items complete only when the user says so and log decisions.
+
+## 3. Understanding the codebase
+
+Please review the entire codebase before making any changes. This is so that you understand how the code architecture and application are currently structured.
+
+## 4. Single-threaded focus
+
+Tackle one todo item at a time, touching only code that is clearly related. Always think through ripple effects before editing.
+
+## 5. Git hygiene
+
+Before coding, remind the user to create and check out a feature branch (`feature/`). Provide PowerShell snippets for add → commit → push; include merge & cleanup commands when needed.
+
+## 6. Iterate, don't reinvent
+
+Search the codebase for existing implementations before writing new code. Prefer simple, incremental fixes; avoid drastic pattern or tech shifts unless all existing options are exhausted. If you _must_ replace a pattern, remove the old one to prevent duplication.
+
+## 7. Server handling & environments
+
+Before testing, kill any related servers from previous sessions. After every change, start a fresh dev server and verify behaviour. Write code that respects `dev`, `test`, and `prod`; never overwrite `.env` without explicit approval.
+
+## 8. Clean, modular code
+
+Keep files under ~300 LOC; refactor when they grow larger. Use small, single-responsibility functions, consistent naming, and clear doc-strings / JSDoc. If the file you want to touch is already ~300 LOC, first consider if it can be refactored to reduce its size or if the new functionality can be placed in a new, related file. Avoid one-off scripts committed to the repo.
+
+## 9. Defensive programming
+
+Validate inputs, cover edge cases, and document assumptions. Treat failure paths as first-class citizens.
+
+## 10. Type safety & interfaces
+
+Create and maintain a dedicated interfaces file structure to ensure proper typing across the application. Never use `any` unless absolutely necessary. Define clear interfaces for all data structures, API responses, and component props.
+
+## 11. Code quality principles
+
+Write code that is flexible, reusable, and maintainable. Follow clean code principles, guard clause principles, SOLID principles, and TypeScript/Express best practices. This includes:
+
+- Single responsibility principle: Each class or module should have only one reason to change
+- Open/closed principle: Software entities should be open for extension but closed for modification
+- Liskov substitution principle: Objects should be replaceable with instances of their subtypes
+- Interface segregation: Many client-specific interfaces are better than one general-purpose interface
+- Dependency inversion: Depend on abstractions, not concretions
+
+## 12. Documentation
+
+Add comprehensive JSDoc comments to all files, functions, classes, and interfaces. Documentation should explain purpose, parameters, return values, examples when helpful, and any potential side effects.
+
+## 13. Comprehensive Testing
+
+All new features must be accompanied by corresponding unit or integration tests to verify correctness and prevent future regressions. Ensure tests cover both happy paths and edge cases.
