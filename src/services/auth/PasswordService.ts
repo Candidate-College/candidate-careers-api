@@ -141,30 +141,37 @@ exports.validatePasswordStrength = (
   if (/[0-9]/.test(password)) score += 1;
   if (/[^a-zA-Z0-9]/.test(password)) score += 1;
 
-  // Additional feedback
-  if (!/[a-z]/.test(password)) {
-    feedback.push("Include lowercase letters");
-  }
-  if (!/[A-Z]/.test(password)) {
-    feedback.push("Include uppercase letters");
-  }
-  if (!/[0-9]/.test(password)) {
-    feedback.push("Include numbers");
-  }
-  if (!/[^a-zA-Z0-9]/.test(password)) {
-    feedback.push("Include special characters");
+  // Additional feedback for weak passwords only
+  if (score < 3) {
+    if (!/[a-z]/.test(password)) {
+      feedback.push("Include lowercase letters");
+    }
+    if (!/[A-Z]/.test(password)) {
+      feedback.push("Include uppercase letters");
+    }
+    if (!/[0-9]/.test(password)) {
+      feedback.push("Include numbers");
+    }
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+      feedback.push("Include special characters");
+    }
   }
 
-  // Common patterns check
-  const commonPatterns = ["123456", "password", "qwerty", "abc123"];
+  // Common patterns check (only for exact matches or very weak passwords)
+  const commonPatterns = ["123456", "qwerty", "abc123"];
+  const weakPasswords = ["password", "admin", "user", "test"];
+
   if (
-    commonPatterns.some((pattern) => password.toLowerCase().includes(pattern))
+    commonPatterns.some((pattern) =>
+      password.toLowerCase().includes(pattern)
+    ) ||
+    weakPasswords.some((weak) => password.toLowerCase() === weak)
   ) {
     feedback.push("Avoid common patterns");
     score = Math.max(0, score - 2);
   }
 
-  const isValid = password.length >= 6 && feedback.length === 0;
+  const isValid = password.length >= 6 && score >= 3;
 
   return {
     isValid,
