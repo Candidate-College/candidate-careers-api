@@ -25,12 +25,20 @@ exports.hashPassword = async (plainPassword: string): Promise<string> => {
     throw new Error("Password must be a string");
   }
 
-  if (plainPassword.length < 6) {
+  // Normalize Unicode to prevent bypass attacks
+  const normalizedPassword = plainPassword.normalize("NFKC");
+
+  if (normalizedPassword.length < 6) {
     throw new Error("Password must be at least 6 characters long");
   }
 
+  // Add maximum length check to prevent DoS attacks
+  if (normalizedPassword.length > 128) {
+    throw new Error("Password cannot exceed 128 characters");
+  }
+
   try {
-    return await crypto.hash(plainPassword);
+    return await crypto.hash(normalizedPassword);
   } catch (error: any) {
     throw new Error(`Password hashing failed: ${error.message}`);
   }
