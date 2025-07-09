@@ -162,12 +162,39 @@ exports.inputSanitizer = (
 ): void => {
   const sanitizeValue = (value: any): any => {
     if (typeof value === "string") {
-      // Remove potentially dangerous characters
-      return value
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "") // Remove script tags
-        .replace(/javascript:/gi, "") // Remove javascript: protocols
-        .replace(/on\w+\s*=/gi, "") // Remove event handlers
+      // Normalize Unicode first to prevent bypass attacks
+      let sanitized = value.normalize("NFKC");
+
+      // More comprehensive XSS prevention patterns
+      sanitized = sanitized
+        // Remove all script tags and their contents (case insensitive)
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+        // Remove javascript: protocols (including encoded variants)
+        .replace(/(?:javascript|vbscript|data|livescript|mocha):/gi, "")
+        // Remove event handlers (more comprehensive)
+        .replace(/\s*on\w+\s*=\s*["\'][^"\']*["\']/gi, "")
+        .replace(/\s*on\w+\s*=\s*[^>\s]+/gi, "")
+        // Remove dangerous HTML tags
+        .replace(
+          /<(iframe|object|embed|applet|meta|link|style|base)[^>]*>/gi,
+          ""
+        )
+        // Remove expressions and eval
+        .replace(/expression\s*\(/gi, "")
+        .replace(/eval\s*\(/gi, "")
+        // Remove potential HTML injection attempts
+        .replace(/<[^>]*>/g, (match) => {
+          // Allow safe tags only, strip attributes from others
+          const safeTags = ["b", "i", "u", "strong", "em", "p", "br"];
+          const tagMatch = match.match(/<\/?(\w+)/);
+          if (tagMatch && safeTags.includes(tagMatch[1].toLowerCase())) {
+            return `<${tagMatch[1]}>`;
+          }
+          return "";
+        })
         .trim();
+
+      return sanitized;
     }
 
     if (Array.isArray(value)) {
@@ -177,7 +204,10 @@ exports.inputSanitizer = (
     if (value && typeof value === "object") {
       const sanitized: any = {};
       for (const [key, val] of Object.entries(value)) {
-        sanitized[key] = sanitizeValue(val);
+        // Also sanitize object keys to prevent key injection
+        const sanitizedKey =
+          typeof key === "string" ? key.replace(/[<>'"&]/g, "") : key;
+        sanitized[sanitizedKey] = sanitizeValue(val);
       }
       return sanitized;
     }
@@ -333,6 +363,10 @@ exports.contentTypeValidation = (
  * Helper function to parse size string to bytes
  */
 const parseSize = (sizeStr: string): number => {
+  if (!sizeStr || typeof sizeStr !== "string") {
+    throw new Error("Size parameter must be a non-empty string");
+  }
+
   const units: { [key: string]: number } = {
     b: 1,
     kb: 1024,
@@ -340,15 +374,30 @@ const parseSize = (sizeStr: string): number => {
     gb: 1024 * 1024 * 1024,
   };
 
-  const regex = /^(\d+(?:\.\d+)?)(b|kb|mb|gb)$/;
-  const match = regex.exec(sizeStr.toLowerCase());
+  const regex = /^(\d+(?:\.\d+)?)(b|kb|mb|gb)$/i;
+  const match = regex.exec(sizeStr.toLowerCase().trim());
 
   if (!match) {
-    throw new Error(`Invalid size format: ${sizeStr}`);
+    throw new Error(
+      `Invalid size format: ${sizeStr}. Expected format: "10mb", "500kb", etc.`
+    );
   }
 
-  const [, size, unit] = match;
-  return parseFloat(size) * units[unit];
+  const [, sizeValue, unit] = match;
+  const numericSize = parseFloat(sizeValue);
+
+  if (isNaN(numericSize) || numericSize < 0) {
+    throw new Error(
+      `Invalid size value: ${sizeValue}. Must be a positive number.`
+    );
+  }
+
+  // Prevent extremely large values that could cause issues
+  if (numericSize > Number.MAX_SAFE_INTEGER / units[unit.toLowerCase()]) {
+    throw new Error(`Size value too large: ${sizeStr}`);
+  }
+
+  return numericSize * units[unit.toLowerCase()];
 };
 
 /**
