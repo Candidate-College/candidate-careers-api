@@ -33,6 +33,28 @@ interface AuthError {
 }
 
 /**
+ * Safely decode JWT token without verification to extract payload
+ * Used for expired tokens where we need session information
+ */
+const decodeTokenWithoutVerification = (token: string): any => {
+  try {
+    // Split the token to get the payload part
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    // Decode the payload (second part)
+    const payload = parts[1];
+    const decodedPayload = Buffer.from(payload, "base64url").toString("utf-8");
+    return JSON.parse(decodedPayload);
+  } catch (error) {
+    // If we can't decode the token safely, return null
+    return null;
+  }
+};
+
+/**
  * Extract token from Authorization header
  */
 const extractTokenFromHeader = (
@@ -273,6 +295,31 @@ exports.refreshToken = (
       error.message.includes("expired") ||
       error.name === "TokenExpiredError"
     ) {
+      // Get refresh token from cookies for decoding
+      const refreshToken = req.cookies?.["refresh_token"];
+
+      if (refreshToken) {
+        // Try to safely decode the expired token to preserve session ID
+        const decodedPayload = decodeTokenWithoutVerification(refreshToken);
+
+        if (decodedPayload && decodedPayload.id) {
+          // Preserve original session information for controllers
+          req.user = {
+            session: {
+              id: decodedPayload.id,
+              exp: decodedPayload.exp || 0,
+              iat: decodedPayload.iat || 0,
+              expired: true,
+            },
+            sessionId: decodedPayload.id,
+            exp: decodedPayload.exp,
+            iat: decodedPayload.iat,
+          };
+          return next();
+        }
+      }
+
+      // Fallback if we can't decode the token or no token available
       req.user = {
         session: {
           id: "",
