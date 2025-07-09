@@ -29,15 +29,38 @@ export type AuthenticatedRequest = ExpressRequest & {
 };
 
 /**
+ * Standard API response format
+ */
+export interface ApiResponse<T = any> {
+  statusCode: number;
+  message: string;
+  data?: T;
+  error?: {
+    type?: string;
+    code?: string;
+    details?: ValidationError[] | Record<string, string[]>;
+  };
+}
+
+/**
+ * Validation error interface
+ */
+export interface ValidationError {
+  field: string;
+  message: string;
+  value?: any;
+}
+
+/**
  * Interface for custom express response invocation
  */
 export type JsonResponse = ExpressResponse & {
-  success: (message: string, data?: any) => ExpressResponse;
+  success: <T = any>(message: string, data?: T) => ExpressResponse;
 
   error: (
     statusCode?: number,
     message?: string,
-    errors?: Record<string, string[]> | any[]
+    errors?: ValidationError[] | Record<string, string[]>
   ) => ExpressResponse;
 
   setCookie: (key: string, value: string) => ExpressResponse;
