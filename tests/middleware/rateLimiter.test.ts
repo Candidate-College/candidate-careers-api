@@ -43,6 +43,10 @@ describe("Rate Limiter Middleware", () => {
     process.env.RATE_LIMIT_WINDOW_MS = "60000";
     process.env.RATE_LIMIT_MAX_REQUESTS = "5";
 
+    // Clear any failed attempts state
+    const key = "192.168.1.1";
+    rateLimiter.clearFailedAttempts && rateLimiter.clearFailedAttempts(key);
+
     // Mock request object
     req = {
       ip: "192.168.1.1",
@@ -106,16 +110,16 @@ describe("Rate Limiter Middleware", () => {
     });
 
     test("should use IP address for rate limiting key", () => {
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          keyGenerator: expect.any(Function),
-        })
-      );
+      // The authRateLimit should have been created during import
+      expect(mockRateLimit).toHaveBeenCalled();
 
-      // Test the key generator
-      const lastCall =
-        mockRateLimit.mock.calls[mockRateLimit.mock.calls.length - 1];
-      const options = lastCall[0];
+      // Find the auth rate limit call (should be first one)
+      const authRateLimitCall = mockRateLimit.mock.calls.find(
+        (call) => call[0]?.max === 5 // Auth rate limit has max 5
+      );
+      expect(authRateLimitCall).toBeDefined();
+
+      const options = authRateLimitCall[0];
       const key = options.keyGenerator(req);
 
       expect(key).toBe("192.168.1.1");
@@ -124,9 +128,13 @@ describe("Rate Limiter Middleware", () => {
     test("should use IP and user ID for authenticated requests", () => {
       req.user = { id: 123 };
 
-      const lastCall =
-        mockRateLimit.mock.calls[mockRateLimit.mock.calls.length - 1];
-      const options = lastCall[0];
+      // Find the auth rate limit call
+      const authRateLimitCall = mockRateLimit.mock.calls.find(
+        (call) => call[0]?.max === 5
+      );
+      expect(authRateLimitCall).toBeDefined();
+
+      const options = authRateLimitCall[0];
       const key = options.keyGenerator(req);
 
       expect(key).toBe("192.168.1.1:123");
@@ -158,25 +166,21 @@ describe("Rate Limiter Middleware", () => {
     });
 
     test("should have more lenient limits than auth endpoints", () => {
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          windowMs: 15 * 60 * 1000, // 15 minutes
-          max: 100, // 100 requests
-        })
+      // Find the general rate limit call
+      const generalRateLimitCall = mockRateLimit.mock.calls.find(
+        (call) => call[0]?.max === 100 && call[0]?.windowMs === 15 * 60 * 1000
       );
+      expect(generalRateLimitCall).toBeDefined();
     });
   });
 
   describe("Strict Rate Limiting", () => {
     test("should have very restrictive limits", () => {
-      rateLimiter.strictRateLimit(req, res, next);
-
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          windowMs: 60 * 60 * 1000, // 1 hour
-          max: 3, // 3 requests
-        })
+      // Find the strict rate limit call
+      const strictRateLimitCall = mockRateLimit.mock.calls.find(
+        (call) => call[0]?.max === 3 && call[0]?.windowMs === 60 * 60 * 1000
       );
+      expect(strictRateLimitCall).toBeDefined();
     });
 
     test("should provide specific error message for sensitive operations", () => {
@@ -280,13 +284,14 @@ describe("Rate Limiter Middleware", () => {
       const customLimiter = rateLimiter.createCustomRateLimit(options);
 
       expect(customLimiter).toBeDefined();
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          windowMs: 30000,
-          max: 10,
-          message: "Custom rate limit message",
-        })
+      // The custom limiter should call mockRateLimit when created
+      const customRateLimitCall = mockRateLimit.mock.calls.find(
+        (call) =>
+          call[0]?.windowMs === 30000 &&
+          call[0]?.max === 10 &&
+          call[0]?.message === "Custom rate limit message"
       );
+      expect(customRateLimitCall).toBeDefined();
     });
 
     test("should use default message if not provided", () => {
@@ -297,11 +302,14 @@ describe("Rate Limiter Middleware", () => {
 
       rateLimiter.createCustomRateLimit(options);
 
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: "Rate limit exceeded",
-        })
-      );
+      // Find the most recent custom rate limit call
+      const customRateLimitCall = mockRateLimit.mock.calls
+        .slice()
+        .reverse()
+        .find((call) => call[0]?.windowMs === 30000 && call[0]?.max === 10);
+
+      expect(customRateLimitCall).toBeDefined();
+      expect(customRateLimitCall[0].message).toBe("Rate limit exceeded");
     });
 
     test("should skip successful requests if configured", () => {
@@ -313,11 +321,14 @@ describe("Rate Limiter Middleware", () => {
 
       rateLimiter.createCustomRateLimit(options);
 
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skipSuccessfulRequests: true,
-        })
+      // Find the custom rate limit call with skipSuccessfulRequests
+      const customRateLimitCall = mockRateLimit.mock.calls.find(
+        (call) =>
+          call[0]?.windowMs === 30000 &&
+          call[0]?.max === 10 &&
+          call[0]?.skipSuccessfulRequests === true
       );
+      expect(customRateLimitCall).toBeDefined();
     });
   });
 
@@ -380,15 +391,11 @@ describe("Rate Limiter Middleware", () => {
       jest.resetModules();
       const freshRateLimiter = require("@/middlewares/rateLimiter");
 
-      freshRateLimiter.authRateLimit(req, res, next);
-
-      // Verify that the new configuration is used
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          windowMs: 120000,
-          max: 10,
-        })
+      // The module should have created rate limiters with the new config
+      const configCall = mockRateLimit.mock.calls.find(
+        (call) => call[0]?.windowMs === 120000 && call[0]?.max === 10
       );
+      expect(configCall).toBeDefined();
     });
 
     test("should use default values when environment variables are not set", () => {
@@ -398,25 +405,22 @@ describe("Rate Limiter Middleware", () => {
       jest.resetModules();
       const freshRateLimiter = require("@/middlewares/rateLimiter");
 
-      freshRateLimiter.authRateLimit(req, res, next);
-
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          windowMs: 60000, // Default 1 minute
-          max: 5, // Default 5 requests
-        })
+      // Should find a call with default values
+      const defaultCall = mockRateLimit.mock.calls.find(
+        (call) => call[0]?.windowMs === 60000 && call[0]?.max === 5
       );
+      expect(defaultCall).toBeDefined();
     });
   });
 
   describe("Headers and Response Format", () => {
     test("should include rate limit headers", () => {
-      expect(mockRateLimit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          standardHeaders: true,
-          legacyHeaders: false,
-        })
+      // Check if any of the rate limiter calls include header configuration
+      const hasHeaderConfig = mockRateLimit.mock.calls.some(
+        (call) =>
+          call[0]?.standardHeaders === true && call[0]?.legacyHeaders === false
       );
+      expect(hasHeaderConfig).toBe(true);
     });
 
     test("should provide consistent error response format", () => {
