@@ -351,13 +351,21 @@ describe("Authentication Middleware", () => {
 
       expect(req.user).toEqual(payload);
       expect(next).toHaveBeenCalled();
-      expect(res.error).not.toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalled();
     });
 
     test("should reject request without verification token", () => {
       authMiddleware.verificationToken(req, res, next);
 
-      expect(res.error).toHaveBeenCalledWith(401, "Token is required!");
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        statusCode: 401,
+        message: "Verification token is required",
+        error: {
+          type: "NO_TOKEN",
+          code: "AUTH_NO_TOKEN",
+        },
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -371,10 +379,15 @@ describe("Authentication Middleware", () => {
 
       authMiddleware.verificationToken(req, res, next);
 
-      expect(res.error).toHaveBeenCalledWith(
-        401,
-        "Invalid or expired verification token"
-      );
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        statusCode: 401,
+        message: "Authentication token has expired",
+        error: {
+          type: "EXPIRED_TOKEN",
+          code: "AUTH_EXPIRED_TOKEN",
+        },
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -388,10 +401,15 @@ describe("Authentication Middleware", () => {
 
       authMiddleware.verificationToken(req, res, next);
 
-      expect(res.error).toHaveBeenCalledWith(
-        401,
-        "Invalid or expired verification token"
-      );
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        statusCode: 401,
+        message: "Invalid authentication token",
+        error: {
+          type: "INVALID_TOKEN",
+          code: "AUTH_INVALID_TOKEN",
+        },
+      });
       expect(next).not.toHaveBeenCalled();
     });
   });
