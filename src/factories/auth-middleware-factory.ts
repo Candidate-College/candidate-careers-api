@@ -24,7 +24,7 @@ import {
   decodeTokenWithoutVerification,
   extractRefreshToken,
   extractVerificationToken,
-} from "@/utils/token-utils";
+} from "@/utilities/token-utils";
 import {
   extractUserContext,
   createSessionContext,
