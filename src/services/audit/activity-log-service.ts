@@ -102,14 +102,19 @@ export class ActivityLogService {
         created_at: new Date(),
       });
 
-      // Log to Winston
-      await defaultWinstonLogger.asyncInfo("Activity logged successfully", {
-        activityId: activityLog.id,
-        action: enrichedParams.action,
-        userId: enrichedParams.userId || undefined,
-        severity: enrichedParams.severity,
-        category: enrichedParams.category,
-      });
+      // Log to Winston (don't let Winston errors fail the operation)
+      try {
+        await defaultWinstonLogger.asyncInfo("Activity logged successfully", {
+          activityId: activityLog.id,
+          action: enrichedParams.action,
+          userId: enrichedParams.userId || undefined,
+          severity: enrichedParams.severity,
+          category: enrichedParams.category,
+        });
+      } catch (winstonError) {
+        // Winston logging errors should not fail the main operation
+        // We could potentially log this to a fallback logger, but for now just continue
+      }
 
       return {
         success: true,
@@ -117,11 +122,15 @@ export class ActivityLogService {
         message: "Activity logged successfully",
       };
     } catch (error) {
-      // Log error to Winston
-      await defaultWinstonLogger.asyncError("Failed to log activity", {
-        error: error instanceof Error ? error.message : String(error),
-        params: ActivityValidation.sanitizeParams(params),
-      });
+      // Log error to Winston (don't let Winston errors compound the issue)
+      try {
+        await defaultWinstonLogger.asyncError("Failed to log activity", {
+          error: error instanceof Error ? error.message : String(error),
+          params: ActivityValidation.sanitizeParams(params),
+        });
+      } catch (winstonError) {
+        // Winston logging errors should not compound the original error
+      }
 
       return {
         success: false,
@@ -330,12 +339,13 @@ export class ActivityLogService {
         severityCounts[stat.severity] = parseInt(stat.count);
       });
 
+      const totalCount = parseInt(totalActivities?.count || "0");
+      const successCountValue = parseInt(successCount?.count || "0");
+
       return {
-        totalActivities: parseInt(totalActivities?.count || "0"),
+        totalActivities: totalCount,
         successRate:
-          (parseInt(successCount?.count || "0") /
-            parseInt(totalActivities?.count || "1")) *
-          100,
+          totalCount > 0 ? (successCountValue / totalCount) * 100 : 0,
         categoryCounts,
         severityCounts,
       };

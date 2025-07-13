@@ -186,6 +186,9 @@ describe("ActivityLogService", () => {
     it("should handle null userId correctly", async () => {
       const paramsWithNullUser = { ...mockActivityParams, userId: null };
 
+      // Mock the metadata collection to return the params with null userId
+      mockActivityMetadata.collectMetadata.mockReturnValue(paramsWithNullUser);
+
       const result = await ActivityLogService.logActivity(paramsWithNullUser);
 
       expect(result.success).toBe(true);
@@ -442,7 +445,11 @@ describe("ActivityLogService", () => {
 
     it("should handle database errors in statistics", async () => {
       const mockQueryBuilder = {
-        count: jest.fn().mockRejectedValue(new Error("Database error")),
+        count: jest.fn().mockReturnThis(),
+        first: jest.fn().mockRejectedValue(new Error("Database error")),
+        where: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
       };
       mockActivityLog.query = jest.fn().mockReturnValue(mockQueryBuilder);
 
