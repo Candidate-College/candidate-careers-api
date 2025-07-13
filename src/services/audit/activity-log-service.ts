@@ -7,14 +7,12 @@
  * @module services/audit/activity-log-service
  */
 
-import { ActivityLog, ActivityLogData } from "@/models/activity-log-model";
+import { ActivityLog } from "@/models/activity-log-model";
 import { UserData } from "@/models/user-model";
 import {
   ActivitySeverity,
   ActivityCategory,
   ActivityStatus,
-  ActivityAction,
-  ResourceType,
 } from "@/constants/activity-log-constants";
 import { defaultWinstonLogger } from "@/utilities/winston-logger";
 import { ActivityCategorization } from "./activity-categorization";
@@ -32,9 +30,9 @@ export interface ActivityLogParams {
   resourceId?: number | null;
   resourceUuid?: string | null;
   description: string;
-  oldValues?: any | null;
-  newValues?: any | null;
-  metadata?: any | null;
+  oldValues?: any;
+  newValues?: any;
+  metadata?: any;
   ipAddress?: string | null;
   userAgent?: string | null;
   severity?: ActivitySeverity;
@@ -113,7 +111,8 @@ export class ActivityLogService {
         });
       } catch (winstonError) {
         // Winston logging errors should not fail the main operation
-        // We could potentially log this to a fallback logger, but for now just continue
+        // Fall back to console logging
+        console.error("Winston logging failed:", winstonError);
       }
 
       return {
@@ -130,6 +129,8 @@ export class ActivityLogService {
         });
       } catch (winstonError) {
         // Winston logging errors should not compound the original error
+        // Fall back to console logging
+        console.error("Winston error logging failed:", winstonError);
       }
 
       return {
