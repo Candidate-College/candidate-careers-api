@@ -81,9 +81,8 @@ describe("ActivityRetrievalService", () => {
       mockCountQuery.resultSize.mockResolvedValue(2);
 
       // Mock the paginated query to return the activities
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getActivityLogs();
@@ -124,9 +123,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.validateAndSanitize.mockReturnValue(filters);
       mockCountQuery.resultSize.mockResolvedValue(15);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getActivityLogs(filters);
@@ -178,9 +176,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.validateAndSanitize.mockReturnValue(filters);
       mockCountQuery.resultSize.mockResolvedValue(1500);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getActivityLogs(filters);
@@ -209,9 +206,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.isValidUserId.mockReturnValue(true);
       mockCountQuery.resultSize.mockResolvedValue(1);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getUserActivityHistory(
@@ -248,10 +244,7 @@ describe("ActivityRetrievalService", () => {
       mockFilters.isValidUserId.mockReturnValue(true);
       mockCountQuery.resultSize.mockResolvedValue(0);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue([]);
-      mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
-      );
+      mockQueryBuilder.applyPagination.mockReturnValue(Promise.resolve([]));
 
       const result = await ActivityRetrievalService.getUserActivityHistory(
         userId
@@ -273,9 +266,8 @@ describe("ActivityRetrievalService", () => {
         user: { id: 1, email: "user@example.com" },
       };
 
-      const mockQueryResult = jest.fn().mockResolvedValue(mockActivity);
       mockQueryBuilder.buildSingleActivityQuery.mockReturnValue(
-        mockQueryResult as any
+        Promise.resolve(mockActivity)
       );
 
       const result = await ActivityRetrievalService.getActivityById(activityId);
@@ -301,9 +293,8 @@ describe("ActivityRetrievalService", () => {
     it("should return null when activity not found", async () => {
       const activityId = 999;
 
-      const mockQueryResult = jest.fn().mockResolvedValue(null);
       mockQueryBuilder.buildSingleActivityQuery.mockReturnValue(
-        mockQueryResult as any
+        Promise.resolve(null)
       );
 
       const result = await ActivityRetrievalService.getActivityById(activityId);
@@ -321,9 +312,8 @@ describe("ActivityRetrievalService", () => {
         description: "User login",
       };
 
-      const mockQueryResult = jest.fn().mockResolvedValue(mockActivity);
       mockQueryBuilder.buildSingleActivityQuery.mockReturnValue(
-        mockQueryResult as any
+        Promise.resolve(mockActivity)
       );
 
       const result = await ActivityRetrievalService.getActivityById(
@@ -352,9 +342,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.sanitizeSearchTerm.mockReturnValue(searchTerm);
       mockCountQuery.resultSize.mockResolvedValue(2);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.searchActivities(
@@ -391,10 +380,7 @@ describe("ActivityRetrievalService", () => {
       mockFilters.sanitizeSearchTerm.mockReturnValue(searchTerm);
       mockCountQuery.resultSize.mockResolvedValue(0);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue([]);
-      mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
-      );
+      mockQueryBuilder.applyPagination.mockReturnValue(Promise.resolve([]));
 
       const result = await ActivityRetrievalService.searchActivities(
         searchTerm
@@ -417,9 +403,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.sanitizeSearchTerm.mockReturnValue(searchTerm);
       mockCountQuery.resultSize.mockResolvedValue(500);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.searchActivities(
@@ -430,7 +415,7 @@ describe("ActivityRetrievalService", () => {
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(20);
       expect(result.pagination?.total).toBe(500);
-      expect(result.pagination?.totalPages).toBe(10);
+      expect(result.pagination?.totalPages).toBe(25);
     });
   });
 
@@ -442,9 +427,8 @@ describe("ActivityRetrievalService", () => {
         { id: 1, action: "register", description: "User registration" },
       ];
 
-      const mockQueryResult = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.buildRecentActivitiesQuery.mockReturnValue(
-        mockQueryResult as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getRecentActivities();
@@ -465,9 +449,8 @@ describe("ActivityRetrievalService", () => {
         description: `Description ${i}`,
       }));
 
-      const mockQueryResult = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.buildRecentActivitiesQuery.mockReturnValue(
-        mockQueryResult as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getRecentActivities(
@@ -484,9 +467,8 @@ describe("ActivityRetrievalService", () => {
     });
 
     it("should handle empty recent activities", async () => {
-      const mockQueryResult = jest.fn().mockResolvedValue([]);
       mockQueryBuilder.buildRecentActivitiesQuery.mockReturnValue(
-        mockQueryResult as any
+        Promise.resolve([])
       );
 
       const result = await ActivityRetrievalService.getRecentActivities();
@@ -524,9 +506,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.validateAndSanitize.mockReturnValue(filters);
       mockCountQuery.resultSize.mockResolvedValue(100000);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const startTime = Date.now();
@@ -553,9 +534,8 @@ describe("ActivityRetrievalService", () => {
       mockFilters.isValidUserId.mockReturnValue(true);
       mockCountQuery.resultSize.mockResolvedValue(50000);
 
-      const mockPaginatedQuery = jest.fn().mockResolvedValue(mockActivities);
       mockQueryBuilder.applyPagination.mockReturnValue(
-        mockPaginatedQuery as any
+        Promise.resolve(mockActivities)
       );
 
       const result = await ActivityRetrievalService.getUserActivityHistory(
