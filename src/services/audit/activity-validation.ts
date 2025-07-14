@@ -30,6 +30,35 @@ export class ActivityValidation {
    */
   public static validateParams(params: ActivityLogParams): ValidationResult {
     // Check required fields
+    const requiredFieldResult = this.validateRequiredFields(params);
+    if (!requiredFieldResult.isValid) {
+      return requiredFieldResult;
+    }
+
+    // Validate field lengths
+    const fieldLengthResult = this.validateFieldLengths(params);
+    if (!fieldLengthResult.isValid) {
+      return fieldLengthResult;
+    }
+
+    // Validate optional fields
+    const optionalFieldResult = this.validateOptionalFields(params);
+    if (!optionalFieldResult.isValid) {
+      return optionalFieldResult;
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Validate required fields
+   *
+   * @param params - Parameters to validate
+   * @returns ValidationResult
+   */
+  private static validateRequiredFields(
+    params: ActivityLogParams
+  ): ValidationResult {
     if (!params.action) {
       return {
         isValid: false,
@@ -54,7 +83,18 @@ export class ActivityValidation {
       };
     }
 
-    // Validate field lengths
+    return { isValid: true };
+  }
+
+  /**
+   * Validate field lengths
+   *
+   * @param params - Parameters to validate
+   * @returns ValidationResult
+   */
+  private static validateFieldLengths(
+    params: ActivityLogParams
+  ): ValidationResult {
     if (params.action.length > 100) {
       return {
         isValid: false,
@@ -79,7 +119,18 @@ export class ActivityValidation {
       };
     }
 
-    // Validate optional fields
+    return { isValid: true };
+  }
+
+  /**
+   * Validate optional fields
+   *
+   * @param params - Parameters to validate
+   * @returns ValidationResult
+   */
+  private static validateOptionalFields(
+    params: ActivityLogParams
+  ): ValidationResult {
     if (params.resourceUuid && !this.isValidUUID(params.resourceUuid)) {
       return {
         isValid: false,
@@ -112,6 +163,21 @@ export class ActivityValidation {
       };
     }
 
+    const idValidationResult = this.validateIDs(params);
+    if (!idValidationResult.isValid) {
+      return idValidationResult;
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Validate ID fields
+   *
+   * @param params - Parameters to validate
+   * @returns ValidationResult
+   */
+  private static validateIDs(params: ActivityLogParams): ValidationResult {
     if (
       params.resourceId !== undefined &&
       params.resourceId !== null &&
@@ -174,14 +240,40 @@ export class ActivityValidation {
    * @returns boolean
    */
   private static isValidIP(ip: string): boolean {
-    // IPv4 pattern
-    const ipv4Pattern =
-      /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
+    return this.isValidIPv4(ip) || this.isValidIPv6(ip);
+  }
 
-    // IPv6 pattern (simplified)
-    const ipv6Pattern = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+  /**
+   * Validate IPv4 format
+   *
+   * @param ip - IP address to validate
+   * @returns boolean
+   */
+  private static isValidIPv4(ip: string): boolean {
+    // Simplified IPv4 validation using parts approach
+    const parts = ip.split(".");
+    if (parts.length !== 4) {
+      return false;
+    }
 
-    return ipv4Pattern.test(ip) || ipv6Pattern.test(ip);
+    const ipv4Part = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+    return parts.every((part) => ipv4Part.test(part));
+  }
+
+  /**
+   * Validate IPv6 format
+   *
+   * @param ip - IP address to validate
+   * @returns boolean
+   */
+  private static isValidIPv6(ip: string): boolean {
+    // Simplified IPv6 check for common formats
+    if (ip === "::1" || ip === "::") {
+      return true;
+    }
+
+    const ipv6Pattern = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    return ipv6Pattern.test(ip);
   }
 
   /**
