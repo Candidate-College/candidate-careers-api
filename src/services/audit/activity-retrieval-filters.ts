@@ -68,74 +68,110 @@ export class ActivityRetrievalFilters {
   ): ActivityRetrievalFilters {
     const sanitized: ActivityRetrievalFilters = { ...filters };
 
+    this.sanitizePagination(sanitized);
+    this.sanitizeSorting(sanitized);
+    this.sanitizeDates(sanitized);
+    this.sanitizeEnumValues(sanitized);
+
+    return sanitized;
+  }
+
+  /**
+   * Sanitize pagination parameters
+   *
+   * @param filters - Filters to sanitize
+   */
+  private static sanitizePagination(filters: ActivityRetrievalFilters): void {
     // Validate and sanitize pagination
-    if (sanitized.page !== undefined && sanitized.page <= 0) {
-      sanitized.page = this.DEFAULT_PAGE;
+    if (filters.page !== undefined && filters.page <= 0) {
+      filters.page = this.DEFAULT_PAGE;
     }
 
-    if (sanitized.limit) {
-      if (sanitized.limit <= 0) {
-        sanitized.limit = this.DEFAULT_LIMIT;
-      } else if (sanitized.limit > this.MAX_LIMIT) {
-        sanitized.limit = this.MAX_LIMIT;
+    if (filters.limit) {
+      if (filters.limit <= 0) {
+        filters.limit = this.DEFAULT_LIMIT;
+      } else if (filters.limit > this.MAX_LIMIT) {
+        filters.limit = this.MAX_LIMIT;
       }
     }
+  }
 
+  /**
+   * Sanitize sorting parameters
+   *
+   * @param filters - Filters to sanitize
+   */
+  private static sanitizeSorting(filters: ActivityRetrievalFilters): void {
     // Validate sort field
-    if (
-      sanitized.sortBy &&
-      !this.VALID_SORT_FIELDS.includes(sanitized.sortBy)
-    ) {
-      sanitized.sortBy = "created_at";
+    if (filters.sortBy && !this.VALID_SORT_FIELDS.includes(filters.sortBy)) {
+      filters.sortBy = "created_at";
     }
 
     // Validate sort order
-    if (sanitized.sortOrder && !["asc", "desc"].includes(sanitized.sortOrder)) {
-      sanitized.sortOrder = "desc";
+    if (filters.sortOrder && !["asc", "desc"].includes(filters.sortOrder)) {
+      filters.sortOrder = "desc";
+    }
+  }
+
+  /**
+   * Sanitize date parameters
+   *
+   * @param filters - Filters to sanitize
+   */
+  private static sanitizeDates(filters: ActivityRetrievalFilters): void {
+    filters.dateFrom = this.sanitizeDate(filters.dateFrom);
+    filters.dateTo = this.sanitizeDate(filters.dateTo);
+  }
+
+  /**
+   * Sanitize a date value
+   *
+   * @param dateValue - Date value to sanitize
+   * @returns Sanitized date or undefined
+   */
+  private static sanitizeDate(dateValue?: Date | string): Date | undefined {
+    if (!dateValue) {
+      return undefined;
     }
 
-    // Validate dates
-    if (sanitized.dateFrom && typeof sanitized.dateFrom === "string") {
-      const date = new Date(sanitized.dateFrom);
+    if (typeof dateValue === "string") {
+      const date = new Date(dateValue);
       if (isNaN(date.getTime())) {
-        delete sanitized.dateFrom;
-      } else {
-        sanitized.dateFrom = date;
+        return undefined;
       }
+      return date;
     }
 
-    if (sanitized.dateTo && typeof sanitized.dateTo === "string") {
-      const date = new Date(sanitized.dateTo);
-      if (isNaN(date.getTime())) {
-        delete sanitized.dateTo;
-      } else {
-        sanitized.dateTo = date;
-      }
-    }
+    return dateValue;
+  }
 
+  /**
+   * Sanitize enum values
+   *
+   * @param filters - Filters to sanitize
+   */
+  private static sanitizeEnumValues(filters: ActivityRetrievalFilters): void {
     // Validate enum values
     if (
-      sanitized.category &&
-      !Object.values(ActivityCategory).includes(sanitized.category)
+      filters.category &&
+      !Object.values(ActivityCategory).includes(filters.category)
     ) {
-      delete sanitized.category;
+      delete filters.category;
     }
 
     if (
-      sanitized.severity &&
-      !Object.values(ActivitySeverity).includes(sanitized.severity)
+      filters.severity &&
+      !Object.values(ActivitySeverity).includes(filters.severity)
     ) {
-      delete sanitized.severity;
+      delete filters.severity;
     }
 
     if (
-      sanitized.status &&
-      !Object.values(ActivityStatus).includes(sanitized.status)
+      filters.status &&
+      !Object.values(ActivityStatus).includes(filters.status)
     ) {
-      delete sanitized.status;
+      delete filters.status;
     }
-
-    return sanitized;
   }
 
   /**
