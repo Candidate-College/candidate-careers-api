@@ -30,7 +30,8 @@
     "objection-softdelete": "^3.0.1",
     "pg": "^8.15.6",
     "uuid": "^11.1.0",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "dayjs": "^1.11.10"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
