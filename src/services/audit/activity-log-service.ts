@@ -30,9 +30,9 @@ export interface ActivityLogParams {
   resourceId?: number | null;
   resourceUuid?: string | null;
   description: string;
-  oldValues?: any;
-  newValues?: any;
-  metadata?: any;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   ipAddress?: string | null;
   userAgent?: string | null;
   severity?: ActivitySeverity;

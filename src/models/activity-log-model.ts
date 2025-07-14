@@ -23,14 +23,14 @@ export interface ActivityLogData {
   id: number;
   user_id: number | null;
   session_id?: string | null;
-  action: ActivityAction | string;
-  resource_type: ResourceType | string;
+  action: ActivityAction;
+  resource_type: ResourceType;
   resource_id?: number | null;
   resource_uuid?: string | null;
   description: string;
-  old_values?: any | null;
-  new_values?: any | null;
-  metadata?: any | null;
+  old_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
   ip_address?: string | null;
   user_agent?: string | null;
   severity: ActivitySeverity;
@@ -44,10 +44,10 @@ export interface ActivityLogData {
  * Activity Log Model Class
  */
 export class ActivityLog extends Model {
-  static tableName = "activity_logs";
-  static softDelete = false;
+  static readonly tableName = "activity_logs";
+  static readonly softDelete = false;
 
-  static relationMappings = {
+  static readonly relationMappings = {
     user: {
       relation: Model.BelongsToOneRelation,
       modelClass: User,
@@ -167,7 +167,7 @@ export class ActivityLog extends Model {
   private isValidIP(ip: string): boolean {
     // IPv4 regex
     const ipv4Regex =
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
 
     // IPv6 regex (simplified)
     const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;

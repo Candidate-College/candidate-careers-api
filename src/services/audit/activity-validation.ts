@@ -176,7 +176,7 @@ export class ActivityValidation {
   private static isValidIP(ip: string): boolean {
     // IPv4 pattern
     const ipv4Pattern =
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
 
     // IPv6 pattern (simplified)
     const ipv6Pattern = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
@@ -202,7 +202,7 @@ export class ActivityValidation {
    * @param data - Data to validate
    * @returns ValidationResult
    */
-  public static validateJSON(data: any): ValidationResult {
+  public static validateJSON(data: unknown): ValidationResult {
     if (data === null || data === undefined) {
       return { isValid: true };
     }
@@ -232,7 +232,7 @@ export class ActivityValidation {
    * @returns ValidationResult
    */
   public static validateRequiredString(
-    value: any,
+    value: unknown,
     fieldName: string,
     maxLength: number = 255
   ): ValidationResult {
@@ -272,7 +272,7 @@ export class ActivityValidation {
    * @returns ValidationResult
    */
   public static validateOptionalString(
-    value: any,
+    value: unknown,
     fieldName: string,
     maxLength: number = 255
   ): ValidationResult {
@@ -307,7 +307,7 @@ export class ActivityValidation {
    * @returns ValidationResult
    */
   public static validatePositiveInteger(
-    value: any,
+    value: unknown,
     fieldName: string
   ): ValidationResult {
     if (value === null || value === undefined) {
