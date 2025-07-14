@@ -37,7 +37,10 @@ import {
   ActivitySeverity,
   ActivityStatus,
 } from "@/constants/activity-log-constants";
-import { ActivityExportFilters, ActivityExportResult } from "@/interfaces/audit/activity-export";
+import {
+  ActivityExportFilters,
+  ActivityExportResult,
+} from "@/interfaces/audit/activity-export";
 
 // ---------------------------------------------------------------------------
 // Constants & helpers
@@ -92,7 +95,12 @@ export class ActivityExportService {
     filters: ActivityExportFilters = {},
     batchSize: number = DEFAULT_BATCH_SIZE
   ): Promise<ActivityExportResult> {
-    return ActivityExportService.exportGeneric("csv", filters, batchSize, ActivityExportService.rowsToCsvString);
+    return ActivityExportService.exportGeneric(
+      "csv",
+      filters,
+      batchSize,
+      ActivityExportService.rowsToCsvString
+    );
   }
 
   /** Export logs into JSON (newline-delimited for streaming friendliness) */
@@ -100,7 +108,12 @@ export class ActivityExportService {
     filters: ActivityExportFilters = {},
     batchSize: number = DEFAULT_BATCH_SIZE
   ): Promise<ActivityExportResult> {
-    return ActivityExportService.exportGeneric("json", filters, batchSize, ActivityExportService.rowsToNdJsonString);
+    return ActivityExportService.exportGeneric(
+      "json",
+      filters,
+      batchSize,
+      ActivityExportService.rowsToNdJsonString
+    );
   }
 
   /** Export logs into simple XLSX (single sheet) */
@@ -108,7 +121,12 @@ export class ActivityExportService {
     filters: ActivityExportFilters = {},
     batchSize: number = DEFAULT_BATCH_SIZE
   ): Promise<ActivityExportResult> {
-    return ActivityExportService.exportGeneric("xlsx", filters, batchSize, ActivityExportService.rowsToXlsxBuffer);
+    return ActivityExportService.exportGeneric(
+      "xlsx",
+      filters,
+      batchSize,
+      ActivityExportService.rowsToXlsxBuffer
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -122,66 +140,33 @@ export class ActivityExportService {
     serializer: (rows: any[]) => Buffer | string
   ): Promise<ActivityExportResult> {
     const startedAt = Date.now();
-    const isTest = process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
+    const isTest =
+      process.env.NODE_ENV === "test" || !!process.env.JEST_WORKER_ID;
     const temp = isTest ? undefined : tmpFile(format);
 
-    let bufferChunks: Buffer[] = [];
-    let writeStream: fs.WriteStream | undefined;
-    if (!isTest) {
-      // Ensure tmp dir exists
-      fs.mkdirSync(path.dirname(temp!), { recursive: true });
-      writeStream = fs.createWriteStream(temp!);
-    }
+    // Setup file stream or buffer based on environment
+    const { writeStream, bufferChunks } = this.setupOutputStream(isTest, temp);
 
-    // Build base query with filters
-    let query = ActivityLog.query();
-    if (filters.userId) query = query.where("user_id", filters.userId);
-    if (filters.dateFrom) query = query.where("created_at", ">=", filters.dateFrom);
-    if (filters.dateTo) query = query.where("created_at", "<=", filters.dateTo);
-    if (filters.severity) query = query.where("severity", filters.severity);
-    if (filters.category) query = query.where("category", filters.category);
+    // Apply filters and get total count
+    const { query, total } = await this.buildQueryAndCountTotal(filters);
 
-    // Count total for metadata
-    const countRows = await query.clone().count();
-    // Objection count() returns array like [{ count: '123' }]
-    const total = parseInt((Array.isArray(countRows) ? countRows[0].count : (countRows as any).count) || "0");
+    // Stream records in batches
+    await this.processRecordsInBatches(
+      query,
+      batchSize,
+      serializer,
+      isTest,
+      writeStream,
+      bufferChunks
+    );
 
-    // Stream in batches by incremental id cursor for performance
-    let lastId = 0;
-    while (true) {
-      const rows = await query
-        .clone()
-        .where("id", ">", lastId)
-        .orderBy("id", "asc")
-        .limit(batchSize);
-
-      if (rows.length === 0) break;
-
-      lastId = rows[rows.length - 1].id;
-
-      const payload = serializer(rows.map(normaliseRow));
-
-      if (isTest) {
-        const buf = typeof payload === "string" ? Buffer.from(payload) : payload;
-        bufferChunks.push(buf);
-      } else {
-        if (typeof payload === "string") {
-          writeStream!.write(payload);
-        } else {
-          writeStream!.write(payload);
-        }
-      }
-    }
-
-    let buffer: Buffer;
-    if (isTest) {
-      buffer = Buffer.concat(bufferChunks);
-    } else {
-      // Finalise stream
-      await new Promise<void>((resolve) => writeStream!.end(resolve));
-      buffer = fs.readFileSync(temp!);
-      fs.unlink(temp!, () => void 0); // async cleanup
-    }
+    // Finalize output and return result
+    const buffer = await this.finalizeOutput(
+      isTest,
+      writeStream,
+      temp,
+      bufferChunks
+    );
 
     const durationMs = Date.now() - startedAt;
     defaultWinstonLogger.info("Activity export completed", {
@@ -196,6 +181,106 @@ export class ActivityExportService {
       totalRows: total,
       format,
     };
+  }
+
+  /**
+   * Setup the output stream based on environment (test or production)
+   */
+  private static setupOutputStream(isTest: boolean, temp?: string) {
+    const bufferChunks: Buffer[] = [];
+    let writeStream: fs.WriteStream | undefined;
+
+    if (!isTest && temp) {
+      // Ensure tmp dir exists
+      fs.mkdirSync(path.dirname(temp), { recursive: true });
+      writeStream = fs.createWriteStream(temp);
+    }
+
+    return { writeStream, bufferChunks };
+  }
+
+  /**
+   * Build query with filters and count total records
+   */
+  private static async buildQueryAndCountTotal(filters: ActivityExportFilters) {
+    // Build base query with filters
+    let query = ActivityLog.query();
+    if (filters.userId) query = query.where("user_id", filters.userId);
+    if (filters.dateFrom)
+      query = query.where("created_at", ">=", filters.dateFrom);
+    if (filters.dateTo) query = query.where("created_at", "<=", filters.dateTo);
+    if (filters.severity) query = query.where("severity", filters.severity);
+    if (filters.category) query = query.where("category", filters.category);
+
+    // Count total for metadata
+    const countRows = await query.clone().count();
+    // Objection count() returns array like [{ count: '123' }]
+    const count = Array.isArray(countRows)
+      ? countRows[0].count
+      : countRows.count;
+    const total = parseInt(count || "0");
+
+    return { query, total };
+  }
+
+  /**
+   * Process records in batches and write to output
+   */
+  private static async processRecordsInBatches(
+    query: any,
+    batchSize: number,
+    serializer: (rows: any[]) => Buffer | string,
+    isTest: boolean,
+    writeStream?: fs.WriteStream,
+    bufferChunks?: Buffer[]
+  ) {
+    // Stream in batches by incremental id cursor for performance
+    let lastId = 0;
+
+    while (true) {
+      const rows = await query
+        .clone()
+        .where("id", ">", lastId)
+        .orderBy("id", "asc")
+        .limit(batchSize);
+
+      if (rows.length === 0) break;
+
+      lastId = rows[rows.length - 1].id;
+
+      const payload = serializer(rows.map(normaliseRow));
+      const buf = typeof payload === "string" ? Buffer.from(payload) : payload;
+
+      if (isTest) {
+        bufferChunks?.push(buf);
+      } else {
+        writeStream?.write(buf);
+      }
+    }
+  }
+
+  /**
+   * Finalize output and return buffer
+   */
+  private static async finalizeOutput(
+    isTest: boolean,
+    writeStream?: fs.WriteStream,
+    temp?: string,
+    bufferChunks?: Buffer[]
+  ): Promise<Buffer> {
+    if (isTest && bufferChunks) {
+      return Buffer.concat(bufferChunks);
+    }
+
+    // Finalise stream
+    if (writeStream && temp) {
+      await new Promise<void>((resolve) => writeStream.end(resolve));
+      const buffer = fs.readFileSync(temp);
+      fs.unlink(temp, () => void 0); // async cleanup
+      return buffer;
+    }
+
+    return Buffer.alloc(0); // Empty buffer as fallback
   }
 
   // -------------------------------------------------------------------------
