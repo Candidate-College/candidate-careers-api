@@ -62,7 +62,17 @@ export class ActivityLog extends Model {
    * Validate activity log data
    */
   validate(data: Partial<ActivityLogData>): void {
-    // Required field validations
+    this.validateRequiredFields(data);
+    this.validateFieldLengths(data);
+    this.validateEnums(data);
+    this.validateSpecialFormats(data);
+    this.validateDataTypes(data);
+  }
+
+  /**
+   * Validate required fields
+   */
+  private validateRequiredFields(data: Partial<ActivityLogData>): void {
     if (!data.action) {
       throw new Error("Action is required");
     }
@@ -75,8 +85,12 @@ export class ActivityLog extends Model {
     if (!data.category) {
       throw new Error("Category is required");
     }
+  }
 
-    // Field length validations
+  /**
+   * Validate field lengths
+   */
+  private validateFieldLengths(data: Partial<ActivityLogData>): void {
     if (data.action && data.action.length > 100) {
       throw new Error("Action must not exceed 100 characters");
     }
@@ -86,8 +100,12 @@ export class ActivityLog extends Model {
     if (data.ip_address && data.ip_address.length > 45) {
       throw new Error("IP address must not exceed 45 characters");
     }
+  }
 
-    // Enum validations
+  /**
+   * Validate enum values
+   */
+  private validateEnums(data: Partial<ActivityLogData>): void {
     if (
       data.severity &&
       !Object.values(ActivitySeverity).includes(data.severity)
@@ -103,10 +121,20 @@ export class ActivityLog extends Model {
     if (data.status && !Object.values(ActivityStatus).includes(data.status)) {
       throw new Error("Invalid status value");
     }
+  }
 
+  /**
+   * Validate special formats
+   */
+  private validateSpecialFormats(data: Partial<ActivityLogData>): void {
     // IP address format validation
     if (data.ip_address && !this.isValidIP(data.ip_address)) {
       throw new Error("Invalid IP address format");
+    }
+
+    // UUID format validation
+    if (data.resource_uuid && !this.isValidUUID(data.resource_uuid)) {
+      throw new Error("Invalid UUID format");
     }
 
     // Resource ID validation
@@ -117,12 +145,12 @@ export class ActivityLog extends Model {
     ) {
       throw new Error("Resource ID must be positive");
     }
+  }
 
-    // UUID format validation
-    if (data.resource_uuid && !this.isValidUUID(data.resource_uuid)) {
-      throw new Error("Invalid UUID format");
-    }
-
+  /**
+   * Validate data types
+   */
+  private validateDataTypes(data: Partial<ActivityLogData>): void {
     // JSON field validation
     if (data.old_values && typeof data.old_values === "string") {
       throw new Error("old_values must be a valid JSON object");
@@ -165,14 +193,35 @@ export class ActivityLog extends Model {
    * Validate IP address format (IPv4 and IPv6)
    */
   private isValidIP(ip: string): boolean {
-    // IPv4 regex
-    const ipv4Regex =
-      /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
+    return this.isValidIPv4(ip) || this.isValidIPv6(ip);
+  }
 
-    // IPv6 regex (simplified)
-    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+  /**
+   * Validate IPv4 format
+   */
+  private isValidIPv4(ip: string): boolean {
+    // Simplified IPv4 regex with less complexity
+    const ipv4Part = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+    const parts = ip.split(".");
 
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+    if (parts.length !== 4) {
+      return false;
+    }
+
+    return parts.every((part) => ipv4Part.test(part));
+  }
+
+  /**
+   * Validate IPv6 format
+   */
+  private isValidIPv6(ip: string): boolean {
+    // Simplified IPv6 check
+    if (ip === "::1" || ip === "::") {
+      return true;
+    }
+
+    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    return ipv6Regex.test(ip);
   }
 
   /**
