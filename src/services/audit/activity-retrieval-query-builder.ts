@@ -8,10 +8,10 @@
  */
 
 import { ActivityLog } from "@/models/activity-log-model";
-import { QueryBuilder } from "objection";
+import { QueryBuilder, Model } from "objection";
 import { ActivityRetrievalFilters } from "./activity-retrieval-filters";
 
-const Model = require("@/config/database/orm");
+const BaseModel = require("@/config/database/orm");
 
 /**
  * Activity Retrieval Query Builder Utility Class
@@ -56,9 +56,9 @@ export class ActivityRetrievalQueryBuilder {
    * @returns Modified query builder
    */
   public static applyFilters(
-    query: QueryBuilder<ActivityLog>,
+    query: any,
     filters: ActivityRetrievalFilters
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     if (filters.userId !== undefined && filters.userId !== null) {
       query = query.where("user_id", filters.userId);
     }
@@ -75,12 +75,8 @@ export class ActivityRetrievalQueryBuilder {
       query = query.where("resource_type", filters.resourceType);
     }
 
-    if (filters.resourceId !== undefined && filters.resourceId !== null) {
+    if (filters.resourceId) {
       query = query.where("resource_id", filters.resourceId);
-    }
-
-    if (filters.resourceUuid) {
-      query = query.where("resource_uuid", filters.resourceUuid);
     }
 
     if (filters.category) {
@@ -111,19 +107,16 @@ export class ActivityRetrievalQueryBuilder {
   }
 
   /**
-   * Apply search to query with full-text search
+   * Apply full-text search to query
    *
    * @param query - Query builder instance
    * @param searchTerm - Search term
    * @returns Modified query builder
    */
-  public static applySearch(
-    query: QueryBuilder<ActivityLog>,
-    searchTerm: string
-  ): QueryBuilder<ActivityLog> {
+  public static applySearch(query: any, searchTerm: string): any {
     const term = `%${searchTerm.toLowerCase()}%`;
 
-    return query.where((builder) => {
+    return query.where((builder: any) => {
       builder
         .whereRaw("LOWER(description) LIKE ?", [term])
         .orWhereRaw("LOWER(action) LIKE ?", [term])
@@ -138,15 +131,15 @@ export class ActivityRetrievalQueryBuilder {
    * Apply sorting to query
    *
    * @param query - Query builder instance
-   * @param sortBy - Sort field
+   * @param sortBy - Sort column
    * @param sortOrder - Sort order
    * @returns Modified query builder
    */
   public static applySorting(
-    query: QueryBuilder<ActivityLog>,
+    query: any,
     sortBy: string = "created_at",
     sortOrder: "asc" | "desc" = "desc"
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     return query.orderBy(sortBy, sortOrder);
   }
 
@@ -155,29 +148,25 @@ export class ActivityRetrievalQueryBuilder {
    *
    * @param query - Query builder instance
    * @param page - Page number
-   * @param limit - Items per page
+   * @param limit - Records per page
    * @returns Modified query builder
    */
-  public static applyPagination(
-    query: QueryBuilder<ActivityLog>,
-    page: number,
-    limit: number
-  ): QueryBuilder<ActivityLog> {
+  public static applyPagination(query: any, page: number, limit: number): any {
     const offset = (page - 1) * limit;
-    return query.offset(offset).limit(limit);
+    return query.limit(limit).offset(offset);
   }
 
   /**
-   * Build query for finding specific activity by ID
+   * Build query for single activity
    *
    * @param id - Activity ID
-   * @param includeUser - Whether to include user relationship
+   * @param includeUser - Include user relationship
    * @returns Query builder for single activity
    */
   public static buildSingleActivityQuery(
     id: number,
     includeUser: boolean = true
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     let query = ActivityLog.query().findById(id);
 
     if (includeUser) {
@@ -197,47 +186,68 @@ export class ActivityRetrievalQueryBuilder {
   public static buildUserActivityQuery(
     userId: number,
     filters: ActivityRetrievalFilters
-  ): QueryBuilder<ActivityLog> {
-    const userFilters: ActivityRetrievalFilters = {
-      ...filters,
-      userId,
-      includeUser: true,
-    };
+  ): any {
+    let query = ActivityLog.query().where("user_id", userId);
 
-    return this.buildQuery(userFilters);
+    // Apply additional filters
+    query = this.applyFilters(query, filters);
+
+    // Apply search if provided
+    if (filters.search) {
+      query = this.applySearch(query, filters.search);
+    }
+
+    // Apply sorting
+    query = this.applySorting(query, filters.sortBy, filters.sortOrder);
+
+    // Include user relationship if requested
+    if (filters.includeUser) {
+      query = query.withGraphFetched("user");
+    }
+
+    return query;
   }
 
   /**
-   * Build search query with advanced search capabilities
+   * Build query for search operations
    *
    * @param searchTerm - Search term
    * @param filters - Additional filters
-   * @returns Query builder for search results
+   * @returns Query builder for search
    */
   public static buildSearchQuery(
     searchTerm: string,
     filters: ActivityRetrievalFilters
-  ): QueryBuilder<ActivityLog> {
-    const searchFilters: ActivityRetrievalFilters = {
-      ...filters,
-      search: searchTerm.trim(),
-    };
+  ): any {
+    let query = ActivityLog.query();
 
-    return this.buildQuery(searchFilters);
+    // Apply search first
+    query = this.applySearch(query, searchTerm);
+
+    // Apply additional filters
+    query = this.applyFilters(query, filters);
+
+    // Apply sorting
+    query = this.applySorting(query, filters.sortBy, filters.sortOrder);
+
+    // Include user relationship if requested
+    if (filters.includeUser) {
+      query = query.withGraphFetched("user");
+    }
+
+    return query;
   }
 
   /**
-   * Build count query for pagination
+   * Build query for count operations
    *
-   * @param filters - Filters to apply
-   * @returns Query builder for counting records
+   * @param filters - Validated filters
+   * @returns Query builder for count
    */
-  public static buildCountQuery(
-    filters: ActivityRetrievalFilters
-  ): QueryBuilder<ActivityLog> {
+  public static buildCountQuery(filters: ActivityRetrievalFilters): any {
     let query = ActivityLog.query();
 
-    // Apply filters (excluding pagination, sorting, and user inclusion)
+    // Apply filters
     query = this.applyFilters(query, filters);
 
     // Apply search if provided
@@ -249,17 +259,15 @@ export class ActivityRetrievalQueryBuilder {
   }
 
   /**
-   * Build query for activity statistics
+   * Build query for statistics operations
    *
-   * @param filters - Filters to apply
+   * @param filters - Validated filters
    * @returns Query builder for statistics
    */
-  public static buildStatisticsQuery(
-    filters: ActivityRetrievalFilters
-  ): QueryBuilder<ActivityLog> {
+  public static buildStatisticsQuery(filters: ActivityRetrievalFilters): any {
     let query = ActivityLog.query();
 
-    // Apply filters (excluding pagination, sorting, and user inclusion)
+    // Apply filters
     query = this.applyFilters(query, filters);
 
     // Apply search if provided
@@ -273,14 +281,14 @@ export class ActivityRetrievalQueryBuilder {
   /**
    * Build query for recent activities
    *
-   * @param limit - Number of recent activities to fetch
-   * @param includeUser - Whether to include user relationship
+   * @param limit - Number of activities to retrieve
+   * @param includeUser - Include user relationship
    * @returns Query builder for recent activities
    */
   public static buildRecentActivitiesQuery(
     limit: number = 10,
     includeUser: boolean = true
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     let query = ActivityLog.query().orderBy("created_at", "desc").limit(limit);
 
     if (includeUser) {
@@ -291,18 +299,18 @@ export class ActivityRetrievalQueryBuilder {
   }
 
   /**
-   * Build query for activities within date range
+   * Build query for date range activities
    *
    * @param dateFrom - Start date
    * @param dateTo - End date
-   * @param includeUser - Whether to include user relationship
-   * @returns Query builder for date range activities
+   * @param includeUser - Include user relationship
+   * @returns Query builder for date range
    */
   public static buildDateRangeQuery(
     dateFrom: Date,
     dateTo: Date,
     includeUser: boolean = true
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     let query = ActivityLog.query()
       .where("created_at", ">=", dateFrom)
       .where("created_at", "<=", dateTo)
@@ -316,16 +324,16 @@ export class ActivityRetrievalQueryBuilder {
   }
 
   /**
-   * Build query for activities by category
+   * Build query for category-based activities
    *
    * @param category - Activity category
-   * @param includeUser - Whether to include user relationship
-   * @returns Query builder for category activities
+   * @param includeUser - Include user relationship
+   * @returns Query builder for category
    */
   public static buildCategoryQuery(
     category: string,
     includeUser: boolean = true
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     let query = ActivityLog.query()
       .where("category", category)
       .orderBy("created_at", "desc");
@@ -338,16 +346,16 @@ export class ActivityRetrievalQueryBuilder {
   }
 
   /**
-   * Build query for activities by severity
+   * Build query for severity-based activities
    *
    * @param severity - Activity severity
-   * @param includeUser - Whether to include user relationship
-   * @returns Query builder for severity activities
+   * @param includeUser - Include user relationship
+   * @returns Query builder for severity
    */
   public static buildSeverityQuery(
     severity: string,
     includeUser: boolean = true
-  ): QueryBuilder<ActivityLog> {
+  ): any {
     let query = ActivityLog.query()
       .where("severity", severity)
       .orderBy("created_at", "desc");
