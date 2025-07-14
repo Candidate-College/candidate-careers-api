@@ -7,7 +7,7 @@
  * @module services/audit/activity-retrieval-service
  */
 
-import { ActivityLogData } from "@/models/activity-log-model";
+import { ActivityLog } from "@/models/activity-log-model";
 import { defaultWinstonLogger } from "@/utilities/winston-logger";
 import { ActivityRetrievalFilters } from "./activity-retrieval-filters";
 import { ActivityRetrievalQueryBuilder } from "./activity-retrieval-query-builder";
@@ -20,7 +20,7 @@ export { ActivityRetrievalFilters } from "./activity-retrieval-filters";
  */
 export interface ActivityRetrievalResult {
   success: boolean;
-  data?: ActivityLogData[];
+  data?: ActivityLog[];
   pagination?: {
     page: number;
     limit: number;
@@ -38,7 +38,7 @@ export interface ActivityRetrievalResult {
  */
 export interface SingleActivityResult {
   success: boolean;
-  data?: ActivityLogData;
+  data?: ActivityLog;
   error?: string;
   message?: string;
 }
@@ -102,7 +102,7 @@ export class ActivityRetrievalService {
         hasPrevious,
       };
 
-      await defaultWinstonLogger.info("Activity logs retrieved successfully", {
+      defaultWinstonLogger.info("Activity logs retrieved successfully", {
         filters: validatedFilters,
         resultCount: activities.length,
         pagination,
@@ -115,14 +115,16 @@ export class ActivityRetrievalService {
         message: `Retrieved ${activities.length} activity logs`,
       };
     } catch (error) {
-      await defaultWinstonLogger.error("Failed to retrieve activity logs", {
-        error: error.message,
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      defaultWinstonLogger.error("Failed to retrieve activity logs", {
+        error: errorMessage,
         filters,
       });
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to retrieve activity logs",
       };
     }
@@ -179,7 +181,7 @@ export class ActivityRetrievalService {
         hasPrevious: page > 1,
       };
 
-      await defaultWinstonLogger.info(
+      defaultWinstonLogger.info(
         "User activity history retrieved successfully",
         {
           userId,
@@ -194,18 +196,17 @@ export class ActivityRetrievalService {
         message: `Retrieved ${activities.length} user activities`,
       };
     } catch (error) {
-      await defaultWinstonLogger.error(
-        "Failed to retrieve user activity history",
-        {
-          error: error.message,
-          userId,
-          filters,
-        }
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      defaultWinstonLogger.error("Failed to retrieve user activity history", {
+        error: errorMessage,
+        userId,
+        filters,
+      });
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to retrieve user activity history",
       };
     }
@@ -235,7 +236,8 @@ export class ActivityRetrievalService {
         id,
         includeUser
       );
-      const activity = await query;
+      const result = await query;
+      const activity = Array.isArray(result) ? result[0] : result;
 
       if (!activity) {
         return {
@@ -245,7 +247,7 @@ export class ActivityRetrievalService {
         };
       }
 
-      await defaultWinstonLogger.info("Activity retrieved successfully", {
+      defaultWinstonLogger.info("Activity retrieved successfully", {
         activityId: id,
         includeUser,
       });
@@ -256,14 +258,16 @@ export class ActivityRetrievalService {
         message: "Activity retrieved successfully",
       };
     } catch (error) {
-      await defaultWinstonLogger.error("Failed to retrieve activity", {
-        error: error.message,
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      defaultWinstonLogger.error("Failed to retrieve activity", {
+        error: errorMessage,
         activityId: id,
       });
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to retrieve activity",
       };
     }
@@ -323,13 +327,10 @@ export class ActivityRetrievalService {
         hasPrevious: page > 1,
       };
 
-      await defaultWinstonLogger.info(
-        "Activity search completed successfully",
-        {
-          searchTerm: sanitizedSearch,
-          resultCount: activities.length,
-        }
-      );
+      defaultWinstonLogger.info("Activity search completed successfully", {
+        searchTerm: sanitizedSearch,
+        resultCount: activities.length,
+      });
 
       return {
         success: true,
@@ -338,15 +339,17 @@ export class ActivityRetrievalService {
         message: `Found ${activities.length} activities matching search`,
       };
     } catch (error) {
-      await defaultWinstonLogger.error("Failed to search activities", {
-        error: error.message,
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      defaultWinstonLogger.error("Failed to search activities", {
+        error: errorMessage,
         searchTerm,
         filters,
       });
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to search activities",
       };
     }
@@ -370,13 +373,10 @@ export class ActivityRetrievalService {
       );
       const activities = await query;
 
-      await defaultWinstonLogger.info(
-        "Recent activities retrieved successfully",
-        {
-          limit,
-          resultCount: activities.length,
-        }
-      );
+      defaultWinstonLogger.info("Recent activities retrieved successfully", {
+        limit,
+        resultCount: activities.length,
+      });
 
       return {
         success: true,
@@ -384,14 +384,16 @@ export class ActivityRetrievalService {
         message: `Retrieved ${activities.length} recent activities`,
       };
     } catch (error) {
-      await defaultWinstonLogger.error("Failed to retrieve recent activities", {
-        error: error.message,
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      defaultWinstonLogger.error("Failed to retrieve recent activities", {
+        error: errorMessage,
         limit,
       });
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to retrieve recent activities",
       };
     }
