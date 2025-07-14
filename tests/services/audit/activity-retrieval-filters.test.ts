@@ -5,12 +5,12 @@
  * covering validation, sanitization, and helper methods.
  */
 
-import { ActivityRetrievalFilters } from "@/services/audit/activity-retrieval-filters";
+import { ActivityRetrievalFilters } from "../../../src/services/audit/activity-retrieval-filters";
 import {
   ActivitySeverity,
   ActivityCategory,
   ActivityStatus,
-} from "@/constants/activity-log-constants";
+} from "../../../src/constants/activity-log-constants";
 
 describe("ActivityRetrievalFilters", () => {
   describe("validateAndSanitize", () => {
