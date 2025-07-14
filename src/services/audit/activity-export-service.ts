@@ -209,9 +209,13 @@ export class ActivityExportService {
     for (const row of rows) {
       const line = headers
         .map((h) => {
-          const value = row[h];
-          // Escape quotes & commas
+          let value = row[h];
+          // Escape quotes & commas and neutralise potential formula injection
           if (typeof value === "string") {
+            // Neutralise Excel/Sheets formula injection
+            if (/^[=+\-@]/.test(value)) {
+              value = "'" + value; // Prefix with apostrophe
+            }
             return `"${value.replace(/"/g, '""')}"`;
           }
           return value ?? "";

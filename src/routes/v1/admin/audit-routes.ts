@@ -15,6 +15,8 @@ const { requireRole } = require('@/middlewares/role-middleware');
 const validate = require('@/middlewares/request-validation-middleware');
 const fields = require('@/validators/audit-validator');
 const auditController = require('@/controllers/audit-controller');
+const auditExportController = require('@/controllers/audit-export-controller');
+const { generalRateLimit } = require('@/middlewares/rateLimiter');
 
 // Require authentication + Super-Admin role for everything below
 router.use(accessToken, requireRole('super_admin'));
@@ -29,5 +31,9 @@ router.get('/users/:uuid/activity', validate(fields, { only: 'param' }), auditCo
 router.get('/statistics', validate(fields, { only: 'query' }), auditController.getStatistics);
 // GET /admin/audit/dashboard
 router.get('/dashboard', auditController.getDashboard);
+// POST /admin/audit/export
+router.post('/export', generalRateLimit, auditExportController.exportLogs);
+// GET /admin/audit/stream
+router.get('/stream', generalRateLimit, auditExportController.streamLogs);
 
 module.exports = router;
