@@ -14,8 +14,11 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csv-writer": "^1.6.0",
+    "dayjs": "^1.11.10",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.1",
@@ -23,15 +26,17 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
+    "lodash": "^4.17.21",
     "mailtrap": "^4.1.0",
     "multer": "1.4.5-lts.2",
+    "node-cron": "^4.2.1",
     "nodemailer": "^6.10.1",
     "objection": "^3.1.5",
     "objection-softdelete": "^3.0.1",
     "pg": "^8.15.6",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
-    "dayjs": "^1.11.10"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
