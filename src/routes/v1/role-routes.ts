@@ -13,6 +13,8 @@ import { RoleController } from '@/controllers/role-controller';
 import { authorize } from '@/middlewares/authorization/authorize';
 
 const router = Router();
+// Nested permissions routes
+router.use('/:id/permissions', require('./role-permission-routes'));
 
 // List roles (view permission)
 router.get('/', authorize('roles.view'), RoleController.list);
