@@ -8,6 +8,7 @@ const apiRoutes = require('@/routes');
 const corsOptions = require('@/config/cors');
 const logger = require('@/utilities/logger');
 const responseMiddleware = require('@/middlewares/response-middleware');
+const { activityLogger } = require('@/middlewares/activity-logger');
 
 const app = express();
 const upload = multer();
@@ -18,6 +19,7 @@ app.use(cookie());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.any());
+app.use(activityLogger());
 app.use(responseMiddleware);
 app.use('/api', apiRoutes);
 
