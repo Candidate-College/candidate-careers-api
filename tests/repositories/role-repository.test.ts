@@ -9,7 +9,7 @@ jest.mock('@/utilities/pagination');
 
 // Build a fake query builder that just returns itself for chaining
 // @ts-nocheck
-var fakeQb: any;
+let fakeQb: any;
 
 jest.mock('@/models/role-model', () => {
   const qb = {

@@ -24,7 +24,7 @@ import { AssignRoleResult, RevokeRoleResult } from '@/interfaces/rbac/role-permi
 
 export class RolePermissionService {
   /** Protected roles that cannot be removed from users */
-  private static PROTECTED_ROLE_SLUGS = ['super_admin'];
+  private static readonly PROTECTED_ROLE_SLUGS = ['super_admin'];
 
   /**
    * Assign a role to a user. Idempotent – attempting to assign a role the user

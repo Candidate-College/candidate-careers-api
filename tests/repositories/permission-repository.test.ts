@@ -8,7 +8,7 @@ import { paginate } from '@/utilities/pagination';
 jest.mock('@/utilities/pagination');
 
 // @ts-nocheck
-var fakeQb: any;
+let fakeQb: any;
 
 jest.mock('@/models/permission-model', () => {
   const qb = {
