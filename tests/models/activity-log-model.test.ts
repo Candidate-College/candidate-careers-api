@@ -17,21 +17,32 @@ import {
   ActivityStatus,
   AUTHENTICATION_ACTIONS,
   RESOURCE_TYPES,
-  ActivityAction,
-  ResourceType,
   SYSTEM_ACTIONS,
 } from "../../src/constants/activity-log-constants";
+
+// Prepare valid IP addresses and invalid IP addresses for testing
+const validIPs = ["192.168.1.1", "10.0.0.1", "127.0.0.1", "::1"];
+const invalidIPs = ["999.999.999.999", "invalid-ip", "192.168.1"];
 
 // Mock the ORM
 jest.mock("../../src/config/database/orm", () => {
   return class MockModel {
-    static tableName = "";
-    static softDelete = false;
-    static relationMappings: any = {};
-    static BelongsToOneRelation = "BelongsToOneRelation";
+    static readonly tableName = "";
+    static readonly softDelete = false;
+    static readonly relationMappings: any = {};
+    static readonly BelongsToOneRelation = "BelongsToOneRelation";
 
-    validate() {}
-    serialize() {}
+    // Empty validate method - implementation not needed for testing
+    validate() {
+      // This is intentionally empty as it's just a mock
+      // The actual implementation will be provided by the test spies
+    }
+
+    // Empty serialize method - implementation not needed for testing
+    serialize() {
+      // This is intentionally empty as it's just a mock
+      // The actual implementation will be provided by the test spies
+    }
   };
 });
 
@@ -97,70 +108,22 @@ describe("ActivityLog Model", () => {
 
     it("should validate enum values for severity", () => {
       const log = new ActivityLog();
-
-      // Valid severity values should pass
-      Object.values(ActivitySeverity).forEach((severity) => {
-        expect(() =>
-          log.validate({ ...validActivityData, severity })
-        ).not.toThrow();
-      });
-
-      // Invalid severity should fail
-      expect(() =>
-        log.validate({ ...validActivityData, severity: "invalid" as any })
-      ).toThrow();
+      testEnumValues(log, "severity", ActivitySeverity, validActivityData);
     });
 
     it("should validate enum values for category", () => {
       const log = new ActivityLog();
-
-      // Valid category values should pass
-      Object.values(ActivityCategory).forEach((category) => {
-        expect(() =>
-          log.validate({ ...validActivityData, category })
-        ).not.toThrow();
-      });
-
-      // Invalid category should fail
-      expect(() =>
-        log.validate({ ...validActivityData, category: "invalid" as any })
-      ).toThrow();
+      testEnumValues(log, "category", ActivityCategory, validActivityData);
     });
 
     it("should validate enum values for status", () => {
       const log = new ActivityLog();
-
-      // Valid status values should pass
-      Object.values(ActivityStatus).forEach((status) => {
-        expect(() =>
-          log.validate({ ...validActivityData, status })
-        ).not.toThrow();
-      });
-
-      // Invalid status should fail
-      expect(() =>
-        log.validate({ ...validActivityData, status: "invalid" as any })
-      ).toThrow();
+      testEnumValues(log, "status", ActivityStatus, validActivityData);
     });
 
     it("should validate IP address format", () => {
       const log = new ActivityLog();
-
-      // Valid IP addresses
-      const validIPs = ["192.168.1.1", "10.0.0.1", "127.0.0.1", "::1"];
-      validIPs.forEach((ip) => {
-        expect(() =>
-          log.validate({ ...validActivityData, ip_address: ip })
-        ).not.toThrow();
-      });
-
-      // Invalid IP addresses
-      const invalidIPs = ["999.999.999.999", "invalid-ip", "192.168.1"];
-      invalidIPs.forEach((ip) => {
-        expect(() =>
-          log.validate({ ...validActivityData, ip_address: ip })
-        ).toThrow();
-      });
+      testIPAddresses(log, validActivityData);
     });
 
     it("should validate JSON fields", () => {
@@ -407,3 +370,43 @@ describe("ActivityLog Model", () => {
     });
   });
 });
+
+/**
+ * Helper function to test enum validation
+ */
+function testEnumValues(
+  log: ActivityLog,
+  fieldName: string,
+  enumObject: any,
+  validData: Partial<ActivityLogData>
+): void {
+  // Valid enum values should pass
+  Object.values(enumObject).forEach((value) => {
+    expect(() =>
+      log.validate({ ...validData, [fieldName]: value })
+    ).not.toThrow();
+  });
+
+  // Invalid value should fail
+  expect(() =>
+    log.validate({ ...validData, [fieldName]: "invalid" as any })
+  ).toThrow();
+}
+
+/**
+ * Helper function to test IP address validation
+ */
+function testIPAddresses(
+  log: ActivityLog,
+  validData: Partial<ActivityLogData>
+): void {
+  // Test valid IP addresses
+  validIPs.forEach((ip) => {
+    expect(() => log.validate({ ...validData, ip_address: ip })).not.toThrow();
+  });
+
+  // Test invalid IP addresses
+  invalidIPs.forEach((ip) => {
+    expect(() => log.validate({ ...validData, ip_address: ip })).toThrow();
+  });
+}
