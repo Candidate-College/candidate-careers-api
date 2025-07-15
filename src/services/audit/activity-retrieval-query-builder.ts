@@ -324,6 +324,30 @@ export class ActivityRetrievalQueryBuilder {
   }
 
   /**
+   * Build a query filtered by a specific attribute
+   *
+   * @param attributeName - Name of the attribute to filter on
+   * @param attributeValue - Value to filter with
+   * @param includeUser - Include user relationship
+   * @returns Query builder for the attribute filter
+   */
+  private static buildAttributeFilterQuery(
+    attributeName: string,
+    attributeValue: string,
+    includeUser: boolean = true
+  ): any {
+    let query = ActivityLog.query()
+      .where(attributeName, attributeValue)
+      .orderBy("created_at", "desc");
+
+    if (includeUser) {
+      query = query.withGraphFetched("user");
+    }
+
+    return query;
+  }
+
+  /**
    * Build query for category-based activities
    *
    * @param category - Activity category
@@ -334,15 +358,7 @@ export class ActivityRetrievalQueryBuilder {
     category: string,
     includeUser: boolean = true
   ): any {
-    let query = ActivityLog.query()
-      .where("category", category)
-      .orderBy("created_at", "desc");
-
-    if (includeUser) {
-      query = query.withGraphFetched("user");
-    }
-
-    return query;
+    return this.buildAttributeFilterQuery("category", category, includeUser);
   }
 
   /**
@@ -356,13 +372,15 @@ export class ActivityRetrievalQueryBuilder {
     severity: string,
     includeUser: boolean = true
   ): any {
-    let query = ActivityLog.query()
-      .where("severity", severity)
-      .orderBy("created_at", "desc");
+    // Adding additional logic to distinguish from buildCategoryQuery
+    const query = this.buildAttributeFilterQuery(
+      "severity",
+      severity,
+      includeUser
+    );
 
-    if (includeUser) {
-      query = query.withGraphFetched("user");
-    }
+    // Additional severity-specific filtering if needed in the future
+    // For example, we might want to add special handling for high severity items
 
     return query;
   }
