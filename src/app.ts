@@ -8,6 +8,7 @@ const apiRoutes = require('@/routes');
 const corsOptions = require('@/config/cors');
 const logger = require('@/utilities/logger');
 const responseMiddleware = require('@/middlewares/response-middleware');
+const { authorize } = require('@/middlewares/authorization/authorize');
 const { activityLogger } = require('@/middlewares/activity-logger');
 
 const app = express();
@@ -21,7 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(upload.any());
 app.use(activityLogger());
 app.use(responseMiddleware);
-app.use('/api', apiRoutes);
+// Authorization middleware applied to all /api routes
+app.use('/api', authorize('*'), apiRoutes);
 
 app.listen(port, logger.log(`Server is running on port ${port}`));
 

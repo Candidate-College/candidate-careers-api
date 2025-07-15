@@ -1,7 +1,7 @@
 {
-  "name": "express-typescript-boilerplate",
+  "name": "candidate-college-career-api",
   "version": "1.0.0",
-  "description": "A boilerplate code of JSON REST API for common backend application.",
+  "description": "Candidate College Career API",
   "main": "src/app.ts",
   "scripts": {
     "start": "node dist/app.js",
