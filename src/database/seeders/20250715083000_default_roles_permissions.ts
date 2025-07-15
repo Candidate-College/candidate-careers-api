@@ -10,12 +10,8 @@
  */
 
 import type { Knex } from 'knex';
-
-interface SeedRole {
-  name: string;
-  display_name: string;
-  description?: string;
-}
+import { DEFAULT_ROLES, getDefaultRolePermissions, DefaultRoleKey } from '@/config/rbac/default-roles';
+import { SYSTEM_PERMISSIONS } from '@/config/rbac/system-permissions';
 
 interface SeedPermission {
   name: string;
@@ -23,38 +19,22 @@ interface SeedPermission {
   description?: string;
 }
 
-const roles: SeedRole[] = [
-  {
-    name: 'super_admin',
-    display_name: 'Super Administrator',
-    description: 'Full system access with elevated privileges.',
-  },
-  {
-    name: 'recruiter',
-    display_name: 'Recruiter',
-    description: 'Manage job postings and candidate applications.',
-  },
-  {
-    name: 'candidate',
-    display_name: 'Candidate',
-    description: 'Standard user applying for jobs.',
-  },
-];
-
-import { SYSTEM_PERMISSIONS } from '@/config/rbac/system-permissions';
+const roles = Object.entries(DEFAULT_ROLES).map(([name, cfg]) => ({
+  name,
+  display_name: cfg.display_name,
+  description: cfg.description,
+}));
 
 const permissions: SeedPermission[] = Object.entries(SYSTEM_PERMISSIONS).map(([name, display_name]) => ({ name, display_name }));
 
 // Helper: build many-to-many mapping
 function buildRolePermissions(): Array<{ role_name: string; perm_name: string }> {
-  return [
-    // Super admin gets all permissions
-    ...permissions.map((p) => ({ role_name: 'super_admin', perm_name: p.name })),
-    // Recruiter job permissions
-    { role_name: 'recruiter', perm_name: 'jobs.create' },
-    { role_name: 'recruiter', perm_name: 'jobs.update' },
-    { role_name: 'recruiter', perm_name: 'jobs.delete' },
-  ];
+  const mappings: Array<{ role_name: string; perm_name: string }> = [];
+  (Object.keys(DEFAULT_ROLES) as DefaultRoleKey[]).forEach((role) => {
+    const perms = getDefaultRolePermissions(role);
+    perms.forEach((perm) => mappings.push({ role_name: role, perm_name: perm }));
+  });
+  return mappings;
 }
 
 export async function seed(knex: Knex): Promise<void> {
