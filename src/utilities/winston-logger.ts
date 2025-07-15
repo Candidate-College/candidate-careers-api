@@ -6,7 +6,7 @@
  */
 
 import winston from "winston";
-import { createLoggerConfig, defaultLogger } from "@/config/logger";
+import { defaultLogger } from "@/config/logger";
 
 /**
  * Logging metadata interface for structured logging
@@ -23,11 +23,16 @@ export interface LogMetadata {
 }
 
 /**
+ * Log level type
+ */
+export type LogLevel = "info" | "warn" | "error";
+
+/**
  * Winston Logger Wrapper Class
  */
 export class WinstonLogger {
-  private logger: winston.Logger;
-  private fallbackEnabled: boolean;
+  private readonly logger: winston.Logger;
+  private readonly fallbackEnabled: boolean;
 
   constructor(config?: winston.LoggerOptions) {
     this.fallbackEnabled = true;
@@ -123,7 +128,7 @@ export class WinstonLogger {
    */
   batchLog(
     entries: Array<{
-      level: "info" | "warn" | "error";
+      level: LogLevel;
       message: string;
       metadata?: LogMetadata;
     }>
@@ -136,7 +141,7 @@ export class WinstonLogger {
   /**
    * Configure logger level dynamically
    */
-  setLevel(level: "info" | "warn" | "error"): void {
+  setLevel(level: LogLevel): void {
     try {
       this.logger.level = level;
     } catch (error) {
@@ -160,7 +165,7 @@ export class WinstonLogger {
    * Safe logging with error handling
    */
   private logSafely(
-    level: "info" | "warn" | "error",
+    level: LogLevel,
     message: string,
     metadata?: LogMetadata
   ): void {
@@ -169,7 +174,14 @@ export class WinstonLogger {
       this.logger[level](message, sanitizedMetadata);
     } catch (error) {
       if (this.fallbackEnabled) {
-        this.fallbackToConsole(level, message, metadata);
+        try {
+          this.fallbackToConsole(level, message, metadata);
+        } catch (fallbackError) {
+          console.error("Critical logging failure with fallback:", message, {
+            originalError: error,
+            fallbackError,
+          });
+        }
       }
     }
   }
@@ -178,7 +190,7 @@ export class WinstonLogger {
    * Async logging implementation
    */
   private async logAsync(
-    level: "info" | "warn" | "error",
+    level: LogLevel,
     message: string,
     metadata?: LogMetadata
   ): Promise<void> {
@@ -190,7 +202,14 @@ export class WinstonLogger {
         });
       } catch (error) {
         if (this.fallbackEnabled) {
-          this.fallbackToConsole(level, message, metadata);
+          try {
+            this.fallbackToConsole(level, message, metadata);
+          } catch (fallbackError) {
+            console.error("Critical async logging failure:", message, {
+              originalError: error,
+              fallbackError,
+            });
+          }
         }
         resolve();
       }
@@ -208,7 +227,12 @@ export class WinstonLogger {
       JSON.stringify(metadata);
       return metadata;
     } catch (error) {
-      // Remove circular references and problematic properties
+      // Handle the error by removing circular references
+      this.fallbackToConsole(
+        "warn",
+        "Metadata contains circular references, sanitizing",
+        { error }
+      );
       return this.removeCircularReferences(metadata);
     }
   }
@@ -236,6 +260,10 @@ export class WinstonLogger {
       try {
         cleaned[key] = this.removeCircularReferences(value, seen);
       } catch (error) {
+        // Log the specific property that couldn't be processed
+        this.fallbackToConsole("warn", `Could not process property: ${key}`, {
+          error,
+        });
         cleaned[key] = "[Unserializable]";
       }
     }
@@ -247,32 +275,45 @@ export class WinstonLogger {
    * Serialize error object safely
    */
   private serializeError(error: Error): object {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      ...Object.getOwnPropertyNames(error).reduce((acc, key) => {
-        acc[key] = (error as any)[key];
-        return acc;
-      }, {} as any),
-    };
+    try {
+      return {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        ...Object.getOwnPropertyNames(error).reduce((acc, key) => {
+          acc[key] = (error as any)[key];
+          return acc;
+        }, {} as any),
+      };
+    } catch (error) {
+      // Handle any errors during error serialization
+      this.fallbackToConsole("warn", "Failed to serialize error object", {
+        error,
+      });
+      return { name: "UnknownError", message: "Failed to serialize error" };
+    }
   }
 
   /**
    * Fallback to console logging when Winston fails
    */
   private fallbackToConsole(
-    level: "info" | "warn" | "error",
+    level: LogLevel,
     message: string,
     metadata?: LogMetadata
   ): void {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+    try {
+      const timestamp = new Date().toISOString();
+      const logMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
 
-    if (metadata) {
-      console[level](logMessage, metadata);
-    } else {
-      console[level](logMessage);
+      if (metadata) {
+        console[level](logMessage, metadata);
+      } else {
+        console[level](logMessage);
+      }
+    } catch (error) {
+      // Last resort if even console logging fails
+      console.error("Critical logging failure:", message, error);
     }
   }
 
