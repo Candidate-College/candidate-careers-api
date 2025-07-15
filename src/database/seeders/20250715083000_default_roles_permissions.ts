@@ -41,30 +41,9 @@ const roles: SeedRole[] = [
   },
 ];
 
-const permissions: SeedPermission[] = [
-  // Job Posting
-  {
-    name: 'job.create',
-    display_name: 'Create Job Posting',
-  },
-  {
-    name: 'job.update',
-    display_name: 'Update Job Posting',
-  },
-  {
-    name: 'job.delete',
-    display_name: 'Delete Job Posting',
-  },
-  // User management
-  {
-    name: 'user.read',
-    display_name: 'Read User',
-  },
-  {
-    name: 'user.update',
-    display_name: 'Update User',
-  },
-];
+import { SYSTEM_PERMISSIONS } from '@/config/rbac/system-permissions';
+
+const permissions: SeedPermission[] = Object.entries(SYSTEM_PERMISSIONS).map(([name, display_name]) => ({ name, display_name }));
 
 // Helper: build many-to-many mapping
 function buildRolePermissions(): Array<{ role_name: string; perm_name: string }> {
@@ -72,9 +51,9 @@ function buildRolePermissions(): Array<{ role_name: string; perm_name: string }>
     // Super admin gets all permissions
     ...permissions.map((p) => ({ role_name: 'super_admin', perm_name: p.name })),
     // Recruiter job permissions
-    { role_name: 'recruiter', perm_name: 'job.create' },
-    { role_name: 'recruiter', perm_name: 'job.update' },
-    { role_name: 'recruiter', perm_name: 'job.delete' },
+    { role_name: 'recruiter', perm_name: 'jobs.create' },
+    { role_name: 'recruiter', perm_name: 'jobs.update' },
+    { role_name: 'recruiter', perm_name: 'jobs.delete' },
   ];
 }
 
