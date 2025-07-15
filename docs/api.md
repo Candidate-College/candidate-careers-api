@@ -230,6 +230,58 @@ Response:
   }
   ```
 
+## **Role & Permission Management**
+### **Create Role**
+- **Method**: POST
+- **Path**: `/api/v1/roles`
+- **Headers**:
+  - **Authentication**: `Bearer <ACCESS_TOKEN>` _(requires `roles.manage`)_
+  - **Content-Type**: `application/json`
+- **Body**:
+  ```json
+  {
+    "name": "string|min:3",
+    "slug": "string|unique|kebab-case"
+  }
+  ```
+- **Response**:
+  - **201** Role created `{ success: true, data: Partial<RoleData> }`
+
+### **Assign Permissions to Role**
+- **Method**: POST
+- **Path**: `/api/v1/roles/:id/permissions`
+- **Headers**: Auth as above
+- **Body**:
+  ```json
+  { "permissionIds": [1, 2, 3] }
+  ```
+- **Response**: **200** `{ success: true, inserted: 3 }`
+
+### **Revoke Permission from Role**
+- **Method**: DELETE
+- **Path**: `/api/v1/roles/:id/permissions/:permId`
+- **Headers**: Auth as above
+- **Response**: **204** _No body_
+
+### **Assign Roles to User**
+- **Method**: POST
+- **Path**: `/api/v1/users/:id/roles`
+- **Headers**:
+  - **Authentication**: `Bearer <ACCESS_TOKEN>` _(requires `users.manage`)_
+- **Body**:
+  ```json
+  { "roleIds": [1, 4] }
+  ```
+- **Response**: **200** `{ success: true, inserted: 2 }`
+
+### **Revoke Role from User**
+- **Method**: DELETE
+- **Path**: `/api/v1/users/:id/roles/:roleId`
+- **Headers**: Auth as above
+- **Response**: **204**
+
+---
+
 ## **Basic CRUD Example (Events)**
 ### **Get All Events**
 - **Method**: GET
