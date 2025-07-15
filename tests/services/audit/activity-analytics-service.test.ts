@@ -11,7 +11,6 @@ import { ActivityLog } from "../../../src/models/activity-log-model";
 import {
   ActivityCategory,
   ActivitySeverity,
-  ActivityStatus,
 } from "../../../src/constants/activity-log-constants";
 import dayjs from "dayjs";
 
@@ -30,14 +29,15 @@ describe("ActivityAnalyticsService", () => {
         { period_value: "2025-07", count: 10 },
         { period_value: "2025-08", count: 5 },
       ];
+
+      // Refactored to reduce nesting depth
+      const orderByMock = jest.fn().mockResolvedValue(mockStats);
+      const groupByMock = jest.fn().mockReturnValue({ orderBy: orderByMock });
+      const countMock = jest.fn().mockReturnValue({ groupBy: groupByMock });
+      const selectRawMock = jest.fn().mockReturnValue({ count: countMock });
+
       mockActivityLog.query.mockReturnValue({
-        selectRaw: () => ({
-          count: () => ({
-            groupBy: () => ({
-              orderBy: () => Promise.resolve(mockStats),
-            }),
-          }),
-        }),
+        selectRaw: selectRawMock,
       } as any);
 
       const result = await ActivityAnalyticsService.getActivityStatistics();
@@ -74,7 +74,9 @@ describe("ActivityAnalyticsService", () => {
 
     it("should calculate dashboard aggregates correctly", async () => {
       // Mock total events
-      const totalEventsQuery: any = { resultSize: jest.fn().mockResolvedValue(20) };
+      const totalEventsQuery: any = {
+        resultSize: jest.fn().mockResolvedValue(20),
+      };
       // Mock successful events query
       const successEventsQuery: any = {
         where: jest.fn().mockReturnThis(),
@@ -89,31 +91,49 @@ describe("ActivityAnalyticsService", () => {
         { severity: ActivitySeverity.LOW, count: 10 },
         { severity: ActivitySeverity.HIGH, count: 10 },
       ];
-      const trendRows = [
-        { date: dayjs().format("YYYY-MM-DD"), count: 20 },
-      ];
+      const trendRows = [{ date: dayjs().format("YYYY-MM-DD"), count: 20 }];
+
+      // Refactored mocks for categories
+      const groupByCategoryMock = jest.fn().mockResolvedValue(categoryRows);
+      const countCategoryMock = jest.fn().mockReturnThis();
+      const selectCategoryMock = jest.fn().mockReturnThis();
+      const categoryQuery = {
+        select: selectCategoryMock,
+        count: countCategoryMock,
+        groupBy: groupByCategoryMock,
+      };
+
+      // Refactored mocks for severities
+      const groupBySeverityMock = jest.fn().mockResolvedValue(severityRows);
+      const countSeverityMock = jest.fn().mockReturnThis();
+      const selectSeverityMock = jest.fn().mockReturnThis();
+      const severityQuery = {
+        select: selectSeverityMock,
+        count: countSeverityMock,
+        groupBy: groupBySeverityMock,
+      };
+
+      // Refactored mocks for trend
+      const orderByTrendMock = jest.fn().mockResolvedValue(trendRows);
+      const groupByRawTrendMock = jest.fn().mockReturnThis();
+      const whereTrendMock = jest.fn().mockReturnThis();
+      const countTrendMock = jest.fn().mockReturnThis();
+      const selectRawTrendMock = jest.fn().mockReturnThis();
+      const trendQuery = {
+        selectRaw: selectRawTrendMock,
+        count: countTrendMock,
+        where: whereTrendMock,
+        groupByRaw: groupByRawTrendMock,
+        orderBy: orderByTrendMock,
+      };
 
       // Chain mocks based on the order of execution inside getDashboardData
       mockActivityLog.query
         .mockReturnValueOnce(totalEventsQuery) // totalEvents
         .mockReturnValueOnce(successEventsQuery) // successfulEvents
-        .mockReturnValueOnce({
-          select: jest.fn().mockReturnThis(),
-          count: jest.fn().mockReturnThis(),
-          groupBy: jest.fn().mockResolvedValue(categoryRows),
-        }) // categories
-        .mockReturnValueOnce({
-          select: jest.fn().mockReturnThis(),
-          count: jest.fn().mockReturnThis(),
-          groupBy: jest.fn().mockResolvedValue(severityRows),
-        }) // severities
-        .mockReturnValueOnce({
-          selectRaw: jest.fn().mockReturnThis(),
-          count: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          groupByRaw: jest.fn().mockReturnThis(),
-          orderBy: jest.fn().mockResolvedValue(trendRows),
-        }); // trend
+        .mockReturnValueOnce(categoryQuery) // categories
+        .mockReturnValueOnce(severityQuery) // severities
+        .mockReturnValueOnce(trendQuery); // trend
 
       const result = await ActivityAnalyticsService.getDashboardData();
 
