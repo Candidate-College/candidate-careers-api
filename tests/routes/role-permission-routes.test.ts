@@ -1,4 +1,6 @@
 import request from 'supertest';
+process.env.NODE_ENV = 'test';
+// Import app after setting env
 import app from '@/app';
 
 // Mock auth middleware

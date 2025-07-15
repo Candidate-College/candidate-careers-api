@@ -25,6 +25,8 @@ app.use(responseMiddleware);
 // Authorization middleware applied to all /api routes
 app.use('/api', authorize('*'), apiRoutes);
 
-app.listen(port, logger.log(`Server is running on port ${port}`));
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, logger.log(`Server is running on port ${port}`));
+}
 
 export default app;
