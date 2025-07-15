@@ -24,8 +24,8 @@ export class RolePermissionRepository {
     const trx = await transaction.start(RolePermission.knex());
     try {
       const rows = permissionIds.map((pid) => ({ role_id: roleId, permission_id: pid }));
-      // @ts-ignore typings for onConflict not in Objection typings
-      await RolePermission.query(trx)
+      // Cast to `any` to access knex.onConflict until Objection typings support it
+      await (RolePermission.query(trx) as any)
         .insert(rows)
         .onConflict(['role_id', 'permission_id'])
         .ignore();
