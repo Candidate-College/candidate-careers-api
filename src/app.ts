@@ -23,7 +23,11 @@ app.use(upload.any());
 app.use(activityLogger());
 app.use(responseMiddleware);
 // Authorization middleware applied to all /api routes
-app.use('/api', authorize('*'), apiRoutes);
+// Public health check endpoint
+app.get('/health', (_req: any, res: any) => res.json({ status: 'ok' }));
+
+// Mount versioned API routes – each sub-router applies its own authorization where required
+app.use('/api', apiRoutes);
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, logger.log(`Server is running on port ${port}`));
