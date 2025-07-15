@@ -43,7 +43,8 @@ export const authorize = (
         return sendError(res, 401, 'Unauthenticated');
       }
 
-            if (user.id == null) {
+            // Ensure user.id is present; strict equality guards against undefined/null explicitly.
+            if (user.id === null || user.id === undefined) {
         logger.warn('authorize: user id missing', { permission });
         return sendError(res, 401, 'Unauthenticated');
       }
