@@ -39,7 +39,8 @@ const getRateLimitConfig = (): RateLimitConfig => {
  * Custom key generator for rate limiting based on IP and user ID
  */
 const generateKey = (req: Request): string => {
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  // Use only req.ip and fallback to 'unknown' if not present
+  const ip = req.ip || 'unknown';
   const userId = (req as AuthenticatedRequest).user?.id;
 
   // If user is authenticated, use user ID + IP for more precise limiting
@@ -64,8 +65,6 @@ const rateLimitHandler = (req: Request, res: Response): void => {
     retryAfter: Math.ceil(getRateLimitConfig().windowMs / 1000),
     resetTime: resetTime.toISOString(),
   });
-
-  return;
 };
 
 /**
