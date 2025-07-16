@@ -176,32 +176,34 @@ describe('UserSearchService', () => {
     });
 
     test('should handle empty search results gracefully', async () => {
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        whereNull: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-      };
-
-      mockUser.query.mockReturnValue(mockQuery);
-
-      const mockPaginate = jest.fn().mockResolvedValue({
-        data: [],
-        pagination: { total: 0, page: 1, limit: 10 },
-      });
-
+      jest.resetModules();
       jest.doMock('@/utilities/pagination', () => ({
-        paginate: mockPaginate,
+        paginate: jest.fn().mockResolvedValue({
+          data: [],
+          pagination: { total: 0, page: 1, limit: 10 },
+        }),
       }));
-
-      const result = await UserSearchService.searchUsers({
-        q: 'nonexistent',
-        limit: 10,
+      jest.doMock('@/models/user-model', () => ({
+        User: {
+          query: jest.fn(() => ({
+            select: jest.fn().mockReturnThis(),
+            leftJoin: jest.fn().mockReturnThis(),
+            whereNull: jest.fn().mockReturnThis(),
+            where: jest.fn().mockReturnThis(),
+            orderBy: jest.fn().mockReturnThis(),
+          })),
+          raw: jest.fn(),
+        },
+      }));
+      await jest.isolateModulesAsync(async () => {
+        const { UserSearchService } = require('@/services/user/user-search-service');
+        const result = await UserSearchService.searchUsers({
+          q: 'nonexistent',
+          limit: 10,
+        });
+        expect(result.data).toHaveLength(0);
+        expect(result.pagination.total).toBe(0);
       });
-
-      expect(result.data).toHaveLength(0);
-      expect(result.pagination.total).toBe(0);
     });
 
     test('should handle exact match search', async () => {
@@ -549,33 +551,35 @@ describe('UserSearchService', () => {
 
   describe('Search Performance and Edge Cases', () => {
     test('should handle large search queries efficiently', async () => {
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        whereNull: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-      };
-
-      mockUser.query.mockReturnValue(mockQuery);
-
-      const mockPaginate = jest.fn().mockResolvedValue({
-        data: Array.from({ length: 100 }, (_, i) => ({ id: i + 1, name: `User ${i + 1}` })),
-        pagination: { total: 1000, page: 1, limit: 100 },
-      });
-
+      jest.resetModules();
       jest.doMock('@/utilities/pagination', () => ({
-        paginate: mockPaginate,
+        paginate: jest.fn().mockResolvedValue({
+          data: Array.from({ length: 100 }, (_, i) => ({ id: i + 1, name: `User ${i + 1}` })),
+          pagination: { total: 1000, page: 1, limit: 100 },
+        }),
       }));
-
-      const result = await UserSearchService.searchUsers({
-        q: 'user',
-        limit: 100,
-        page: 1,
+      jest.doMock('@/models/user-model', () => ({
+        User: {
+          query: jest.fn(() => ({
+            select: jest.fn().mockReturnThis(),
+            leftJoin: jest.fn().mockReturnThis(),
+            whereNull: jest.fn().mockReturnThis(),
+            where: jest.fn().mockReturnThis(),
+            orderBy: jest.fn().mockReturnThis(),
+          })),
+          raw: jest.fn(),
+        },
+      }));
+      await jest.isolateModulesAsync(async () => {
+        const { UserSearchService } = require('@/services/user/user-search-service');
+        const result = await UserSearchService.searchUsers({
+          q: 'user',
+          limit: 100,
+          page: 1,
+        });
+        expect(result.data).toHaveLength(100);
+        expect(result.pagination.total).toBe(1000);
       });
-
-      expect(result.data).toHaveLength(100);
-      expect(result.pagination.total).toBe(1000);
     });
 
     test('should handle special characters in search query', async () => {
