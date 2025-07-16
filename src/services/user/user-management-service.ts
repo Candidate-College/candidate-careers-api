@@ -21,16 +21,11 @@ import {
   UserDeleteOptions,
   BulkOperationPayload,
   PasswordResetOptions,
-  UserSearchFilters,
-  UserSearchResult,
-  UserStatistics,
   BulkOperationResult,
   PasswordResetResult,
-  UserNotificationPayload,
-  UserManagementResult,
   TransactionContext,
-  UserActionContext,
 } from '@/interfaces/user/user-management';
+import { defaultWinstonLogger } from '@/utilities/winston-logger';
 
 export class UserManagementService {
   static async listUsers(query: Record<string, unknown>): Promise<PaginatedResult<UserWithRole>> {
@@ -384,7 +379,7 @@ export class UserManagementService {
 
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
-    const result = await transaction(UserRepository, async (trx: TransactionContext['trx']) => {
+    await transaction(UserRepository, async (trx: TransactionContext['trx']) => {
       const updatedUser = await UserRepository.updateByUuid(
         uuid,
         {
@@ -425,8 +420,6 @@ export class UserManagementService {
       if (options.send_email !== false) {
         await emailService.sendPasswordResetEmail(currentUser.email, currentUser.name, newPassword);
       }
-
-      return updatedUser;
     });
 
     return {
@@ -463,8 +456,8 @@ export class UserManagementService {
         );
       }
     } catch (error) {
-      // Log error but don't fail the operation
-      console.error('Failed to send user update notification:', error);
+      // Log error using Winston logger
+      defaultWinstonLogger.error('Failed to send user update notification', { error });
     }
   }
 
@@ -503,8 +496,8 @@ export class UserManagementService {
         }
       }
     } catch (error) {
-      // Log error but don't fail the operation
-      console.error('Failed to send bulk operation notifications:', error);
+      // Log error using Winston logger
+      defaultWinstonLogger.error('Failed to send bulk operation notifications', { error });
     }
   }
 }

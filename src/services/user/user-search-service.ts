@@ -7,12 +7,10 @@
  * @module src/services/user/user-search-service
  */
 
-import { UserRepository } from '@/repositories/user-repository';
 import { PaginatedResult } from '@/utilities/pagination';
 import { QueryBuilder } from 'objection';
 import { User, UserData } from '@/models/user-model';
 import dayjs from 'dayjs';
-import { raw } from 'objection';
 
 export interface SearchUsersFilters {
   q?: string;
@@ -60,6 +58,93 @@ export class UserSearchService {
   }
 
   /**
+   * Helper to apply text search filter
+   */
+  private static applyTextSearch(
+    query: QueryBuilder<User, UserData[]>,
+    filters: SearchUsersFilters,
+  ): QueryBuilder<User, UserData[]> {
+    if (filters.q) {
+      const searchTerm = filters.q.toLowerCase();
+      if (filters.exact_match) {
+        query = query.where((rawBuilder: any) => {
+          rawBuilder
+            .whereRaw('LOWER(users.name) = ?', [searchTerm])
+            .orWhereRaw('LOWER(users.email) = ?', [searchTerm]);
+        });
+      } else {
+        query = query.where((rawBuilder: any) => {
+          rawBuilder
+            .whereRaw('LOWER(users.name) LIKE ?', [`%${searchTerm}%`])
+            .orWhereRaw('LOWER(users.email) LIKE ?', [`%${searchTerm}%`]);
+        });
+      }
+    }
+    return query;
+  }
+
+  /**
+   * Helper to apply role, status, and domain filters
+   */
+  private static applyRoleStatusDomainFilters(
+    query: QueryBuilder<User, UserData[]>,
+    filters: SearchUsersFilters,
+  ): QueryBuilder<User, UserData[]> {
+    if (filters.role_ids && filters.role_ids.length > 0) {
+      query = query.whereIn('users.role_id', filters.role_ids);
+    }
+    if (filters.statuses && filters.statuses.length > 0) {
+      query = query.whereIn('users.status', filters.statuses);
+    }
+    if (filters.email_domain) {
+      query = query.whereRaw('LOWER(users.email) LIKE ?', [
+        `%@${filters.email_domain.toLowerCase()}%`,
+      ]);
+    }
+    return query;
+  }
+
+  /**
+   * Helper to apply date and login filters
+   */
+  private static applyDateAndLoginFilters(
+    query: QueryBuilder<User, UserData[]>,
+    filters: SearchUsersFilters,
+  ): QueryBuilder<User, UserData[]> {
+    if (filters.created_after) {
+      query = query.where('users.created_at', '>=', dayjs(filters.created_after).toISOString());
+    }
+    if (filters.created_before) {
+      query = query.where('users.created_at', '<=', dayjs(filters.created_before).toISOString());
+    }
+    if (filters.last_login_after) {
+      query = query.where(
+        'users.last_login_at',
+        '>=',
+        dayjs(filters.last_login_after).toISOString(),
+      );
+    }
+    if (filters.last_login_before) {
+      query = query.where(
+        'users.last_login_at',
+        '<=',
+        dayjs(filters.last_login_before).toISOString(),
+      );
+    }
+    if (filters.has_verified_email !== undefined) {
+      if (filters.has_verified_email) {
+        query = query.whereNotNull('users.email_verified_at');
+      } else {
+        query = query.whereNull('users.email_verified_at');
+      }
+    }
+    if (filters.login_attempts_greater_than !== undefined) {
+      query = query.where('users.login_attempts', '>', filters.login_attempts_greater_than);
+    }
+    return query;
+  }
+
+  /**
    * Build complex search query based on filters
    */
   private static buildSearchQuery(filters: SearchUsersFilters): QueryBuilder<User, UserData[]> {
@@ -85,82 +170,14 @@ export class UserSearchService {
       query = query.whereNull('users.deleted_at');
     }
 
-    // Text search
-    if (filters.q) {
-      const searchTerm = filters.q.toLowerCase();
-      if (filters.exact_match) {
-        query = query.where((rawBuilder: any) => {
-          rawBuilder
-            .whereRaw('LOWER(users.name) = ?', [searchTerm])
-            .orWhereRaw('LOWER(users.email) = ?', [searchTerm]);
-        });
-      } else {
-        query = query.where((rawBuilder: any) => {
-          rawBuilder
-            .whereRaw('LOWER(users.name) LIKE ?', [`%${searchTerm}%`])
-            .orWhereRaw('LOWER(users.email) LIKE ?', [`%${searchTerm}%`]);
-        });
-      }
-    }
-
-    // Role filter
-    if (filters.role_ids && filters.role_ids.length > 0) {
-      query = query.whereIn('users.role_id', filters.role_ids);
-    }
-
-    // Status filter
-    if (filters.statuses && filters.statuses.length > 0) {
-      query = query.whereIn('users.status', filters.statuses);
-    }
-
-    // Email domain filter
-    if (filters.email_domain) {
-      query = query.whereRaw('LOWER(users.email) LIKE ?', [
-        `%@${filters.email_domain.toLowerCase()}%`,
-      ]);
-    }
-
-    // Date range filters
-    if (filters.created_after) {
-      query = query.where('users.created_at', '>=', dayjs(filters.created_after).toISOString());
-    }
-    if (filters.created_before) {
-      query = query.where('users.created_at', '<=', dayjs(filters.created_before).toISOString());
-    }
-    if (filters.last_login_after) {
-      query = query.where(
-        'users.last_login_at',
-        '>=',
-        dayjs(filters.last_login_after).toISOString(),
-      );
-    }
-    if (filters.last_login_before) {
-      query = query.where(
-        'users.last_login_at',
-        '<=',
-        dayjs(filters.last_login_before).toISOString(),
-      );
-    }
-
-    // Email verification filter
-    if (filters.has_verified_email !== undefined) {
-      if (filters.has_verified_email) {
-        query = query.whereNotNull('users.email_verified_at');
-      } else {
-        query = query.whereNull('users.email_verified_at');
-      }
-    }
-
-    // Login attempts filter
-    if (filters.login_attempts_greater_than !== undefined) {
-      query = query.where('users.login_attempts', '>', filters.login_attempts_greater_than);
-    }
-
+    // Refactored filter application
+    query = this.applyTextSearch(query, filters);
+    query = this.applyRoleStatusDomainFilters(query, filters);
+    query = this.applyDateAndLoginFilters(query, filters);
     // Sorting
     const sortBy = filters.sort_by ?? 'created_at';
     const sortOrder = filters.sort_order ?? 'desc';
     query = query.orderBy(`users.${sortBy}`, sortOrder);
-
     return query;
   }
 
@@ -239,7 +256,9 @@ export class UserSearchService {
       });
     });
 
-    return suggestions.sort((a, b) => b.count - a.count).slice(0, limit);
+    // Move sort to a separate statement for SonarLint
+    suggestions.sort((a, b) => b.count - a.count);
+    return suggestions.slice(0, limit);
   }
 
   /**
