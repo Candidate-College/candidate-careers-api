@@ -556,6 +556,8 @@ describe('UserManagementService', () => {
         role: { name: 'super_admin', display_name: 'Super Administrator' },
       };
       mockUserRepository.findDetailedByUuid.mockResolvedValue(superAdminUser as any);
+      mockUserRepository.updateByUuid.mockResolvedValue({ ...superAdminUser, role_id: 2 } as any);
+      mockUserRepository.findByUuid.mockResolvedValue({ ...superAdminUser, role_id: 2 } as any);
 
       // Note: The service doesn't currently prevent super admin demotion
       // This test documents the current behavior
