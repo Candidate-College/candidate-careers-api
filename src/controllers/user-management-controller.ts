@@ -9,31 +9,32 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { UserManagementService } from '@/services/user/user-management-service';
+import { AuthenticatedRequest, JsonResponse } from '@/types/express-extension';
 
 export class UserManagementController {
   /** GET /admin/users */
-  static async listUsers(req: Request, res: Response, next: NextFunction) {
+  static async listUsers(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const result = await UserManagementService.listUsers(req.query);
-      return (res as any).success('Users retrieved successfully', result);
+      return res.success('Users retrieved successfully', result);
     } catch (err) {
       return next(err);
     }
   }
 
   /** GET /admin/users/:uuid */
-  static async getUserDetail(req: Request, res: Response, next: NextFunction) {
+  static async getUserDetail(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const user = await UserManagementService.getUserByUuid(req.params.uuid);
-      if (!user) return (res as any).error('User not found', 404);
-      return (res as any).success('User retrieved successfully', user);
+      if (!user) return res.error(404, 'User not found');
+      return res.success('User retrieved successfully', user);
     } catch (err) {
       return next(err);
     }
   }
 
   /** GET /admin/users/:uuid/activity */
-  static async getUserActivity(req: Request, res: Response, next: NextFunction) {
+  static async getUserActivity(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const { UserActivityService } = await import('@/services/user/user-activity-service');
       const result = await UserActivityService.getUserActivity(req.params.uuid, {
@@ -43,64 +44,68 @@ export class UserManagementController {
         from: req.query.from as string | undefined,
         to: req.query.to as string | undefined,
       });
-      return (res as any).success('User activity retrieved successfully', result);
+      return res.success('User activity retrieved successfully', result);
     } catch (err) {
       return next(err);
     }
   }
 
   /** POST /admin/users */
-  static async createUser(req: Request, res: Response, next: NextFunction) {
+  static async createUser(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const user = await UserManagementService.createUser(req.body);
-      return (res as any).success('User created successfully', user, 201);
+      return res.success('User created successfully', user);
     } catch (err) {
       return next(err);
     }
   }
 
   /** PUT /admin/users/:uuid */
-  static async updateUser(req: Request, res: Response, next: NextFunction) {
+  static async updateUser(req: AuthenticatedRequest, res: JsonResponse, next: NextFunction) {
     try {
       const { uuid } = req.params;
-      const adminId = (req as any).user?.id;
+      const adminId = req.user?.id;
 
       if (!adminId) {
-        return (res as any).error('Unauthorized', 401);
+        return res.error(401, 'Unauthorized');
       }
 
       const user = await UserManagementService.updateUser(uuid, req.body, adminId);
-      return (res as any).success('User updated successfully', user);
+      return res.success('User updated successfully', user);
     } catch (err) {
       return next(err);
     }
   }
 
   /** DELETE /admin/users/:uuid */
-  static async deleteUser(req: Request, res: Response, next: NextFunction) {
+  static async deleteUser(req: AuthenticatedRequest, res: JsonResponse, next: NextFunction) {
     try {
       const { uuid } = req.params;
-      const adminId = (req as any).user?.id;
+      const adminId = req.user?.id;
 
       if (!adminId) {
-        return (res as any).error('Unauthorized', 401);
+        return res.error(401, 'Unauthorized');
       }
 
       const result = await UserManagementService.deleteUser(uuid, req.body, adminId);
-      return (res as any).success('User deleted successfully', result);
+      return res.success('User deleted successfully', result);
     } catch (err) {
       return next(err);
     }
   }
 
   /** POST /admin/users/bulk */
-  static async bulkUserOperations(req: Request, res: Response, next: NextFunction) {
+  static async bulkUserOperations(
+    req: AuthenticatedRequest,
+    res: JsonResponse,
+    next: NextFunction,
+  ) {
     try {
       const { action, user_uuids, params } = req.body;
-      const adminId = (req as any).user?.id;
+      const adminId = req.user?.id;
 
       if (!adminId) {
-        return (res as any).error('Unauthorized', 401);
+        return res.error(401, 'Unauthorized');
       }
 
       const result = await UserManagementService.bulkUserOperations(
@@ -109,31 +114,31 @@ export class UserManagementController {
         params,
         adminId,
       );
-      return (res as any).success('Bulk operation completed successfully', result);
+      return res.success('Bulk operation completed successfully', result);
     } catch (err) {
       return next(err);
     }
   }
 
   /** POST /admin/users/:uuid/reset-password */
-  static async resetUserPassword(req: Request, res: Response, next: NextFunction) {
+  static async resetUserPassword(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const { uuid } = req.params;
       const result = await UserManagementService.resetUserPassword(uuid, req.body);
-      return (res as any).success('Password reset successfully', result);
+      return res.success('Password reset successfully', result);
     } catch (err) {
       return next(err);
     }
   }
 
   /** POST /admin/users/:uuid/impersonate */
-  static async impersonateUser(req: Request, res: Response, next: NextFunction) {
+  static async impersonateUser(req: AuthenticatedRequest, res: JsonResponse, next: NextFunction) {
     try {
       const { uuid } = req.params;
-      const adminId = (req as any).user?.id;
+      const adminId = req.user?.id;
 
       if (!adminId) {
-        return (res as any).error('Unauthorized', 401);
+        return res.error(401, 'Unauthorized');
       }
 
       const { UserImpersonationService } = await import(
@@ -149,7 +154,7 @@ export class UserManagementController {
       const targetUser = await UserManagementService.getUserByUuid(uuid);
       const accessToken = UserImpersonationService.generateImpersonationAccessToken(targetUser);
 
-      return (res as any).success('Impersonation started successfully', {
+      return res.success('Impersonation started successfully', {
         ...result,
         access_token: accessToken,
       });
@@ -159,18 +164,18 @@ export class UserManagementController {
   }
 
   /** GET /admin/users/search */
-  static async searchUsers(req: Request, res: Response, next: NextFunction) {
+  static async searchUsers(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const { UserSearchService } = await import('@/services/user/user-search-service');
       const result = await UserSearchService.searchUsers(req.query);
-      return (res as any).success('Users found successfully', result);
+      return res.success('Users found successfully', result);
     } catch (err) {
       return next(err);
     }
   }
 
   /** GET /admin/users/search/suggestions */
-  static async getSearchSuggestions(req: Request, res: Response, next: NextFunction) {
+  static async getSearchSuggestions(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const { q, limit } = req.query;
       const { UserSearchService } = await import('@/services/user/user-search-service');
@@ -178,18 +183,18 @@ export class UserManagementController {
         q as string,
         Number(limit) || 10,
       );
-      return (res as any).success('Search suggestions retrieved successfully', { suggestions });
+      return res.success('Search suggestions retrieved successfully', { suggestions });
     } catch (err) {
       return next(err);
     }
   }
 
   /** GET /admin/users/statistics */
-  static async getUserStatistics(req: Request, res: Response, next: NextFunction) {
+  static async getUserStatistics(req: Request, res: JsonResponse, next: NextFunction) {
     try {
       const { UserSearchService } = await import('@/services/user/user-search-service');
       const statistics = await UserSearchService.getUserStatistics();
-      return (res as any).success('User statistics retrieved successfully', { statistics });
+      return res.success('User statistics retrieved successfully', { statistics });
     } catch (err) {
       return next(err);
     }

@@ -43,7 +43,7 @@ exports.exportLogs = async (req: Request, res: JsonResponse) => {
       dateTo,
       category,
       severity,
-    } as any;
+    } as Record<string, unknown>;
 
     let result;
     switch (format) {
@@ -54,7 +54,10 @@ exports.exportLogs = async (req: Request, res: JsonResponse) => {
         break;
       case 'xlsx':
         result = await ActivityExportService.exportToExcel(filters, batchSize);
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader(
+          'Content-Type',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        );
         res.setHeader('Content-Disposition', 'attachment; filename="audit-logs.xlsx"');
         break;
       default:

@@ -7,8 +7,9 @@
  * @module middlewares/rateLimiter
  */
 
-import rateLimit from "express-rate-limit";
-import { Request, Response } from "express";
+import rateLimit from 'express-rate-limit';
+import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '@/types/express-extension';
 
 /**
  * Rate limit configuration interface
@@ -26,9 +27,9 @@ interface RateLimitConfig {
  */
 const getRateLimitConfig = (): RateLimitConfig => {
   return {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000"), // 1 minute default
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "5"), // 5 requests default
-    message: "Too many requests, please try again later.",
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minute default
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '5'), // 5 requests default
+    message: 'Too many requests, please try again later.',
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   };
@@ -38,8 +39,8 @@ const getRateLimitConfig = (): RateLimitConfig => {
  * Custom key generator for rate limiting based on IP and user ID
  */
 const generateKey = (req: Request): string => {
-  const ip = req.ip || req.connection.remoteAddress || "unknown";
-  const userId = (req as any).user?.id;
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const userId = (req as AuthenticatedRequest).user?.id;
 
   // If user is authenticated, use user ID + IP for more precise limiting
   if (userId) {
@@ -58,8 +59,8 @@ const rateLimitHandler = (req: Request, res: Response): void => {
 
   res.status(429).json({
     statusCode: 429,
-    message: "Rate limit exceeded",
-    error: "Too many requests from this IP, please try again later.",
+    message: 'Rate limit exceeded',
+    error: 'Too many requests from this IP, please try again later.',
     retryAfter: Math.ceil(getRateLimitConfig().windowMs / 1000),
     resetTime: resetTime.toISOString(),
   });
@@ -81,7 +82,7 @@ exports.authRateLimit = rateLimit({
   handler: rateLimitHandler,
   skip: (req: Request): boolean => {
     // Skip rate limiting in test environment
-    return process.env.NODE_ENV === "test";
+    return process.env.NODE_ENV === 'test';
   },
 });
 
@@ -92,13 +93,13 @@ exports.authRateLimit = rateLimit({
 exports.generalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: "Too many API requests from this IP, please try again later.",
+  message: 'Too many API requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: generateKey,
   handler: rateLimitHandler,
   skip: (req: Request): boolean => {
-    return process.env.NODE_ENV === "test";
+    return process.env.NODE_ENV === 'test';
   },
 });
 
@@ -108,8 +109,7 @@ exports.generalRateLimit = rateLimit({
 exports.strictRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // Limit each IP to 3 requests per hour for sensitive operations
-  message:
-    "Too many attempts for this sensitive operation, please try again later.",
+  message: 'Too many attempts for this sensitive operation, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: generateKey,
@@ -118,23 +118,21 @@ exports.strictRateLimit = rateLimit({
 
     res.status(429).json({
       statusCode: 429,
-      message: "Rate limit exceeded for sensitive operation",
-      error:
-        "Too many attempts. For security reasons, please wait before trying again.",
+      message: 'Rate limit exceeded for sensitive operation',
+      error: 'Too many attempts. For security reasons, please wait before trying again.',
       retryAfter: 3600, // 1 hour in seconds
       resetTime: resetTime.toISOString(),
     });
   },
   skip: (req: Request): boolean => {
-    return process.env.NODE_ENV === "test";
+    return process.env.NODE_ENV === 'test';
   },
 });
 
 /**
  * Progressive rate limiting that increases restrictions based on failed attempts
  */
-let failedAttempts: Map<string, { count: number; lastAttempt: number }> =
-  new Map();
+let failedAttempts: Map<string, { count: number; lastAttempt: number }> = new Map();
 
 // Maximum number of entries to prevent memory leaks
 const MAX_FAILED_ATTEMPTS_ENTRIES = 10000;
@@ -156,7 +154,7 @@ const cleanupFailedAttempts = (): void => {
   // If we still have too many entries, remove oldest ones
   if (failedAttempts.size > MAX_FAILED_ATTEMPTS_ENTRIES) {
     const entries = Array.from(failedAttempts.entries()).sort(
-      (a, b) => a[1].lastAttempt - b[1].lastAttempt
+      (a, b) => a[1].lastAttempt - b[1].lastAttempt,
     );
 
     const toRemove = failedAttempts.size - MAX_FAILED_ATTEMPTS_ENTRIES;
@@ -169,20 +167,13 @@ const cleanupFailedAttempts = (): void => {
 /**
  * Progressive rate limiting middleware for login attempts
  */
-exports.progressiveAuthRateLimit = (
-  req: Request,
-  res: Response,
-  next: any
-): void => {
+exports.progressiveAuthRateLimit = (req: Request, res: Response, next: any): void => {
   const key = generateKey(req);
   const now = Date.now();
   const attempts = failedAttempts.get(key) || { count: 0, lastAttempt: 0 };
 
   // Clean up old attempts periodically (increased frequency)
-  if (
-    Math.random() < 0.2 ||
-    failedAttempts.size > MAX_FAILED_ATTEMPTS_ENTRIES * 0.8
-  ) {
+  if (Math.random() < 0.2 || failedAttempts.size > MAX_FAILED_ATTEMPTS_ENTRIES * 0.8) {
     cleanupFailedAttempts();
   }
 
@@ -195,13 +186,11 @@ exports.progressiveAuthRateLimit = (
   const timeSinceLastAttempt = now - attempts.lastAttempt;
 
   if (attempts.count >= 3 && timeSinceLastAttempt < requiredDelay) {
-    const remainingDelay = Math.ceil(
-      (requiredDelay - timeSinceLastAttempt) / 1000
-    );
+    const remainingDelay = Math.ceil((requiredDelay - timeSinceLastAttempt) / 1000);
 
     res.status(429).json({
       statusCode: 429,
-      message: "Account temporarily locked due to multiple failed attempts",
+      message: 'Account temporarily locked due to multiple failed attempts',
       error: `Please wait ${remainingDelay} seconds before trying again.`,
       retryAfter: remainingDelay,
       resetTime: new Date(now + requiredDelay).toISOString(),
@@ -219,7 +208,7 @@ exports.progressiveAuthRateLimit = (
  * Record a failed authentication attempt
  */
 exports.recordFailedAttempt = (key: string): void => {
-  if (!key || typeof key !== "string") {
+  if (!key || typeof key !== 'string') {
     return; // Skip invalid keys
   }
 
@@ -260,14 +249,14 @@ exports.createCustomRateLimit = (options: {
   return rateLimit({
     windowMs: options.windowMs,
     max: options.max,
-    message: options.message || "Rate limit exceeded",
+    message: options.message || 'Rate limit exceeded',
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: generateKey,
     handler: rateLimitHandler,
     skipSuccessfulRequests: options.skipSuccessfulRequests || false,
     skip: (req: Request): boolean => {
-      return process.env.NODE_ENV === "test";
+      return process.env.NODE_ENV === 'test';
     },
   });
 };

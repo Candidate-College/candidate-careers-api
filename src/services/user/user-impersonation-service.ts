@@ -9,6 +9,8 @@
 
 import { UserRepository } from '@/repositories/user-repository';
 import { ActivityLogService } from '@/services/audit/activity-log-service';
+import { UserData } from '@/models/user-model';
+import { DetailedUser } from '@/interfaces/user/user-management';
 const jwt = require('jsonwebtoken');
 import { v4 as uuidv4 } from 'uuid';
 
@@ -52,7 +54,7 @@ export class UserImpersonationService {
   ): Promise<ImpersonationToken> {
     // Validate admin permissions
     const admin = await UserRepository.findDetailedByUuid(adminId.toString());
-    if (!admin || (admin.role as any)?.name !== 'super_admin') {
+    if (!admin || (admin as unknown as DetailedUser).role?.name !== 'super_admin') {
       throw new Error('Only super administrators can impersonate users');
     }
 
@@ -63,7 +65,7 @@ export class UserImpersonationService {
     }
 
     // Prevent impersonating other super admins
-    if ((targetUser.role as any)?.name === 'super_admin') {
+    if ((targetUser as unknown as DetailedUser).role?.name === 'super_admin') {
       throw new Error('Cannot impersonate other super administrators');
     }
 
@@ -96,7 +98,14 @@ export class UserImpersonationService {
 
     // Log impersonation activity
     await ActivityLogService.logUserAction(
-      { id: adminId } as any,
+      {
+        id: adminId,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        created_at: admin.created_at,
+        updated_at: admin.updated_at,
+      },
       'user_impersonation_started',
       'user',
       `Started impersonating user ${targetUser.name} (${targetUser.email})`,
@@ -131,7 +140,15 @@ export class UserImpersonationService {
    */
   static async validateImpersonationToken(token: string): Promise<ImpersonationSession> {
     try {
-      const decoded = jwt.verify(token, this.IMPERSONATION_SECRET) as any;
+      const decoded = jwt.verify(token, this.IMPERSONATION_SECRET) as {
+        exp: number;
+        iat: number;
+        adminId: number;
+        targetUserId: number;
+        targetUserUuid: string;
+        sessionId: string;
+        reason?: string;
+      };
 
       // Check if token is expired
       if (decoded.exp * 1000 < Date.now()) {
@@ -140,7 +157,7 @@ export class UserImpersonationService {
 
       // Verify admin still exists and has super admin role
       const admin = await UserRepository.findDetailedByUuid(decoded.adminId.toString());
-      if (!admin || (admin.role as any)?.name !== 'super_admin') {
+      if (!admin || (admin as unknown as DetailedUser).role?.name !== 'super_admin') {
         throw new Error('Admin user no longer has super admin privileges');
       }
 
@@ -178,7 +195,14 @@ export class UserImpersonationService {
   ): Promise<void> {
     // Log impersonation end
     await ActivityLogService.logUserAction(
-      { id: adminId } as any,
+      {
+        id: adminId,
+        name: 'System',
+        email: 'system@example.com',
+        role: 'admin',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
       'user_impersonation_ended',
       'user',
       'Ended user impersonation session',
