@@ -48,4 +48,14 @@ export class UserManagementController {
       return next(err);
     }
   }
+
+  /** POST /admin/users */
+  static async createUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = await UserManagementService.createUser(req.body);
+      return (res as any).success('User created successfully', user, 201);
+    } catch (err) {
+      return next(err);
+    }
+  }
 }

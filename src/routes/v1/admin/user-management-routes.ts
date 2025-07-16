@@ -16,12 +16,15 @@ const validate = require('@/middlewares/request-validation-middleware');
 const listUsersSchema = require('@/validators/user/list-users.validator');
 
 const router = Router();
+const createUserValidator = require('@/validators/user/create-user.validator');
 
 // Require authentication + Super Admin role for everything below
 router.use(accessToken, requireRole('super_admin'));
 
+// POST /admin/users
+router.post('/', validate(createUserValidator), UserManagementController.createUser);
+
 // GET /admin/users
-// List users
 router.get('/', validate(listUsersSchema, { only: 'query' }), UserManagementController.listUsers);
 
 // User detail

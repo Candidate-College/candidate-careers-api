@@ -92,4 +92,11 @@ export class UserRepository {
   static async findByUuid(uuid: string): Promise<UserData | undefined> {
     return this.baseQuery().where('users.uuid', uuid).first();
   }
+
+  /**
+   * Insert a single user and return the inserted record.
+   */
+  static async create(data: Partial<UserData>, trx?: any) {
+    return trx ? User.query(trx).insertAndFetch(data) : User.query().insertAndFetch(data);
+  }
 }
