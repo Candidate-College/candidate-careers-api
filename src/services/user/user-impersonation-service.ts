@@ -262,15 +262,6 @@ export class UserImpersonationService {
     try {
       const { emailService } = await import('@/services/email/email-service');
 
-      const html = `
-        <p>Hello ${targetUser.name},</p>
-        <p>Your account is being accessed by a system administrator (${
-          admin.name
-        }) for support purposes.</p>
-        ${reason ? `<p>Reason: ${reason}</p>` : ''}
-        <p>If you believe this is unauthorized, please contact support immediately.</p>
-      `;
-
       await emailService.sendAccountStatusNotification(
         targetUser.email,
         targetUser.name,

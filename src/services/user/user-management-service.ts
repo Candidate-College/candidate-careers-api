@@ -95,60 +95,57 @@ export class UserManagementService {
       throw new Error('User not found');
     }
 
-    const updatedUser = await transaction(
-      UserRepository,
-      async (trx: TransactionContext['trx']) => {
-        // Update user
-        const user = await UserRepository.updateByUuid(
-          uuid,
-          {
-            ...updateData,
-            updated_at: new Date(),
+    await transaction(UserRepository, async (trx: TransactionContext['trx']) => {
+      // Update user
+      const user = await UserRepository.updateByUuid(
+        uuid,
+        {
+          ...updateData,
+          updated_at: new Date(),
+        },
+        trx,
+      );
+
+      if (!user) {
+        throw new Error('Failed to update user');
+      }
+
+      // Log activity
+      await ActivityLogService.logUserAction(
+        {
+          id: updatedBy,
+          name: 'System', // This will be overridden by the actual user data
+          email: 'system@example.com', // This will be overridden by the actual user data
+          role: 'admin', // This will be overridden by the actual user data
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        'user_updated',
+        'user',
+        `Updated user ${currentUser.name} (${currentUser.email})`,
+        {
+          resourceId: currentUser.id,
+          resourceUuid: uuid,
+          oldValues: {
+            name: currentUser.name,
+            role_id: currentUser.role_id,
+            status: currentUser.status,
           },
-          trx,
+          newValues: updateData,
+        },
+      );
+
+      // Send notification if requested
+      if (updateData.send_notification !== false) {
+        await this.sendUserUpdateNotification(
+          user as unknown as UserWithRole,
+          updateData,
+          currentUser as unknown as DetailedUser,
         );
+      }
 
-        if (!user) {
-          throw new Error('Failed to update user');
-        }
-
-        // Log activity
-        await ActivityLogService.logUserAction(
-          {
-            id: updatedBy,
-            name: 'System', // This will be overridden by the actual user data
-            email: 'system@example.com', // This will be overridden by the actual user data
-            role: 'admin', // This will be overridden by the actual user data
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
-          'user_updated',
-          'user',
-          `Updated user ${currentUser.name} (${currentUser.email})`,
-          {
-            resourceId: currentUser.id,
-            resourceUuid: uuid,
-            oldValues: {
-              name: currentUser.name,
-              role_id: currentUser.role_id,
-              status: currentUser.status,
-            },
-            newValues: updateData,
-          },
-        );
-
-        // Send notification if requested
-        if (updateData.send_notification !== false) {
-          await this.sendUserUpdateNotification(
-            user as unknown as UserWithRole,
-            updateData,
-            currentUser as unknown as DetailedUser,
-          );
-        }
-
-        return user;
-      },
-    );
+      return user;
+    });
 
     // Convert UserData to UserWithRole by fetching the user with role information
     const userWithRole = await UserRepository.findByUuid(uuid);
@@ -185,48 +182,51 @@ export class UserManagementService {
       throw new Error('Cannot delete your own account');
     }
 
-    const result = await transaction(UserRepository, async (trx: TransactionContext['trx']) => {
-      let deleteResult: number;
-      if (options.permanent) {
-        deleteResult = await UserRepository.hardDeleteByUuid(uuid, trx);
-      } else {
-        deleteResult = await UserRepository.deleteByUuid(uuid, trx);
-      }
+    const deletedCount = await transaction(
+      UserRepository,
+      async (trx: TransactionContext['trx']) => {
+        let deleteResult: number;
+        if (options.permanent) {
+          deleteResult = await UserRepository.hardDeleteByUuid(uuid, trx);
+        } else {
+          deleteResult = await UserRepository.deleteByUuid(uuid, trx);
+        }
 
-      if (deleteResult === 0) {
-        throw new Error('Failed to delete user');
-      }
+        if (deleteResult === 0) {
+          throw new Error('Failed to delete user');
+        }
 
-      // Log activity
-      await ActivityLogService.logUserAction(
-        {
-          id: deletedBy,
-          name: 'System',
-          email: 'system@example.com',
-          role: 'admin',
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        options.permanent ? 'user_permanently_deleted' : 'user_deleted',
-        'user',
-        `${options.permanent ? 'Permanently deleted' : 'Deleted'} user ${currentUser.name} (${
-          currentUser.email
-        })`,
-        {
-          resourceId: currentUser.id,
-          resourceUuid: uuid,
-          oldValues: currentUser as unknown as Record<string, unknown>,
-          metadata: {
-            reason: options.reason,
-            permanent: options.permanent,
+        // Log activity
+        await ActivityLogService.logUserAction(
+          {
+            id: deletedBy,
+            name: 'System',
+            email: 'system@example.com',
+            role: 'admin',
+            created_at: new Date(),
+            updated_at: new Date(),
           },
-        },
-      );
+          options.permanent ? 'user_permanently_deleted' : 'user_deleted',
+          'user',
+          `${options.permanent ? 'Permanently deleted' : 'Deleted'} user ${currentUser.name} (${
+            currentUser.email
+          })`,
+          {
+            resourceId: currentUser.id,
+            resourceUuid: uuid,
+            oldValues: currentUser as unknown as Record<string, unknown>,
+            metadata: {
+              reason: options.reason,
+              permanent: options.permanent,
+            },
+          },
+        );
 
-      return deleteResult;
-    });
+        return deleteResult;
+      },
+    );
 
-    return { success: true, deletedCount: result };
+    return { success: true, deletedCount };
   }
 
   /**
@@ -251,7 +251,7 @@ export class UserManagementService {
       throw new Error('role_id is required for change_role action');
     }
 
-    const result = await transaction(UserRepository, async (trx: TransactionContext['trx']) => {
+    return await transaction(UserRepository, async (trx: TransactionContext['trx']) => {
       // Get users for validation and audit logging
       const users = await UserRepository.findByUuids(userUuids, trx);
       if (users.length !== userUuids.length) {
@@ -347,16 +347,15 @@ export class UserManagementService {
         await this.sendBulkOperationNotifications(users, action, params);
       }
 
-      return operationResult;
+      // Return BulkOperationResult
+      return {
+        success: true,
+        processed: userUuids.length,
+        succeeded: operationResult,
+        failed: userUuids.length - operationResult,
+        errors: [],
+      };
     });
-
-    return {
-      success: true,
-      processed: userUuids.length,
-      succeeded: result,
-      failed: userUuids.length - result,
-      errors: [],
-    };
   }
 
   /**
