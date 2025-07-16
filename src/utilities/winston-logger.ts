@@ -5,8 +5,8 @@
  * and backward compatibility. Implements exactly 3 levels: INFO, WARN, ERROR.
  */
 
-import winston from "winston";
-import { defaultLogger } from "@/config/logger";
+import winston from 'winston';
+import { defaultLogger } from '@/config/logger';
 
 /**
  * Logging metadata interface for structured logging
@@ -25,7 +25,7 @@ export interface LogMetadata {
 /**
  * Log level type
  */
-export type LogLevel = "info" | "warn" | "error";
+export type LogLevel = 'info' | 'warn' | 'error';
 
 /**
  * Winston Logger Wrapper Class
@@ -50,24 +50,20 @@ export class WinstonLogger {
    * Log INFO level messages
    */
   info(message: string, metadata?: LogMetadata): void {
-    this.logSafely("info", message, metadata);
+    this.logSafely('info', message, metadata);
   }
 
   /**
    * Log WARN level messages
    */
   warn(message: string, metadata?: LogMetadata): void {
-    this.logSafely("warn", message, metadata);
+    this.logSafely('warn', message, metadata);
   }
 
   /**
    * Log ERROR level messages
    */
-  error(
-    message: string,
-    error?: Error | LogMetadata,
-    metadata?: LogMetadata
-  ): void {
+  error(message: string, error?: Error | LogMetadata, metadata?: LogMetadata): void {
     if (error instanceof Error) {
       const combinedMetadata = {
         ...metadata,
@@ -77,9 +73,9 @@ export class WinstonLogger {
           stack: error.stack,
         },
       };
-      this.logSafely("error", message, combinedMetadata);
+      this.logSafely('error', message, combinedMetadata);
     } else {
-      this.logSafely("error", message, error);
+      this.logSafely('error', message, error);
     }
   }
 
@@ -94,14 +90,14 @@ export class WinstonLogger {
    * Async INFO logging
    */
   async asyncInfo(message: string, metadata?: LogMetadata): Promise<void> {
-    return this.logAsync("info", message, metadata);
+    return this.logAsync('info', message, metadata);
   }
 
   /**
    * Async WARN logging
    */
   async asyncWarn(message: string, metadata?: LogMetadata): Promise<void> {
-    return this.logAsync("warn", message, metadata);
+    return this.logAsync('warn', message, metadata);
   }
 
   /**
@@ -110,16 +106,16 @@ export class WinstonLogger {
   async asyncError(
     message: string,
     error?: Error | LogMetadata,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): Promise<void> {
     if (error instanceof Error) {
       const combinedMetadata = {
         ...metadata,
         error: this.serializeError(error),
       };
-      return this.logAsync("error", message, combinedMetadata);
+      return this.logAsync('error', message, combinedMetadata);
     } else {
-      return this.logAsync("error", message, error);
+      return this.logAsync('error', message, error);
     }
   }
 
@@ -131,9 +127,9 @@ export class WinstonLogger {
       level: LogLevel;
       message: string;
       metadata?: LogMetadata;
-    }>
+    }>,
   ): void {
-    entries.forEach((entry) => {
+    entries.forEach(entry => {
       this.logSafely(entry.level, entry.message, entry.metadata);
     });
   }
@@ -145,7 +141,7 @@ export class WinstonLogger {
     try {
       this.logger.level = level;
     } catch (error) {
-      this.fallbackToConsole("warn", `Failed to set log level: ${level}`, {
+      this.fallbackToConsole('warn', `Failed to set log level: ${level}`, {
         error,
       });
     }
@@ -164,11 +160,7 @@ export class WinstonLogger {
   /**
    * Safe logging with error handling
    */
-  private logSafely(
-    level: LogLevel,
-    message: string,
-    metadata?: LogMetadata
-  ): void {
+  private logSafely(level: LogLevel, message: string, metadata?: LogMetadata): void {
     try {
       const sanitizedMetadata = this.sanitizeMetadata(metadata);
       this.logger[level](message, sanitizedMetadata);
@@ -177,7 +169,7 @@ export class WinstonLogger {
         try {
           this.fallbackToConsole(level, message, metadata);
         } catch (fallbackError) {
-          console.error("Critical logging failure with fallback:", message, {
+          console.error('Critical logging failure with fallback:', message, {
             originalError: error,
             fallbackError,
           });
@@ -189,12 +181,8 @@ export class WinstonLogger {
   /**
    * Async logging implementation
    */
-  private async logAsync(
-    level: LogLevel,
-    message: string,
-    metadata?: LogMetadata
-  ): Promise<void> {
-    return new Promise((resolve) => {
+  private async logAsync(level: LogLevel, message: string, metadata?: LogMetadata): Promise<void> {
+    return new Promise(resolve => {
       try {
         const sanitizedMetadata = this.sanitizeMetadata(metadata);
         this.logger[level](message, sanitizedMetadata, () => {
@@ -205,7 +193,7 @@ export class WinstonLogger {
           try {
             this.fallbackToConsole(level, message, metadata);
           } catch (fallbackError) {
-            console.error("Critical async logging failure:", message, {
+            console.error('Critical async logging failure:', message, {
               originalError: error,
               fallbackError,
             });
@@ -228,11 +216,9 @@ export class WinstonLogger {
       return metadata;
     } catch (error) {
       // Handle the error by removing circular references
-      this.fallbackToConsole(
-        "warn",
-        "Metadata contains circular references, sanitizing",
-        { error }
-      );
+      this.fallbackToConsole('warn', 'Metadata contains circular references, sanitizing', {
+        error,
+      });
       return this.removeCircularReferences(metadata);
     }
   }
@@ -241,18 +227,18 @@ export class WinstonLogger {
    * Remove circular references from metadata
    */
   private removeCircularReferences(obj: any, seen = new WeakSet()): any {
-    if (obj === null || typeof obj !== "object") {
+    if (obj === null || typeof obj !== 'object') {
       return obj;
     }
 
     if (seen.has(obj)) {
-      return "[Circular Reference]";
+      return '[Circular Reference]';
     }
 
     seen.add(obj);
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => this.removeCircularReferences(item, seen));
+      return obj.map(item => this.removeCircularReferences(item, seen));
     }
 
     const cleaned: any = {};
@@ -261,10 +247,10 @@ export class WinstonLogger {
         cleaned[key] = this.removeCircularReferences(value, seen);
       } catch (error) {
         // Log the specific property that couldn't be processed
-        this.fallbackToConsole("warn", `Could not process property: ${key}`, {
+        this.fallbackToConsole('warn', `Could not process property: ${key}`, {
           error,
         });
-        cleaned[key] = "[Unserializable]";
+        cleaned[key] = '[Unserializable]';
       }
     }
 
@@ -281,27 +267,23 @@ export class WinstonLogger {
         message: error.message,
         stack: error.stack,
         ...Object.getOwnPropertyNames(error).reduce((acc, key) => {
-          acc[key] = (error as any)[key];
+          acc[key] = (error as unknown as Record<string, unknown>)[key];
           return acc;
-        }, {} as any),
+        }, {} as Record<string, unknown>),
       };
     } catch (error) {
       // Handle any errors during error serialization
-      this.fallbackToConsole("warn", "Failed to serialize error object", {
+      this.fallbackToConsole('warn', 'Failed to serialize error object', {
         error,
       });
-      return { name: "UnknownError", message: "Failed to serialize error" };
+      return { name: 'UnknownError', message: 'Failed to serialize error' };
     }
   }
 
   /**
    * Fallback to console logging when Winston fails
    */
-  private fallbackToConsole(
-    level: LogLevel,
-    message: string,
-    metadata?: LogMetadata
-  ): void {
+  private fallbackToConsole(level: LogLevel, message: string, metadata?: LogMetadata): void {
     try {
       const timestamp = new Date().toISOString();
       const logMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
@@ -313,7 +295,7 @@ export class WinstonLogger {
       }
     } catch (error) {
       // Last resort if even console logging fails
-      console.error("Critical logging failure:", message, error);
+      console.error('Critical logging failure:', message, error);
     }
   }
 
@@ -321,8 +303,8 @@ export class WinstonLogger {
    * Handle logger creation errors
    */
   private handleLoggerCreationError(error: any): void {
-    console.error("[WINSTON] Failed to create logger:", error.message);
-    console.error("[WINSTON] Falling back to console logging");
+    console.error('[WINSTON] Failed to create logger:', error.message);
+    console.error('[WINSTON] Falling back to console logging');
   }
 }
 
@@ -335,15 +317,9 @@ export const defaultWinstonLogger = new WinstonLogger();
  * Convenience functions for backward compatibility
  */
 export const winstonLogger = {
-  info: (message: string, metadata?: LogMetadata) =>
-    defaultWinstonLogger.info(message, metadata),
-  warn: (message: string, metadata?: LogMetadata) =>
-    defaultWinstonLogger.warn(message, metadata),
-  error: (
-    message: string,
-    error?: Error | LogMetadata,
-    metadata?: LogMetadata
-  ) => defaultWinstonLogger.error(message, error, metadata),
-  log: (message: string, metadata?: LogMetadata) =>
-    defaultWinstonLogger.log(message, metadata),
+  info: (message: string, metadata?: LogMetadata) => defaultWinstonLogger.info(message, metadata),
+  warn: (message: string, metadata?: LogMetadata) => defaultWinstonLogger.warn(message, metadata),
+  error: (message: string, error?: Error | LogMetadata, metadata?: LogMetadata) =>
+    defaultWinstonLogger.error(message, error, metadata),
+  log: (message: string, metadata?: LogMetadata) => defaultWinstonLogger.log(message, metadata),
 };

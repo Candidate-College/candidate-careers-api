@@ -35,3 +35,10 @@
 {"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-15T03:02:49.899Z","userId":1}
 {"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-15T03:05:05.349Z"}
 {"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-15T03:05:05.356Z","userId":1}
+{"count":15,"level":"warn","message":"Security alert triggered","reason":"High activity volume","timestamp":"2025-07-16T05:04:29.850Z"}
+{"count":5,"level":"warn","message":"Security alert triggered","reason":"Repeated failures for update_record","timestamp":"2025-07-16T05:04:29.850Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-16T05:04:29.937Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-16T05:04:29.959Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-16T05:04:29.962Z","userId":10}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-16T05:04:32.049Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-16T05:04:32.059Z"}

@@ -5,7 +5,10 @@ export interface UserData {
   id: number;
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  password_hash?: string;
+  role_id?: number;
+  status?: 'active' | 'inactive' | 'suspended';
   role: string;
   verification_token?: string;
   email_verified_at?: Date | null;
@@ -17,10 +20,10 @@ export interface UserData {
 }
 
 export class User extends Model {
-  static softDelete = true;
-  static tableName = 'users';
+  static readonly softDelete = true;
+  static readonly tableName = 'users';
 
-  static relationMappings = {
+  static readonly relationMappings = {
     sessions: {
       relation: Model.HasManyRelation,
       modelClass: UserSession,
