@@ -28,9 +28,9 @@ import { UserRepository } from '@/repositories/user-repository';
 import { ActivityLogService } from '@/services/audit/activity-log-service';
 import jwt from 'jsonwebtoken';
 
-const mockUserRepository = UserRepository as jest.Mocked<typeof UserRepository>;
+const mockUserRepository = UserRepository;
 const mockActivityLogService = ActivityLogService as jest.Mocked<typeof ActivityLogService>;
-const mockJwt = jwt as jest.Mocked<typeof jwt>;
+const mockJwt = jwt;
 
 const superAdmin = {
   id: 1,

@@ -10,7 +10,9 @@
 // @ts-nocheck
 
 // Mock ORM to avoid initializing real knex
-class MockModel {}
+class MockModel {
+  public static readonly __dummy = true;
+} // SonarLint S1444: Make static property public and readonly
 (MockModel as any).knex = jest.fn();
 (MockModel as any).BelongsToOneRelation = 1;
 (MockModel as any).HasManyRelation = 2;
@@ -774,6 +776,30 @@ describe('UserManagementService', () => {
       ).rejects.toThrow('Some users not found');
     });
 
+    // Helpers for deeply nested User model mock (for S2004)
+    function firstFn() {
+      return Promise.resolve({ count: '2' });
+    }
+    function countFn() {
+      return { first: firstFn };
+    }
+    function whereNullFn() {
+      return { count: countFn };
+    }
+    function whereFn() {
+      return { whereNull: whereNullFn };
+    }
+    function leftJoinFn() {
+      return { where: whereFn };
+    }
+    function selectFn() {
+      return { leftJoin: leftJoinFn };
+    }
+    function queryFn() {
+      return { select: selectFn };
+    }
+    const deeplyNestedUserModelMock = { query: queryFn };
+
     it('should prevent bulk deletion of all super admins', async () => {
       // Simulate all users are super admins and totalSuperAdmins = 2
       const superAdminUsers = [
@@ -781,23 +807,8 @@ describe('UserManagementService', () => {
         { id: 2, uuid: 'uuid-2', role: { name: 'super_admin' } },
       ];
       mockUserRepository.findByUuids.mockResolvedValue(superAdminUsers as any);
-      // Mock User.query().select().leftJoin().where().whereNull().count().first()
-      const mockUserModel = {
-        query: () => ({
-          select: () => ({
-            leftJoin: () => ({
-              where: () => ({
-                whereNull: () => ({
-                  count: () => ({
-                    first: () => Promise.resolve({ count: '2' }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        }),
-      };
-      jest.doMock('@/models/user-model', () => ({ User: mockUserModel }));
+      // Use extracted deeply nested mock to reduce nesting (SonarLint S2004)
+      jest.doMock('@/models/user-model', () => ({ User: deeplyNestedUserModelMock }));
       await expect(
         UserManagementService.bulkUserOperations('delete', ['uuid-1', 'uuid-2'], {}, 1),
       ).rejects.toThrow('Cannot delete all super administrators');
