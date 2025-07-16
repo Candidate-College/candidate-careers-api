@@ -10,7 +10,10 @@
 import { UserData } from '@/models/user-model';
 import { RoleData } from '@/models/role-model';
 import { AuthenticatedUser, JsonResponse } from '@/types/express-extension';
-import { PaginatedResult } from '@/utilities/pagination';
+
+// Type aliases for status and action
+export type UserStatus = 'active' | 'inactive' | 'suspended';
+export type BulkAction = 'activate' | 'deactivate' | 'delete' | 'change_role' | 'suspend';
 
 /**
  * Extended user data with role information
@@ -37,7 +40,7 @@ export interface DetailedUser extends Omit<UserData, 'role'> {
 export interface UserUpdatePayload {
   name?: string;
   role_id?: number;
-  status?: 'active' | 'inactive' | 'suspended';
+  status?: UserStatus;
   send_notification?: boolean;
   [key: string]: unknown; // Allow additional properties for Record<string, unknown>
 }
@@ -49,7 +52,7 @@ export interface UserCreatePayload {
   email: string;
   name: string;
   role_id: number;
-  status?: 'active' | 'inactive' | 'suspended';
+  status?: UserStatus;
 }
 
 /**
@@ -65,7 +68,7 @@ export interface UserDeleteOptions {
  * Bulk operation payload interface
  */
 export interface BulkOperationPayload {
-  action: 'activate' | 'deactivate' | 'delete' | 'change_role' | 'suspend';
+  action: BulkAction;
   user_uuids: string[];
   role_id?: number;
   send_notification?: boolean;
@@ -210,9 +213,7 @@ export interface UserManagementResponse extends JsonResponse {
 /**
  * User repository transaction interface
  */
-export interface UserRepositoryTransaction {
-  (callback: (trx: any) => Promise<any>): Promise<any>;
-}
+export type UserRepositoryTransaction = (callback: (trx: any) => Promise<any>) => Promise<any>;
 
 /**
  * Activity log service interface
