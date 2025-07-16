@@ -9,10 +9,10 @@
 
 import { UserRepository } from '@/repositories/user-repository';
 import { ActivityLogService } from '@/services/audit/activity-log-service';
-import { UserData } from '@/models/user-model';
 import { DetailedUser } from '@/interfaces/user/user-management';
 const jwt = require('jsonwebtoken');
 import { v4 as uuidv4 } from 'uuid';
+import { defaultWinstonLogger } from '@/utilities/winston-logger';
 
 export interface ImpersonationToken {
   token: string;
@@ -268,8 +268,9 @@ export class UserImpersonationService {
         'accessed',
       );
     } catch (error) {
-      // Log error but don't fail the operation
-      console.error('Failed to send impersonation notification:', error);
+      // Log error using Winston logger
+      defaultWinstonLogger.error('Failed to send impersonation notification', { error });
+      throw error;
     }
   }
 
@@ -304,7 +305,9 @@ export class UserImpersonationService {
 
       return decoded;
     } catch (error) {
-      throw new Error('Invalid impersonation access token');
+      // Log error using Winston logger
+      defaultWinstonLogger.error('Invalid impersonation access token', { error });
+      throw error;
     }
   }
 }
