@@ -375,7 +375,7 @@ export class UserManagementService {
     }
 
     let newPassword: string;
-    if (options.generate_temporary !== false) {
+    if (options.generate_temporary === true) {
       newPassword = generateSecurePassword();
     } else if (options.new_password) {
       newPassword = options.new_password;
