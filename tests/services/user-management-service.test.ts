@@ -7,6 +7,23 @@
  * @module tests/services/user-management-service
  */
 
+// @ts-nocheck
+
+// Mock ORM to avoid initializing real knex
+class MockModel {}
+(MockModel as any).knex = jest.fn();
+(MockModel as any).BelongsToOneRelation = 1;
+(MockModel as any).HasManyRelation = 2;
+(MockModel as any).query = jest.fn(() => ({ findById: jest.fn(), whereNull: jest.fn() }));
+
+jest.mock('@/config/database/orm', () => MockModel);
+
+// Mock Objection transaction before importing service
+jest.mock('objection', () => ({
+  transaction: (_: any, cb: any) => cb({}),
+  raw: jest.fn(),
+}));
+
 import { UserManagementService } from '@/services/user/user-management-service';
 import { UserRepository } from '@/repositories/user-repository';
 import { ActivityLogService } from '@/services/audit/activity-log-service';
@@ -16,27 +33,6 @@ import { emailService } from '@/services/email/email-service';
 jest.mock('@/repositories/user-repository');
 jest.mock('@/services/audit/activity-log-service');
 jest.mock('@/services/email/email-service');
-jest.mock('@/config/database/orm', () => ({
-  Model: {
-    query: jest.fn(() => ({
-      where: jest.fn().mockReturnThis(),
-      whereIn: jest.fn().mockReturnThis(),
-      whereNull: jest.fn().mockReturnThis(),
-      whereNotNull: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      leftJoin: jest.fn().mockReturnThis(),
-      groupBy: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      count: jest.fn().mockReturnThis(),
-      first: jest.fn().mockReturnThis(),
-      raw: jest.fn().mockReturnThis(),
-    })),
-  },
-}));
-jest.mock('objection', () => ({
-  transaction: jest.fn((model, callback) => callback({})),
-}));
 
 const mockUserRepository = UserRepository as jest.Mocked<typeof UserRepository>;
 const mockActivityLogService = ActivityLogService as jest.Mocked<typeof ActivityLogService>;
@@ -61,6 +57,10 @@ describe('UserManagementService', () => {
     it('should update user successfully', async () => {
       mockUserRepository.findDetailedByUuid.mockResolvedValue(mockUser as any);
       mockUserRepository.updateByUuid.mockResolvedValue({
+        ...mockUser,
+        name: 'Updated User',
+      } as any);
+      mockUserRepository.findByUuid.mockResolvedValue({
         ...mockUser,
         name: 'Updated User',
       } as any);
@@ -93,6 +93,7 @@ describe('UserManagementService', () => {
     it('should send notification when role changes', async () => {
       mockUserRepository.findDetailedByUuid.mockResolvedValue(mockUser as any);
       mockUserRepository.updateByUuid.mockResolvedValue({ ...mockUser, role_id: 3 } as any);
+      mockUserRepository.findByUuid.mockResolvedValue({ ...mockUser, role_id: 3 } as any);
       mockActivityLogService.logUserAction.mockResolvedValue({ success: true });
 
       await UserManagementService.updateUser(
@@ -197,7 +198,7 @@ describe('UserManagementService', () => {
         expect.any(Object),
       );
       expect(result.success).toBe(true);
-      expect(result.affectedCount).toBe(2);
+      expect(result.processed).toBe(2);
     });
 
     it('should change role for multiple users', async () => {
@@ -272,7 +273,7 @@ describe('UserManagementService', () => {
       );
       expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalled();
       expect(result.success).toBe(true);
-      expect(result.temporaryPassword).toBeDefined();
+      expect(result.temporary_password).toBeDefined();
     });
 
     it('should reset password with provided password', async () => {
@@ -286,10 +287,11 @@ describe('UserManagementService', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.temporaryPassword).toBeUndefined();
+      expect(result.temporary_password).toBeUndefined();
     });
 
     it('should throw error if neither generate_temporary nor new_password provided', async () => {
+      mockUserRepository.findDetailedByUuid.mockResolvedValue(mockUser as any);
       await expect(UserManagementService.resetUserPassword('test-uuid', {})).rejects.toThrow(
         'Either generate_temporary must be true or new_password must be provided',
       );
