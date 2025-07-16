@@ -11,7 +11,7 @@
  * @module controllers/audit-export-controller
  */
 
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { JsonResponse } from '@/types/express-extension';
 import ActivityExportService from '@/services/audit/activity-export-service';
 import { ActivityRetrievalService } from '@/services/audit/activity-retrieval-service';
@@ -25,7 +25,7 @@ import { defaultWinstonLogger as logger } from '@/utilities/winston-logger';
  *  – batchSize?: number – override default batch size during export
  *  – userId?, dateFrom?, dateTo?, category?, severity? – optional filters
  */
-exports.exportLogs = async (req: Request, res: JsonResponse) => {
+exports.exportLogs = async (req: Request, res: Response) => {
   const {
     format = 'csv',
     batchSize,
@@ -69,7 +69,7 @@ exports.exportLogs = async (req: Request, res: JsonResponse) => {
     return res.send(result.buffer);
   } catch (err: any) {
     logger.error('audit-export-controller@exportLogs', err);
-    return res.error(500, 'Failed to export audit logs');
+    return (res as unknown as JsonResponse).error(500, 'Failed to export audit logs');
   }
 };
 
@@ -77,7 +77,7 @@ exports.exportLogs = async (req: Request, res: JsonResponse) => {
  * GET /admin/audit/stream – Server-Sent Events stream of recent logs.
  * Pushes last 10 activities every second. Intended for admin dashboards.
  */
-exports.streamLogs = async (_req: Request, res: any) => {
+exports.streamLogs = async (_req: Request, res: Response) => {
   // SSE headers
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
