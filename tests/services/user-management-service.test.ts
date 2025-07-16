@@ -18,6 +18,18 @@ class MockModel {}
 
 jest.mock('@/config/database/orm', () => MockModel);
 
+// Mock User model for all tests
+const mockUserModel = {
+  query: jest.fn().mockReturnThis(),
+  select: jest.fn().mockReturnThis(),
+  leftJoin: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  whereNull: jest.fn().mockReturnThis(),
+  count: jest.fn().mockReturnThis(),
+  first: jest.fn().mockResolvedValue({ count: '2' }),
+};
+jest.mock('@/models/user-model', () => ({ User: mockUserModel }));
+
 // Mock Objection transaction before importing service
 jest.mock('objection', () => ({
   transaction: (_: any, cb: any) => cb({}),
@@ -690,6 +702,49 @@ describe('UserManagementService', () => {
       expect(result.success).toBe(true);
     });
 
+    it('should delete multiple users', async () => {
+      mockUserRepository.findByUuids.mockResolvedValue(mockUsers as any);
+      mockUserRepository.bulkDeleteByUuids.mockResolvedValue(2);
+      mockActivityLogService.logUserAction.mockResolvedValue({ success: true });
+
+      const result = await UserManagementService.bulkUserOperations(
+        'delete',
+        ['uuid-1', 'uuid-2'],
+        {},
+        1,
+      );
+
+      expect(mockUserRepository.bulkDeleteByUuids).toHaveBeenCalledWith(
+        ['uuid-1', 'uuid-2'],
+        expect.any(Object),
+      );
+      expect(result.success).toBe(true);
+      expect(result.processed).toBe(2);
+      expect(result.succeeded).toBe(2);
+      expect(result.failed).toBe(0);
+    });
+
+    it('should provide operation progress tracking', async () => {
+      mockUserRepository.findByUuids.mockResolvedValue(mockUsers as any);
+      mockUserRepository.bulkUpdateByUuids.mockResolvedValue(2);
+      mockActivityLogService.logUserAction.mockResolvedValue({ success: true });
+
+      const result = await UserManagementService.bulkUserOperations(
+        'activate',
+        ['uuid-1', 'uuid-2'],
+        {},
+        1,
+      );
+
+      expect(result).toMatchObject({
+        success: true,
+        processed: 2,
+        succeeded: 2,
+        failed: 0,
+        errors: [],
+      });
+    });
+
     it('should throw error if too many users in bulk operation', async () => {
       const manyUuids = Array.from({ length: 1001 }, (_, i) => `uuid-${i}`);
 
@@ -710,6 +765,61 @@ describe('UserManagementService', () => {
       await expect(
         UserManagementService.bulkUserOperations('activate', ['uuid-1', 'uuid-2'], {}, 1),
       ).rejects.toThrow('Some users not found');
+    });
+
+    it('should fail bulk operation with invalid user UUIDs', async () => {
+      mockUserRepository.findByUuids.mockResolvedValue([] as any);
+      await expect(
+        UserManagementService.bulkUserOperations('activate', ['invalid-uuid'], {}, 1),
+      ).rejects.toThrow('Some users not found');
+    });
+
+    it('should prevent bulk deletion of all super admins', async () => {
+      // Simulate all users are super admins and totalSuperAdmins = 2
+      const superAdminUsers = [
+        { id: 1, uuid: 'uuid-1', role: { name: 'super_admin' } },
+        { id: 2, uuid: 'uuid-2', role: { name: 'super_admin' } },
+      ];
+      mockUserRepository.findByUuids.mockResolvedValue(superAdminUsers as any);
+      // Mock User.query().select().leftJoin().where().whereNull().count().first()
+      const mockUserModel = {
+        query: () => ({
+          select: () => ({
+            leftJoin: () => ({
+              where: () => ({
+                whereNull: () => ({
+                  count: () => ({
+                    first: () => Promise.resolve({ count: '2' }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      };
+      jest.doMock('@/models/user-model', () => ({ User: mockUserModel }));
+      await expect(
+        UserManagementService.bulkUserOperations('delete', ['uuid-1', 'uuid-2'], {}, 1),
+      ).rejects.toThrow('Cannot delete all super administrators');
+      jest.resetModules();
+    });
+
+    it('should handle partial failures in bulk operations', async () => {
+      // Simulate 2 users found, but only 1 succeeded in update
+      mockUserRepository.findByUuids.mockResolvedValue(mockUsers as any);
+      mockUserRepository.bulkUpdateByUuids.mockResolvedValue(1); // Only 1 succeeded
+      mockActivityLogService.logUserAction.mockResolvedValue({ success: true });
+
+      const result = await UserManagementService.bulkUserOperations(
+        'activate',
+        ['uuid-1', 'uuid-2'],
+        {},
+        1,
+      );
+      expect(result.success).toBe(true);
+      expect(result.processed).toBe(2);
+      expect(result.succeeded).toBe(1);
+      expect(result.failed).toBe(1);
     });
   });
 
