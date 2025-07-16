@@ -27,7 +27,6 @@ import dayjs from 'dayjs';
 
 import {
   StatisticsPeriod,
-  GroupByOption,
   StatisticsFilters,
   ActivityStatisticsResult,
   DashboardDataResult,
