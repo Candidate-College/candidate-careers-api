@@ -21,6 +21,14 @@ const router = Router();
 router.use(accessToken, requireRole('super_admin'));
 
 // GET /admin/users
+// List users
 router.get('/', validate(listUsersSchema, { only: 'query' }), UserManagementController.listUsers);
+
+// User detail
+const uuidSchema = require('@/validators/user/user-uuid.validator');
+router.get('/:uuid', validate(uuidSchema, { only: 'params' }), UserManagementController.getUserDetail);
+
+// User activity
+router.get('/:uuid/activity', validate(uuidSchema, { only: 'params' }), UserManagementController.getUserActivity);
 
 module.exports = router;

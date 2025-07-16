@@ -26,4 +26,8 @@ export class UserManagementService {
 
     return UserRepository.list(filters);
   }
+
+  static async getUserByUuid(uuid: string) {
+    return UserRepository.findByUuid(uuid);
+  }
 }

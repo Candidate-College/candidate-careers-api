@@ -87,4 +87,9 @@ export class UserRepository {
 
     return paginate(qb, { page: filters.page, pageSize: filters.limit });
   }
+
+  /** Get single user detail by uuid with role join */
+  static async findByUuid(uuid: string): Promise<UserData | undefined> {
+    return this.baseQuery().where('users.uuid', uuid).first();
+  }
 }
