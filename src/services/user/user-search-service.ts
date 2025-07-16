@@ -1,73 +1,340 @@
 /**
  * UserSearchService
  *
- * Provides advanced user search capabilities for the admin panel. Built on top
- * of UserRepository, but keeps search-specific logic (keyword parsing, dynamic
- * query construction, statistics, suggestions) separate from generic list
- * filtering so we can evolve them independently.
+ * Provides advanced user search functionality with multiple criteria,
+ * filtering, and search suggestions for the admin interface.
+ *
+ * @module src/services/user/user-search-service
  */
 
-import { UserRepository, ListUsersFilters } from '@/repositories/user-repository';
+import { UserRepository } from '@/repositories/user-repository';
 import { PaginatedResult } from '@/utilities/pagination';
+import { QueryBuilder } from 'objection';
+import { User, UserData } from '@/models/user-model';
+import dayjs from 'dayjs';
 import { raw } from 'objection';
+
+export interface SearchUsersFilters {
+  q?: string;
+  page?: number;
+  limit?: number;
+  role_ids?: number[];
+  statuses?: ('active' | 'inactive' | 'suspended')[];
+  email_domain?: string;
+  created_after?: string;
+  created_before?: string;
+  last_login_after?: string;
+  last_login_before?: string;
+  has_verified_email?: boolean;
+  login_attempts_greater_than?: number;
+  include_deleted?: boolean;
+  exact_match?: boolean;
+  sort_by?: 'name' | 'email' | 'created_at' | 'last_login_at' | 'status';
+  sort_order?: 'asc' | 'desc';
+}
+
+export interface SearchSuggestion {
+  value: string;
+  type: 'name' | 'email' | 'domain';
+  count: number;
+}
+
+export interface UserStatistics {
+  total_users: number;
+  active_users: number;
+  inactive_users: number;
+  suspended_users: number;
+  verified_users: number;
+  users_by_role: Array<{ role_name: string; count: number }>;
+  recent_signups: number;
+  avg_login_frequency: number;
+}
 
 export class UserSearchService {
   /**
-   * Perform a keyword search combined with optional structured filters.
+   * Advanced user search with multiple criteria and filtering
    */
-  static async searchUsers(
-    query: string,
-    filters: Omit<ListUsersFilters, 'search'> & { limit?: number; page?: number }
+  static async searchUsers(filters: SearchUsersFilters): Promise<PaginatedResult<any>> {
+    let query = this.buildSearchQuery(filters);
+    return this.paginateQuery(query, filters);
+  }
+
+  /**
+   * Build complex search query based on filters
+   */
+  private static buildSearchQuery(filters: SearchUsersFilters): QueryBuilder<User, UserData[]> {
+    let query = User.query()
+      .select(
+        'users.id',
+        'users.uuid',
+        'users.email',
+        'users.name',
+        'users.status',
+        'users.email_verified_at',
+        'users.last_login_at',
+        'users.created_at',
+        'users.updated_at',
+        'roles.id as role:id',
+        'roles.name as role:name',
+        'roles.display_name as role:display_name',
+      )
+      .leftJoin('roles', 'roles.id', 'users.role_id');
+
+    // Handle deleted users
+    if (!filters.include_deleted) {
+      query = query.whereNull('users.deleted_at');
+    }
+
+    // Text search
+    if (filters.q) {
+      const searchTerm = filters.q.toLowerCase();
+      if (filters.exact_match) {
+        query = query.where((rawBuilder: any) => {
+          rawBuilder
+            .whereRaw('LOWER(users.name) = ?', [searchTerm])
+            .orWhereRaw('LOWER(users.email) = ?', [searchTerm]);
+        });
+      } else {
+        query = query.where((rawBuilder: any) => {
+          rawBuilder
+            .whereRaw('LOWER(users.name) LIKE ?', [`%${searchTerm}%`])
+            .orWhereRaw('LOWER(users.email) LIKE ?', [`%${searchTerm}%`]);
+        });
+      }
+    }
+
+    // Role filter
+    if (filters.role_ids && filters.role_ids.length > 0) {
+      query = query.whereIn('users.role_id', filters.role_ids);
+    }
+
+    // Status filter
+    if (filters.statuses && filters.statuses.length > 0) {
+      query = query.whereIn('users.status', filters.statuses);
+    }
+
+    // Email domain filter
+    if (filters.email_domain) {
+      query = query.whereRaw('LOWER(users.email) LIKE ?', [
+        `%@${filters.email_domain.toLowerCase()}%`,
+      ]);
+    }
+
+    // Date range filters
+    if (filters.created_after) {
+      query = query.where('users.created_at', '>=', dayjs(filters.created_after).toISOString());
+    }
+    if (filters.created_before) {
+      query = query.where('users.created_at', '<=', dayjs(filters.created_before).toISOString());
+    }
+    if (filters.last_login_after) {
+      query = query.where(
+        'users.last_login_at',
+        '>=',
+        dayjs(filters.last_login_after).toISOString(),
+      );
+    }
+    if (filters.last_login_before) {
+      query = query.where(
+        'users.last_login_at',
+        '<=',
+        dayjs(filters.last_login_before).toISOString(),
+      );
+    }
+
+    // Email verification filter
+    if (filters.has_verified_email !== undefined) {
+      if (filters.has_verified_email) {
+        query = query.whereNotNull('users.email_verified_at');
+      } else {
+        query = query.whereNull('users.email_verified_at');
+      }
+    }
+
+    // Login attempts filter
+    if (filters.login_attempts_greater_than !== undefined) {
+      query = query.where('users.login_attempts', '>', filters.login_attempts_greater_than);
+    }
+
+    // Sorting
+    const sortBy = filters.sort_by ?? 'created_at';
+    const sortOrder = filters.sort_order ?? 'desc';
+    query = query.orderBy(`users.${sortBy}`, sortOrder);
+
+    return query;
+  }
+
+  /**
+   * Paginate search query results
+   */
+  private static async paginateQuery(
+    query: QueryBuilder<User, UserData[]>,
+    filters: SearchUsersFilters,
   ): Promise<PaginatedResult<any>> {
-    const merged: ListUsersFilters = {
-      ...filters,
-      search: query,
-    } as any;
-
-    return UserRepository.list(merged);
+    const { paginate } = await import('@/utilities/pagination');
+    return paginate(query, {
+      page: filters.page,
+      pageSize: filters.limit,
+    });
   }
 
   /**
-   * Build dynamic search WHERE clause for raw queries when needed. Currently
-   * returns Objection raw expression matching name OR email ILIKE.
+   * Get search suggestions for autocomplete
    */
-  static buildSearchQuery(q: string) {
-    const term = `%${q.toLowerCase()}%`;
-    return raw('LOWER(users.name) LIKE ? OR LOWER(users.email) LIKE ?', [term, term]);
+  static async getSearchSuggestions(
+    query: string,
+    limit: number = 10,
+  ): Promise<SearchSuggestion[]> {
+    const suggestions: SearchSuggestion[] = [];
+    const searchTerm = query.toLowerCase();
+
+    // Name suggestions
+    const nameSuggestions = await User.query()
+      .select('name')
+      .whereRaw('LOWER(name) LIKE ?', [`%${searchTerm}%`])
+      .whereNull('deleted_at')
+      .groupBy('name')
+      .limit(limit)
+      .count('* as count');
+
+    nameSuggestions.forEach((suggestion: any) => {
+      suggestions.push({
+        value: suggestion.name,
+        type: 'name',
+        count: parseInt(suggestion.count),
+      });
+    });
+
+    // Email suggestions
+    const emailSuggestions = await User.query()
+      .select('email')
+      .whereRaw('LOWER(email) LIKE ?', [`%${searchTerm}%`])
+      .whereNull('deleted_at')
+      .groupBy('email')
+      .limit(limit)
+      .count('* as count');
+
+    emailSuggestions.forEach((suggestion: any) => {
+      suggestions.push({
+        value: suggestion.email,
+        type: 'email',
+        count: parseInt(suggestion.count),
+      });
+    });
+
+    // Domain suggestions
+    const domainSuggestions = await User.query()
+      .select(User.raw("SUBSTRING(email FROM POSITION('@' IN email) + 1) as domain"))
+      .whereRaw('LOWER(email) LIKE ?', [`%@${searchTerm}%`])
+      .whereNull('deleted_at')
+      .groupBy('domain')
+      .limit(limit)
+      .count('* as count');
+
+    domainSuggestions.forEach((suggestion: any) => {
+      suggestions.push({
+        value: suggestion.domain,
+        type: 'domain',
+        count: parseInt(suggestion.count),
+      });
+    });
+
+    return suggestions.sort((a, b) => b.count - a.count).slice(0, limit);
   }
 
   /**
-   * Very simple implementation – return top 5 distinct names/email fragments
-   * that match query. Can be replaced with full-text search later.
+   * Get comprehensive user statistics for admin dashboard
    */
-  static async getSearchSuggestions(q: string): Promise<string[]> {
-    const term = `%${q.toLowerCase()}%`;
-    const rows = await UserRepository['baseQuery']?.() // access protected method via cast
-      .clearSelect()
-      .select('users.name as suggestion')
-      .whereRaw('LOWER(users.name) LIKE ?', [term])
-      .orWhereRaw('LOWER(users.email) LIKE ?', [term])
-      .limit(5);
+  static async getUserStatistics(): Promise<UserStatistics> {
+    const [totalUsers, activeUsers, inactiveUsers, suspendedUsers, verifiedUsers] =
+      await Promise.all([
+        User.query().whereNull('deleted_at').count('* as count').first(),
+        User.query().whereNull('deleted_at').where('status', 'active').count('* as count').first(),
+        User.query()
+          .whereNull('deleted_at')
+          .where('status', 'inactive')
+          .count('* as count')
+          .first(),
+        User.query()
+          .whereNull('deleted_at')
+          .where('status', 'suspended')
+          .count('* as count')
+          .first(),
+        User.query()
+          .whereNull('deleted_at')
+          .whereNotNull('email_verified_at')
+          .count('* as count')
+          .first(),
+      ]);
 
-    return (rows ?? []).map((r: any) => r.suggestion);
-  }
+    // Users by role
+    const usersByRole = await User.query()
+      .select('roles.name as role_name')
+      .count('users.id as count')
+      .leftJoin('roles', 'roles.id', 'users.role_id')
+      .whereNull('users.deleted_at')
+      .groupBy('roles.name')
+      .orderBy('count', 'desc');
 
-  /**
-   * Aggregate simple user statistics for dashboard: total, active, inactive.
-   */
-  static async getUserStatistics() {
-    const base = (await import('@/models/user-model')).User.query();
+    // Recent signups (last 30 days)
+    const thirtyDaysAgo = dayjs().subtract(30, 'days').toISOString();
+    const recentSignups = await User.query()
+      .whereNull('deleted_at')
+      .where('created_at', '>=', thirtyDaysAgo)
+      .count('* as count')
+      .first();
 
-    const [totalRes, activeRes, inactiveRes] = await Promise.all([
-      base.clone().count({ total: '*' }).first(),
-      base.clone().where('status', 'active').count({ total: '*' }).first(),
-      base.clone().where('status', 'inactive').count({ total: '*' }).first(),
-    ]);
+    // Average login frequency (users with login activity in last 90 days)
+    const ninetyDaysAgo = dayjs().subtract(90, 'days').toISOString();
+    const activeLoginUsers = await User.query()
+      .whereNull('deleted_at')
+      .whereNotNull('last_login_at')
+      .where('last_login_at', '>=', ninetyDaysAgo)
+      .count('* as count')
+      .first();
 
     return {
-      total: Number(totalRes?.total ?? 0),
-      active: Number(activeRes?.total ?? 0),
-      inactive: Number(inactiveRes?.total ?? 0),
+      total_users: parseInt(totalUsers?.count || '0'),
+      active_users: parseInt(activeUsers?.count || '0'),
+      inactive_users: parseInt(inactiveUsers?.count || '0'),
+      suspended_users: parseInt(suspendedUsers?.count || '0'),
+      verified_users: parseInt(verifiedUsers?.count || '0'),
+      users_by_role: usersByRole.map((item: any) => ({
+        role_name: item.role_name || 'No Role',
+        count: parseInt(item.count),
+      })),
+      recent_signups: parseInt(recentSignups?.count || '0'),
+      avg_login_frequency: parseInt(activeLoginUsers?.count || '0'),
     };
+  }
+
+  /**
+   * Get users by email domain
+   */
+  static async getUsersByDomain(
+    domain: string,
+    filters: Partial<SearchUsersFilters> = {},
+  ): Promise<PaginatedResult<any>> {
+    const domainFilters: SearchUsersFilters = {
+      ...filters,
+      email_domain: domain,
+    };
+    return this.searchUsers(domainFilters);
+  }
+
+  /**
+   * Get users created in date range
+   */
+  static async getUsersByDateRange(
+    startDate: string,
+    endDate: string,
+    filters: Partial<SearchUsersFilters> = {},
+  ): Promise<PaginatedResult<any>> {
+    const dateFilters: SearchUsersFilters = {
+      ...filters,
+      created_after: startDate,
+      created_before: endDate,
+    };
+    return this.searchUsers(dateFilters);
   }
 }

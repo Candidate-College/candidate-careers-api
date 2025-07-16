@@ -20,7 +20,7 @@ export interface ListUsersFilters {
   role_id?: number;
   status?: 'active' | 'inactive' | 'suspended';
   created_from?: string; // ISO date
-  created_to?: string;   // ISO date
+  created_to?: string; // ISO date
   sort_by?: 'name' | 'email' | 'created_at' | 'last_login_at';
   sort_order?: 'asc' | 'desc';
 }
@@ -41,7 +41,7 @@ export class UserRepository {
         'users.updated_at',
         'roles.id as role:id',
         'roles.name as role:name',
-        'roles.display_name as role:display_name'
+        'roles.display_name as role:display_name',
       )
       .leftJoin('roles', 'roles.id', 'users.role_id');
   }
@@ -98,5 +98,88 @@ export class UserRepository {
    */
   static async create(data: Partial<UserData>, trx?: any) {
     return trx ? User.query(trx).insertAndFetch(data) : User.query().insertAndFetch(data);
+  }
+
+  /**
+   * Update a user by UUID and return the updated record.
+   */
+  static async updateByUuid(
+    uuid: string,
+    data: Partial<UserData>,
+    trx?: any,
+  ): Promise<UserData | undefined> {
+    const query = trx ? User.query(trx) : User.query();
+    return query.where('uuid', uuid).whereNull('deleted_at').patchAndFetchById(data);
+  }
+
+  /**
+   * Soft delete a user by UUID.
+   */
+  static async deleteByUuid(uuid: string, trx?: any): Promise<number> {
+    const query = trx ? User.query(trx) : User.query();
+    return query.where('uuid', uuid).whereNull('deleted_at').patch({ deleted_at: new Date() });
+  }
+
+  /**
+   * Hard delete a user by UUID (for permanent deletion).
+   */
+  static async hardDeleteByUuid(uuid: string, trx?: any): Promise<number> {
+    const query = trx ? User.query(trx) : User.query();
+    return query.where('uuid', uuid).delete();
+  }
+
+  /**
+   * Find users by UUIDs for bulk operations.
+   */
+  static async findByUuids(uuids: string[], trx?: any): Promise<UserData[]> {
+    const query = trx ? User.query(trx) : User.query();
+    return query.whereIn('uuid', uuids).whereNull('deleted_at');
+  }
+
+  /**
+   * Bulk update users by UUIDs.
+   */
+  static async bulkUpdateByUuids(
+    uuids: string[],
+    data: Partial<UserData>,
+    trx?: any,
+  ): Promise<number> {
+    const query = trx ? User.query(trx) : User.query();
+    return query.whereIn('uuid', uuids).whereNull('deleted_at').patch(data);
+  }
+
+  /**
+   * Bulk soft delete users by UUIDs.
+   */
+  static async bulkDeleteByUuids(uuids: string[], trx?: any): Promise<number> {
+    const query = trx ? User.query(trx) : User.query();
+    return query.whereIn('uuid', uuids).whereNull('deleted_at').patch({ deleted_at: new Date() });
+  }
+
+  /**
+   * Check if user exists and is not deleted.
+   */
+  static async existsByUuid(uuid: string, trx?: any): Promise<boolean> {
+    const query = trx ? User.query(trx) : User.query();
+    const user = await query.where('uuid', uuid).whereNull('deleted_at').first();
+    return !!user;
+  }
+
+  /**
+   * Get user with role details for detailed view.
+   */
+  static async findDetailedByUuid(uuid: string): Promise<UserData | undefined> {
+    return User.query()
+      .select(
+        'users.*',
+        'roles.id as role:id',
+        'roles.name as role:name',
+        'roles.display_name as role:display_name',
+        'roles.description as role:description',
+      )
+      .leftJoin('roles', 'roles.id', 'users.role_id')
+      .where('users.uuid', uuid)
+      .whereNull('users.deleted_at')
+      .first();
   }
 }

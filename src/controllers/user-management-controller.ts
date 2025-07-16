@@ -58,4 +58,140 @@ export class UserManagementController {
       return next(err);
     }
   }
+
+  /** PUT /admin/users/:uuid */
+  static async updateUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { uuid } = req.params;
+      const adminId = (req as any).user?.id;
+
+      if (!adminId) {
+        return (res as any).error('Unauthorized', 401);
+      }
+
+      const user = await UserManagementService.updateUser(uuid, req.body, adminId);
+      return (res as any).success('User updated successfully', user);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** DELETE /admin/users/:uuid */
+  static async deleteUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { uuid } = req.params;
+      const adminId = (req as any).user?.id;
+
+      if (!adminId) {
+        return (res as any).error('Unauthorized', 401);
+      }
+
+      const result = await UserManagementService.deleteUser(uuid, req.body, adminId);
+      return (res as any).success('User deleted successfully', result);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** POST /admin/users/bulk */
+  static async bulkUserOperations(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { action, user_uuids, params } = req.body;
+      const adminId = (req as any).user?.id;
+
+      if (!adminId) {
+        return (res as any).error('Unauthorized', 401);
+      }
+
+      const result = await UserManagementService.bulkUserOperations(
+        action,
+        user_uuids,
+        params,
+        adminId,
+      );
+      return (res as any).success('Bulk operation completed successfully', result);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** POST /admin/users/:uuid/reset-password */
+  static async resetUserPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { uuid } = req.params;
+      const result = await UserManagementService.resetUserPassword(uuid, req.body);
+      return (res as any).success('Password reset successfully', result);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** POST /admin/users/:uuid/impersonate */
+  static async impersonateUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { uuid } = req.params;
+      const adminId = (req as any).user?.id;
+
+      if (!adminId) {
+        return (res as any).error('Unauthorized', 401);
+      }
+
+      const { UserImpersonationService } = await import(
+        '@/services/user/user-impersonation-service'
+      );
+      const result = await UserImpersonationService.createImpersonationToken(
+        adminId,
+        uuid,
+        req.body,
+      );
+
+      // Generate access token for the target user
+      const targetUser = await UserManagementService.getUserByUuid(uuid);
+      const accessToken = UserImpersonationService.generateImpersonationAccessToken(targetUser);
+
+      return (res as any).success('Impersonation started successfully', {
+        ...result,
+        access_token: accessToken,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** GET /admin/users/search */
+  static async searchUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { UserSearchService } = await import('@/services/user/user-search-service');
+      const result = await UserSearchService.searchUsers(req.query);
+      return (res as any).success('Users found successfully', result);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** GET /admin/users/search/suggestions */
+  static async getSearchSuggestions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { q, limit } = req.query;
+      const { UserSearchService } = await import('@/services/user/user-search-service');
+      const suggestions = await UserSearchService.getSearchSuggestions(
+        q as string,
+        Number(limit) || 10,
+      );
+      return (res as any).success('Search suggestions retrieved successfully', { suggestions });
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  /** GET /admin/users/statistics */
+  static async getUserStatistics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { UserSearchService } = await import('@/services/user/user-search-service');
+      const statistics = await UserSearchService.getUserStatistics();
+      return (res as any).success('User statistics retrieved successfully', { statistics });
+    } catch (err) {
+      return next(err);
+    }
+  }
 }

@@ -29,9 +29,75 @@ router.get('/', validate(listUsersSchema, { only: 'query' }), UserManagementCont
 
 // User detail
 const uuidSchema = require('@/validators/user/user-uuid.validator');
-router.get('/:uuid', validate(uuidSchema, { only: 'params' }), UserManagementController.getUserDetail);
+router.get(
+  '/:uuid',
+  validate(uuidSchema, { only: 'params' }),
+  UserManagementController.getUserDetail,
+);
 
 // User activity
-router.get('/:uuid/activity', validate(uuidSchema, { only: 'params' }), UserManagementController.getUserActivity);
+router.get(
+  '/:uuid/activity',
+  validate(uuidSchema, { only: 'params' }),
+  UserManagementController.getUserActivity,
+);
+
+// Update user
+const updateUserValidator = require('@/validators/user/update-user.validator');
+router.put(
+  '/:uuid',
+  validate(uuidSchema, { only: 'params' }),
+  validate(updateUserValidator),
+  UserManagementController.updateUser,
+);
+
+// Delete user
+const deleteUserValidator = require('@/validators/user/delete-user.validator');
+router.delete(
+  '/:uuid',
+  validate(uuidSchema, { only: 'params' }),
+  validate(deleteUserValidator),
+  UserManagementController.deleteUser,
+);
+
+// Reset password
+const resetPasswordValidator = require('@/validators/user/reset-password.validator');
+router.post(
+  '/:uuid/reset-password',
+  validate(uuidSchema, { only: 'params' }),
+  validate(resetPasswordValidator),
+  UserManagementController.resetUserPassword,
+);
+
+// User impersonation
+const impersonateUserValidator = require('@/validators/user/impersonate-user.validator');
+router.post(
+  '/:uuid/impersonate',
+  validate(uuidSchema, { only: 'params' }),
+  validate(impersonateUserValidator),
+  UserManagementController.impersonateUser,
+);
+
+// Bulk operations
+const bulkOperationsValidator = require('@/validators/user/bulk-operations.validator');
+router.post(
+  '/bulk',
+  validate(bulkOperationsValidator),
+  UserManagementController.bulkUserOperations,
+);
+
+// User search
+const searchUsersValidator = require('@/validators/user/search-users.validator');
+router.get(
+  '/search',
+  validate(searchUsersValidator, { only: 'query' }),
+  UserManagementController.searchUsers,
+);
+
+// Search suggestions
+router.get('/search/suggestions', UserManagementController.getSearchSuggestions);
+
+// User statistics
+router.get('/statistics', UserManagementController.getUserStatistics);
 
 module.exports = router;

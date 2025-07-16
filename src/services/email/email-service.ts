@@ -41,6 +41,47 @@ class EmailService {
       html,
     });
   }
+
+  async sendPasswordResetEmail(to: string, name: string, newPassword: string) {
+    const html = `<p>Hello ${name},</p><p>Your password has been reset.</p><p>New password: <strong>${newPassword}</strong></p><p>Please change your password after logging in.</p>`;
+    await this.transporter.sendMail({
+      from: 'no-reply@careers.local',
+      to,
+      subject: 'Password Reset - CC Career',
+      html,
+    });
+  }
+
+  async sendAccountStatusNotification(to: string, name: string, status: string) {
+    const statusMessages = {
+      active: 'Your account has been activated.',
+      inactive: 'Your account has been deactivated.',
+      suspended: 'Your account has been suspended.',
+    };
+
+    const html = `<p>Hello ${name},</p><p>${
+      statusMessages[status as keyof typeof statusMessages] ||
+      'Your account status has been updated.'
+    }</p>`;
+    await this.transporter.sendMail({
+      from: 'no-reply@careers.local',
+      to,
+      subject: `Account Status Update - CC Career`,
+      html,
+    });
+  }
+
+  async sendRoleChangeNotification(to: string, name: string, oldRole?: string, newRole?: string) {
+    const html = `<p>Hello ${name},</p><p>Your role has been updated.</p>${
+      oldRole ? `<p>Previous role: ${oldRole}</p>` : ''
+    }<p>New role: ${newRole || 'No role assigned'}</p>`;
+    await this.transporter.sendMail({
+      from: 'no-reply@careers.local',
+      to,
+      subject: 'Role Update - CC Career',
+      html,
+    });
+  }
 }
 
 export const emailService = new EmailService();
