@@ -22,6 +22,7 @@ export interface AuthenticatedUser extends Partial<UserData> {
   sessionId?: string; // Allow sessionId for refresh token handling
   exp?: number;
   iat?: number;
+  role?: string;
 }
 
 export type AuthenticatedRequest = ExpressRequest & {

@@ -3,7 +3,7 @@
  * 
  * Reads through schema file and serialize JSON resources.
  */
-type ResourceConfig = {
+export type ResourceConfig = {
   exclude?: string[];
   only?: string[];
   include?: Record<string, any>;

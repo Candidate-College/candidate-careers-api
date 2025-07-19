@@ -5,11 +5,10 @@ export interface UserSessionData {
   user_id: number;
   user_agent?: string;
   ip_address?: string;
-  created_at: Date;
-  is_active: boolean;
-  replaced_by?: string;
+  payload: string;
+  last_activity?: number;
 }
 
 export class UserSession extends Model {
-  static tableName = 'user_sessions';
+  static tableName = 'sessions';
 }

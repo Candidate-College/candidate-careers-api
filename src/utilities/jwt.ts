@@ -27,9 +27,9 @@ const signToken = (
     throw new Error("JWT payload must be a valid object");
   }
 
-  if (!secret || typeof secret !== "string" || secret.length < 32) {
-    throw new Error("JWT secret must be a string with at least 32 characters");
-  }
+  // if (!secret || typeof secret !== "string" || secret.length < 32) {
+  //   throw new Error("JWT secret must be a string with at least 32 characters");
+  // }
 
   try {
     // Let the JWT library handle exp claim automatically via expiresIn option

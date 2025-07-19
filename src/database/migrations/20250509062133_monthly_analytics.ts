@@ -20,6 +20,4 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists('monthly_analytics');
-  await knex.schema.dropTableIfExists('departments');
-  await knex.schema.dropTableIfExists('job_categories');
 }

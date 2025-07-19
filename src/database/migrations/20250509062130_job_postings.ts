@@ -57,5 +57,4 @@ export async function down(knex: Knex): Promise<void> {
   await knex.schema.raw('DROP TYPE IF EXISTS job_posting_employment_level');
   await knex.schema.raw('DROP TYPE IF EXISTS job_posting_priority_level');
   await knex.schema.raw('DROP TYPE IF EXISTS job_posting_status');
-  await knex.schema.dropTableIfExists('users');
 }

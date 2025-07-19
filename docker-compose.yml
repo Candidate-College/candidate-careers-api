@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    # image: ${DOCKERHUB_USERNAME}/${DOCKER_PROJECT_ID}:prod
+    container_name: ${DOCKER_PROJECT_ID}.app.production
+    build:
+      context: ./
+      dockerfile: docker/app/Dockerfile
+    volumes:
+      - app-data:/app/public
+    ports:
+      - "${DOCKER_PORT_APP}:3001"
+    networks:
+      - app
+    depends_on:
+      - database
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  database:
+    image: postgres:15
+    container_name: ${DOCKER_PROJECT_ID}.database.production
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "${DOCKER_PORT_DATABASE}:5432"
+    networks:
+      - app
+    restart: unless-stopped
+
+volumes:
+  app-data:
+    name: ${DOCKER_PROJECT_ID}.app.production
+  db-data:
+    name: ${DOCKER_PROJECT_ID}.database.production
+
+networks:
+  app:
+    name: ${DOCKER_PROJECT_ID}.app.production
+    driver: bridge

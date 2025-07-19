@@ -8,6 +8,9 @@ const string = require('@/utilities/string');
 const jwtConfig = require('@/config/jwt');
 const toResource = require('@/utilities/resource');
 const userResource = require('@/resources/user-resource');
+const authResource = require('@/resources/auth-resource');
+const mailer = require('@/utilities/mailer');
+const registerMail = require('@/mails/register');
 
 exports.findUserById = async (
   id: number,
@@ -18,7 +21,7 @@ exports.findUserById = async (
 exports.findUserByEmail = async (
   email: string,
 ): Promise<UserData | null> => {
-  return await User.query().findOne({ email });
+  return await User.query().findOne({ email }).withGraphFetched('role');
 };
 
 exports.findActiveUserSessionById = async (
@@ -30,9 +33,15 @@ exports.findActiveUserSessionById = async (
 };
 
 exports.register = async (
-  user: UserData,
+  userData: UserData,
 ): Promise<UserData> => {
-  return await User.query().insert(user);
+  const { id, ...formattedUserData } = userData;
+  const user = await User.query().insert(formattedUserData);
+
+  const token = jwt.verification.sign(userData);
+  await mailer.sendMail(user.email, 'User Registration', registerMail(token));
+
+  return await toResource(user, authResource.register);
 };
 
 exports.verify = async (
@@ -50,7 +59,7 @@ interface AuthData {
     expiresIn: string;
   };
   session: {
-    id: string;
+    id: number;
     user_id: number;
     token: string;
   };
@@ -63,7 +72,10 @@ exports.authenticate = async (
   req: Request,
   user: UserData,
 ): Promise<AuthData> => {;
-  const authData = await setAuthData(user, string.generateUUID());
+  const authData = await setAuthData(
+    user,
+    Math.floor(Math.random() * (999_999 - 1) + 1),
+  );
   await persistSession(req, authData);
   return authData;
 };
@@ -80,6 +92,8 @@ const persistSession = async (
     user_id: auth.session.user_id,
     user_agent: req.headers['user-agent'],
     ip_address: req.ip,
+    payload: '{}',
+    last_activity: 0,
   });
 };
 exports.persistSession = persistSession;
@@ -115,10 +129,7 @@ exports.logout = async (
   user: UserData,
   userSession: UserSessionData,
 ): Promise<Partial<UserData>> => {
-  await UserSession.query().findById(userSession.id).patch({
-    is_active: false,
-    revoked_at: new Date(),
-  });
+  await UserSession.query().deleteById(userSession.id);
 
   return toResource(user, userResource);
 };
@@ -133,12 +144,13 @@ exports.logout = async (
  */
 const setAuthData = async (
   user: UserData,
-  sessionId: string,
+  sessionId: number,
   sessionExp?: number,
 ): Promise<AuthData> => {
   // filter visible columns for access token
-  const visibleColumns = ['id', 'email', 'role'];
+  const visibleColumns = ['id', 'email'];
   const userData = await toResource(user, { only: visibleColumns });
+  userData.role = user?.role?.name;
 
   // sign tokens
   const accessToken = jwt.access.sign(userData);
