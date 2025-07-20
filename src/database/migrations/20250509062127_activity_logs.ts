@@ -1,23 +1,83 @@
-import type { Knex } from 'knex';
+/**
+ * Enhanced Activity Logs Migration
+ *
+ * Creates comprehensive activity_logs table with enhanced schema for
+ * audit logging system. Includes enum types for categorization,
+ * severity levels, and status tracking with proper indexes.
+ */
+
+import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.createTable('activity_logs', table => {
-    table.increments('id');
-    table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
-    table.string('action', 100).notNullable();
-    table.string('subject_type', 100).notNullable();
-    table.integer('subject_id').notNullable();
-    table.text('description').notNullable();
-    table.json('old_values');
-    table.json('new_values');
-    table.string('ip_address', 45);
-    table.text('user_agent');
-    table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
+  // Create enum types for better data integrity
+  await knex.schema.raw(
+    "CREATE TYPE severity_level AS ENUM ('low', 'medium', 'high', 'critical')"
+  );
 
-    table.index(['user_id']);
+  await knex.schema.raw(
+    "CREATE TYPE activity_category AS ENUM ('authentication', 'authorization', 'user_management', 'data_modification', 'system', 'security')"
+  );
+
+  await knex.schema.raw(
+    "CREATE TYPE activity_status AS ENUM ('success', 'failure', 'error')"
+  );
+
+  // Create enhanced activity_logs table
+  await knex.schema.createTable("activity_logs", (table) => {
+    // Primary key
+    table.bigIncrements("id");
+
+    // Foreign key relationships
+    table
+      .bigInteger("user_id")
+      .unsigned()
+      .nullable()
+      .references("id")
+      .inTable("users")
+      .onDelete("CASCADE");
+    table.string("session_id", 255).nullable();
+
+    // Core activity fields
+    table.string("action", 100).notNullable();
+    table.string("resource_type", 100).notNullable();
+    table.bigInteger("resource_id").nullable();
+    table.string("resource_uuid", 36).nullable();
+    table.text("description").notNullable();
+
+    // Data change tracking
+    table.json("old_values").nullable();
+    table.json("new_values").nullable();
+    table.json("metadata").nullable();
+
+    // Request metadata
+    table.string("ip_address", 45).nullable();
+    table.text("user_agent").nullable();
+
+    // Categorization and severity
+    table.specificType("severity", "severity_level").defaultTo("medium");
+    table.specificType("category", "activity_category").notNullable();
+    table.specificType("status", "activity_status").defaultTo("success");
+
+    // Timestamp
+    table.timestamp("created_at", { useTz: true }).defaultTo(knex.fn.now());
+
+    // Performance indexes
+    table.index(["user_id"]);
+    table.index(["action"]);
+    table.index(["resource_type"]);
+    table.index(["category", "severity"]);
+    table.index(["created_at"]);
+    table.index(["ip_address"]);
+    table.index(["session_id"]);
   });
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTableIfExists('activity_logs');
+  // Drop table first
+  await knex.schema.dropTableIfExists("activity_logs");
+
+  // Drop enum types
+  await knex.schema.raw("DROP TYPE IF EXISTS severity_level");
+  await knex.schema.raw("DROP TYPE IF EXISTS activity_category");
+  await knex.schema.raw("DROP TYPE IF EXISTS activity_status");
 }
