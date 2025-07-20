@@ -23,9 +23,9 @@ export class RolePermissionRepository {
     // Use Objection's insertGraph? Simpler: raw insert with on conflict ignore
     const trx = await transaction.start(RolePermission.knex());
     try {
-      const rows = permissionIds.map((pid) => ({ role_id: roleId, permission_id: pid }));
+      const rows = permissionIds.map(pid => ({ role_id: roleId, permission_id: pid }));
       // Cast to `any` to access knex.onConflict until Objection typings support it
-      await (RolePermission.query(trx) as any)
+      await RolePermission.query(trx)
         .insert(rows)
         .onConflict(['role_id', 'permission_id'])
         .ignore();
@@ -39,8 +39,6 @@ export class RolePermissionRepository {
 
   /** Revoke a single permission from a role */
   static async revoke(roleId: number, permissionId: number): Promise<number> {
-    return RolePermission.query()
-      .delete()
-      .where({ role_id: roleId, permission_id: permissionId });
+    return RolePermission.query().delete().where({ role_id: roleId, permission_id: permissionId });
   }
 }

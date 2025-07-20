@@ -25,7 +25,7 @@ paths:
       responses:
         '201':
           description: User registered
-  
+
   /roles:
     post:
       summary: Create a role
@@ -47,7 +47,7 @@ paths:
           schema: { type: integer }
       responses:
         '200': { description: Paginated list of roles }
-  
+
   /roles/{id}:
     patch:
       summary: Update role
@@ -74,7 +74,7 @@ paths:
           schema: { type: integer }
       responses:
         '204': { description: Role deleted }
-  
+
   /roles/{id}/permissions:
     post:
       summary: Bulk assign permissions to role
@@ -96,7 +96,7 @@ paths:
                   items: { type: integer }
       responses:
         '200': { description: Permissions assigned }
-  
+
   /roles/{id}/permissions/{permId}:
     delete:
       summary: Revoke permission from role
@@ -171,3 +171,520 @@ paths:
           description: User registered successfully
         '400':
           description: Invalid input
+
+  /admin/users:
+    get:
+      summary: List users (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20, maximum: 100 }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: role_id
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string, enum: [active, inactive, suspended] }
+        - in: query
+          name: sort_by
+          schema: { type: string, enum: [name, email, created_at, last_login_at] }
+        - in: query
+          name: sort_order
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - in: query
+          name: created_from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: created_to
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+    post:
+      summary: Create user (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreateResponse'
+
+  /admin/users/{uuid}:
+    get:
+      summary: Get user detail (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+    put:
+      summary: Update user (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+    delete:
+      summary: Delete user (Super Admin only, soft delete)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDeleteRequest'
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDeleteResponse'
+
+  /admin/users/bulk:
+    post:
+      summary: Bulk user operations (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBulkOperationRequest'
+      responses:
+        '200':
+          description: Bulk operation completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBulkOperationResponse'
+
+  /admin/users/{uuid}/reset-password:
+    post:
+      summary: Reset user password (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResetPasswordResponse'
+
+  /admin/users/{uuid}/impersonate:
+    post:
+      summary: Impersonate user (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserImpersonateRequest'
+      responses:
+        '200':
+          description: Impersonation started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserImpersonateResponse'
+
+  /admin/users/search:
+    get:
+      summary: Advanced user search (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: filters
+          schema: { type: object }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+      responses:
+        '200':
+          description: Users found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+
+  /admin/users/search/suggestions:
+    get:
+      summary: Get user search suggestions (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Search suggestions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSearchSuggestionsResponse'
+
+  /admin/users/statistics:
+    get:
+      summary: Get user statistics (Super Admin only)
+      tags: [UserManagement]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStatisticsResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserListResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserSummary'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+            filters:
+              type: object
+    UserSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        email: { type: string }
+        name: { type: string }
+        role:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            display_name: { type: string }
+        status: { type: string }
+        email_verified_at: { type: string, format: date-time }
+        last_login_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Pagination:
+      type: object
+      properties:
+        total: { type: integer }
+        per_page: { type: integer }
+        current_page: { type: integer }
+        total_pages: { type: integer }
+        has_next: { type: boolean }
+        has_prev: { type: boolean }
+    UserCreateRequest:
+      type: object
+      required: [email, name, role_id]
+      properties:
+        email: { type: string, format: email }
+        name: { type: string, minLength: 2, maxLength: 100 }
+        role_id: { type: integer }
+        password: { type: string, minLength: 8, maxLength: 128 }
+        send_welcome_email: { type: boolean, default: true }
+        require_password_change: { type: boolean, default: true }
+    UserCreateResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            id: { type: integer }
+            uuid: { type: string, format: uuid }
+            email: { type: string }
+            name: { type: string }
+            role: { $ref: '#/components/schemas/UserRole' }
+            status: { type: string }
+            temporary_password: { type: string }
+            email_verification_sent: { type: boolean }
+            created_at: { type: string, format: date-time }
+    UserRole:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        display_name: { type: string }
+    UserDetailResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            id: { type: integer }
+            uuid: { type: string, format: uuid }
+            email: { type: string }
+            name: { type: string }
+            role:
+              type: object
+              properties:
+                id: { type: integer }
+                name: { type: string }
+                display_name: { type: string }
+                permissions:
+                  type: array
+                  items: { type: string }
+            status: { type: string }
+            email_verified_at: { type: string, format: date-time }
+            last_login_at: { type: string, format: date-time }
+            login_attempts:
+              type: object
+              properties:
+                failed_attempts: { type: integer }
+                last_attempt: { type: string, format: date-time }
+                is_locked: { type: boolean }
+            activity_summary:
+              type: object
+              properties:
+                total_logins: { type: integer }
+                last_activity: { type: string, format: date-time }
+                recent_actions:
+                  type: array
+                  items: { type: string }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+            deleted_at: { type: string, format: date-time }
+    UserUpdateRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        role_id: { type: integer }
+        status: { type: string, enum: [active, inactive, suspended] }
+        send_notification: { type: boolean, default: true }
+    UserDeleteRequest:
+      type: object
+      required: [confirmation]
+      properties:
+        confirmation: { type: string, enum: [DELETE] }
+        reason: { type: string, maxLength: 500 }
+        permanent: { type: boolean }
+    UserDeleteResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+            deletedCount: { type: integer }
+    UserBulkOperationRequest:
+      type: object
+      required: [action, user_uuids]
+      properties:
+        action: { type: string, enum: [activate, deactivate, delete, change_role, suspend] }
+        user_uuids:
+          type: array
+          items: { type: string, format: uuid }
+        params:
+          type: object
+          properties:
+            role_id: { type: integer }
+            send_notification: { type: boolean }
+            reason: { type: string, maxLength: 500 }
+    UserBulkOperationResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+            affectedCount: { type: integer }
+    UserResetPasswordRequest:
+      type: object
+      properties:
+        generate_temporary: { type: boolean, default: true }
+        send_email: { type: boolean, default: true }
+        require_change: { type: boolean, default: true }
+        new_password: { type: string, minLength: 8, maxLength: 128 }
+    UserResetPasswordResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+            temporaryPassword: { type: string }
+    UserImpersonateRequest:
+      type: object
+      properties:
+        duration_minutes: { type: integer, minimum: 5, maximum: 480 }
+        reason: { type: string, maxLength: 500 }
+        notify_user: { type: boolean }
+    UserImpersonateResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            token: { type: string }
+            expiresAt: { type: string, format: date-time }
+            adminId: { type: integer }
+            targetUserId: { type: integer }
+            targetUserUuid: { type: string, format: uuid }
+            reason: { type: string }
+            access_token: { type: string }
+    UserSearchSuggestionsResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            suggestions:
+              type: array
+              items:
+                type: object
+                properties:
+                  value: { type: string }
+                  type: { type: string, enum: [name, email, domain] }
+                  count: { type: integer }
+    UserStatisticsResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            statistics:
+              type: object
+              properties:
+                total_users: { type: integer }
+                active_users: { type: integer }
+                inactive_users: { type: integer }
+                suspended_users: { type: integer }
+                verified_users: { type: integer }
+                users_by_role:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role_name: { type: string }
+                      count: { type: integer }
+                recent_signups: { type: integer }
+                avg_login_frequency: { type: integer }

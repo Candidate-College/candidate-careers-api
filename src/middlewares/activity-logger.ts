@@ -15,16 +15,17 @@
  * @module middlewares/activity-logger
  */
 
-import { Request } from "express";
+import { Request } from 'express';
 import {
   registerMiddleware,
   createMiddleware,
   InputExtractors,
   MiddlewareConfig,
-} from "@/factories/middleware-factory";
-import ActivityLogService from "@/services/audit/activity-log-service";
-import { defaultWinstonLogger as logger } from "@/utilities/winston-logger";
-import { ActivityCategory } from "@/constants/activity-log-constants";
+} from '@/factories/middleware-factory';
+import ActivityLogService from '@/services/audit/activity-log-service';
+import { defaultWinstonLogger as logger } from '@/utilities/winston-logger';
+import { ActivityCategory } from '@/constants/activity-log-constants';
+import { AuthenticatedRequest } from '@/types/express-extension';
 
 /* -------------------------------------------------------------------------- */
 /*                            Helper Determination                            */
@@ -35,27 +36,27 @@ import { ActivityCategory } from "@/constants/activity-log-constants";
  * the first non-empty path segment, e.g. `/api/v1/users/123` ⇒ `users`.
  */
 const deriveResourceType = (req: Request): string => {
-  const segments = req.path.split("/").filter(Boolean);
-  if (segments.length === 0) return "root";
+  const segments = req.path.split('/').filter(Boolean);
+  if (segments.length === 0) return 'root';
 
   // Walk through segments and return first business segment (not meta)
   for (const seg of segments) {
-    if (seg === "api") continue; // API prefix
+    if (seg === 'api') continue; // API prefix
     if (/^v\d+$/i.test(seg)) continue; // version prefix
     return seg;
   }
   // Fallback if everything is filtered out
-  return segments[segments.length - 1] || "root";
+  return segments[segments.length - 1] || 'root';
 };
 
 /** Identify CRUD-like modifiers based on HTTP method → category mapping. */
 const deriveCategory = (req: Request): ActivityCategory => {
   switch (req.method) {
-    case "POST":
+    case 'POST':
       return ActivityCategory.DATA_MODIFICATION;
-    case "PUT":
-    case "PATCH":
-    case "DELETE":
+    case 'PUT':
+    case 'PATCH':
+    case 'DELETE':
       return ActivityCategory.DATA_MODIFICATION;
     default:
       return ActivityCategory.SYSTEM; // safe default
@@ -66,7 +67,7 @@ const deriveCategory = (req: Request): ActivityCategory => {
 /*                         Middleware Factory Definition                       */
 /* -------------------------------------------------------------------------- */
 
-const ACTIVITY_LOGGER_NAME = "activityLogger";
+const ACTIVITY_LOGGER_NAME = 'activityLogger';
 
 const activityLoggerConfig: MiddlewareConfig<Request, void, Request> = {
   name: ACTIVITY_LOGGER_NAME,
@@ -74,9 +75,9 @@ const activityLoggerConfig: MiddlewareConfig<Request, void, Request> = {
   processor: async (req: Request) => {
     try {
       // Extract user context when available (set by auth middleware earlier)
-      const user = (req as any).user ?? null;
-      const userId = user ? user.id ?? user.userId ?? null : null;
-      const sessionId = (req.headers["x-session-id"] as string) || null;
+      const user = (req as AuthenticatedRequest).user ?? null;
+      const userId = user ? user.id ?? null : null;
+      const sessionId = (req.headers['x-session-id'] as string) || null;
 
       const action = `${req.method} ${req.originalUrl}`;
       const resourceType = deriveResourceType(req);
@@ -89,13 +90,13 @@ const activityLoggerConfig: MiddlewareConfig<Request, void, Request> = {
         resourceType,
         description,
         ipAddress: req.ip,
-        userAgent: (req.headers["user-agent"] as string) || null,
+        userAgent: (req.headers['user-agent'] as string) || null,
         // Further auto categorisation inside ActivityLogService but we hint:
         category: deriveCategory(req),
       });
     } catch (error) {
       // Never throw – log and swallow.
-      logger.error("Activity logging failed", {
+      logger.error('Activity logging failed', {
         error: error instanceof Error ? error.message : String(error),
       });
     }

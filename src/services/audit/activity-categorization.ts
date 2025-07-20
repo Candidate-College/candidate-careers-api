@@ -18,7 +18,7 @@ import {
   SECURITY_ACTIONS,
   AUTHORIZATION_ACTIONS,
   ALL_ACTIONS,
-} from "@/constants/activity-log-constants";
+} from '@/constants/activity-log-constants';
 
 /**
  * Activity categorization interface
@@ -174,15 +174,15 @@ export class ActivityCategorization {
   public static getSeverityDisplayName(severity: ActivitySeverity): string {
     switch (severity) {
       case ActivitySeverity.CRITICAL:
-        return "Critical";
+        return 'Critical';
       case ActivitySeverity.HIGH:
-        return "High";
+        return 'High';
       case ActivitySeverity.MEDIUM:
-        return "Medium";
+        return 'Medium';
       case ActivitySeverity.LOW:
-        return "Low";
+        return 'Low';
       default:
-        return "Unknown";
+        return 'Unknown';
     }
   }
 
@@ -195,19 +195,19 @@ export class ActivityCategorization {
   public static getCategoryDisplayName(category: ActivityCategory): string {
     switch (category) {
       case ActivityCategory.AUTHENTICATION:
-        return "Authentication";
+        return 'Authentication';
       case ActivityCategory.AUTHORIZATION:
-        return "Authorization";
+        return 'Authorization';
       case ActivityCategory.USER_MANAGEMENT:
-        return "User Management";
+        return 'User Management';
       case ActivityCategory.DATA_MODIFICATION:
-        return "Data Modification";
+        return 'Data Modification';
       case ActivityCategory.SYSTEM:
-        return "System";
+        return 'System';
       case ActivityCategory.SECURITY:
-        return "Security";
+        return 'Security';
       default:
-        return "Unknown";
+        return 'Unknown';
     }
   }
 
@@ -220,13 +220,13 @@ export class ActivityCategorization {
   public static getStatusDisplayName(status: ActivityStatus): string {
     switch (status) {
       case ActivityStatus.SUCCESS:
-        return "Success";
+        return 'Success';
       case ActivityStatus.FAILURE:
-        return "Failure";
+        return 'Failure';
       case ActivityStatus.ERROR:
-        return "Error";
+        return 'Error';
       default:
-        return "Unknown";
+        return 'Unknown';
     }
   }
 }
