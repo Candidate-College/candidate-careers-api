@@ -11,7 +11,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string('name', 255).notNullable();
 
     table.integer('role_id').unsigned().references('id').inTable('roles').onDelete('CASCADE');
-    table.specificType('status', 'user_status').defaultTo('active');
+    table.specificType('status', 'user_status').defaultTo('inactive');
 
     table.timestamp('email_verified_at', { useTz: true });
     table.timestamp('last_login_at', { useTz: true });

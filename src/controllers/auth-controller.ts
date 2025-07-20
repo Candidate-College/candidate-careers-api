@@ -3,23 +3,50 @@ import { AuthenticatedRequest, JsonResponse } from '@/types/express-extension';
 
 const logger = require('@/utilities/logger');
 const authService = require('@/services/auth-service');
+const roleService = require('@/services/role-service');
 
 exports.register = async (req: Request, res: JsonResponse) => {
-  const { email } = req.body;
+  const { email, role_id } = req.body;
 
   try {
     if (await authService.findUserByEmail(email)) {
       return res.error(409, 'User already registered');
     }
 
+    if (!await roleService.findRoleById(role_id)) {
+      return res.error(404, 'Role not found');
+    }
+
     const user = await authService.register(req.body);
 
-    return res.success('Successfully registered new user!', user);
+    return res.success(
+      'User registered successfully. Verification email sent.',
+      user,
+    );
   } catch (error: any) {
     logger.error('auth@register', error);
     return res.error();
   }
 };
+
+exports.verifyEmail = async (req: Request, res: JsonResponse) => {
+  const { token } = req.body;
+
+  try {
+    // const decodedToken = 
+
+    if (!await authService.findUserById(token)) {
+      return res.error(400, 'Invalid verification token');
+    }
+
+    return res.success('');
+  } catch (error: any) {
+    logger.error('auth@verifyEmail', error);
+    return res.error();
+  }
+};
+
+
 
 exports.login = async (req: Request, res: JsonResponse) => {
   const { email, password } = req.body;

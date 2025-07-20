@@ -60,6 +60,8 @@ import { JsonResponse } from '@/types/express-extension';
 
 type FieldType = // primitives
                  'string' | 'number' | 'bigint' | 'boolean' |
+                 // number derivatives
+                 'integer' | 'float' | 'decimal' | 'currency' |
                  // string derivatives
                  'text' | 'email' | 'url' |
                  // date & time
@@ -71,7 +73,7 @@ type FieldType = // primitives
 
 type RequestLocation = 'body' | 'query' | 'param';
 
-type ValidationSchema = Record<string, ValidationConfig>;
+export type ValidationSchema = Record<string, ValidationConfig>;
 
 interface ValidationConfig {
   type: FieldType;
@@ -79,6 +81,7 @@ interface ValidationConfig {
   min?: number;
   max?: number;
   optional?: boolean;
+  complex?: boolean;
   mime?: {
     only?: string[];
     except?: string[];
@@ -125,47 +128,85 @@ const validateSchema = (
     switch (config.type) {
       // primitives //
       case 'string':
-      const min = config.min || 0;
-      const max = config.max || 255;
+        const min = config.min || 0;
+        const max = config.max || 255;
 
-      validator = validator
-        .isString()
-        .withMessage(`${field} must be a valid string`,)
-        .isLength({ min, max });
-
-      if (config.min) validator = validator
-        .withMessage(`${field} must be more than ${min} characters`);
-
-      if (config.max) validator = validator
-        .withMessage(`${field} must be less than ${max} characters`);
-      break;
-
-    case 'number':
-      validator = validator
-        .isNumeric()
-        .withMessage(`${field} must be a valid number`);
-
-      if (config.min !== undefined) {
         validator = validator
-          .isFloat({ min: config.min })
-          .withMessage(`${field} must be more than ${config.min}`);
-      }
+          .isString()
+          .withMessage(`${field} must be a valid string`,)
+          .isLength({ min, max });
 
-      if (config.max !== undefined) {
+        if (config.min) validator = validator
+          .withMessage(`${field} must be more than ${min} characters`);
+
+        if (config.max) validator = validator
+          .withMessage(`${field} must be less than ${max} characters`);
+        
+        if (config.complex) {
+          // Regex for complex string:
+          // - At least one uppercase letter
+          // - At least one lowercase letter
+          // - At least one digit
+          // - At least one special character
+          const complexRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+
+          validator = validator
+            .matches(complexRegex)
+            .withMessage(`${field} must be a complex string`);
+        }
+        break;
+
+      case 'number':
         validator = validator
-          .isFloat({ max: config.max })
-          .withMessage(`${field} must be less than ${config.max}`);
-      }
-      break;
+          .isNumeric()
+          .withMessage(`${field} must be a valid number`);
 
-    case 'bigint':
-      break;
-    
-    case 'boolean':
-      validator = validator
-        .isBoolean()
-        .withMessage(`${field} must be a valid boolean`);
-      break;
+        if (config.min !== undefined) {
+          validator = validator
+            .isFloat({ min: config.min })
+            .withMessage(`${field} must be more than ${config.min}`);
+        }
+
+        if (config.max !== undefined) {
+          validator = validator
+            .isFloat({ max: config.max })
+            .withMessage(`${field} must be less than ${config.max}`);
+        }
+        break;
+
+      case 'bigint':
+        break;
+      
+      case 'boolean':
+        validator = validator
+          .isBoolean()
+          .withMessage(`${field} must be a valid boolean`);
+        break;
+
+      // number derivatives //
+      case 'integer':
+        validator = validator
+          .isInt()
+          .withMessage(`${field} must be a valid integer`);
+        break;
+
+      case 'float':
+        validator = validator
+          .isFloat()
+          .withMessage(`${field} must be a valid float`);
+        break;
+
+      case 'decimal':
+        validator = validator
+          .isDecimal()
+          .withMessage(`${field} must be a valid decimal`);
+        break;
+
+      case 'currency':
+        validator = validator
+          .isCurrency()
+          .withMessage(`${field} must be a valid currency`);
+        break;
 
       // string derivatives //
       case 'text':
@@ -283,7 +324,6 @@ const validateSchema = (
         break;
 
       default:
-        // handleBlobTypes(validator, field, config, chains);
         throw new Error(`Unknown type for field: ${field}`);
     }
 
