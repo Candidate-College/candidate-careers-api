@@ -43,7 +43,7 @@ export const extractUserContext = (
   return {
     id: convertIdToNumber(userId),
     email: payload.email,
-    role: payload.role,
+    role: { name: payload.role },
     sessionId: payload.sessionId,
     iat: payload.iat,
     exp: payload.exp,

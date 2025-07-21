@@ -13,6 +13,7 @@ import { generateSecurePassword } from '@/utilities/password-generator';
 import bcrypt from 'bcrypt';
 import { emailService } from '@/services/email/email-service';
 import { UserData } from '@/models/user-model';
+import { RoleData } from '@/models/role-model';
 import {
   UserWithRole,
   DetailedUser,
@@ -111,7 +112,7 @@ export class UserManagementService {
           id: updatedBy,
           name: 'System', // This will be overridden by the actual user data
           email: 'system@example.com', // This will be overridden by the actual user data
-          role: 'admin', // This will be overridden by the actual user data
+          role: { name: 'admin' }, // This will be overridden by the actual user data
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -197,7 +198,7 @@ export class UserManagementService {
             id: deletedBy,
             name: 'System',
             email: 'system@example.com',
-            role: 'admin',
+            role: { name: 'admin' },
             created_at: new Date(),
             updated_at: new Date(),
           },
@@ -316,7 +317,7 @@ export class UserManagementService {
           id: performedBy,
           name: 'System',
           email: 'system@example.com',
-          role: 'admin',
+          role: { name: 'admin' },
           created_at: new Date(),
           updated_at: new Date(),
         },

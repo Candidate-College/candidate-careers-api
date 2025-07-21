@@ -19,7 +19,7 @@ exports.checkRole = (schema: RoleSchema) => {
       return res.status(401).json({ error: 'Unauthorized: missing user or role' });
     }
 
-    const role = user.role;
+    const role = user.role.name ?? 'guest';
 
     // Blocked roles
     if (schema.except?.includes(role)) {

@@ -45,7 +45,7 @@ describe("ActivityLogService", () => {
     email: "test@example.com",
     name: "Test User",
     password: "hashedpassword",
-    role: "user",
+    role: { name: "user" },
     email_verified_at: new Date(),
     created_at: new Date(),
     updated_at: new Date(),

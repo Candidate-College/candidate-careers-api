@@ -9,6 +9,7 @@ export async function up(knex: Knex): Promise<void> {
     table.jsonb('permissions').nullable();
     table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
     table.timestamp('updated_at', { useTz: true }).defaultTo(knex.fn.now());
+    table.timestamp('deleted_at', { useTz: true }).nullable();
   });
 
   await knex.schema.raw('CREATE UNIQUE INDEX roles_name_unique_idx ON roles(name)');

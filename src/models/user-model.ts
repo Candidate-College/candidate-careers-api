@@ -4,13 +4,14 @@ const Model = require('@/config/database/orm');
 
 export interface UserData {
   id: number;
-  uuid: string;
+  uuid?: string;
   email: string;
   password?: string;
+  name: string;
   password_hash?: string;
   role_id?: number;
   status?: 'active' | 'inactive' | 'suspended';
-  role: string;
+  role: Partial<RoleData>;
   verification_token?: string;
   email_verified_at?: Date | null;
   last_login_at?: Date | null;

@@ -196,7 +196,7 @@ describe("ActivityLog Model", () => {
           name: "John Doe",
           email: "john@example.com",
           password: "hashed",
-          role: "user",
+          role: { name: "user" },
           created_at: new Date(),
           updated_at: new Date(),
         },
