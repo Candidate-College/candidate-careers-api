@@ -1,7 +1,7 @@
 /**
  * Applications Seeder
  *
- * Seeds the applications table with realistic sample data for development, testing, and demo environments.
+ * Seeds the applications table with at least 50 applications for development, testing, and demo environments.
  * Ensures idempotency and referential integrity. Uses seeder-utils for logging and error handling.
  *
  * @module src/database/seeders/applications
@@ -20,7 +20,7 @@ export async function seed(knex: Knex): Promise<void> {
     const users = await knex('users').select('id', 'email', 'name');
     if (!jobPostings.length || !users.length) throw new Error('Job postings or users missing');
 
-    const applications = Array.from({ length: 10 }).map((_, i) => {
+    const applications = Array.from({ length: 50 }).map((_, i) => {
       const job = randomFromArray(jobPostings);
       const user = randomFromArray(users);
       return {

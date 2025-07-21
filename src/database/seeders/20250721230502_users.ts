@@ -1,5 +1,13 @@
+/**
+ * Users Seeder
+ *
+ * Seeds the users table with at least 15 users for development, testing, and demo environments.
+ * Ensures idempotency and referential integrity. Uses Knex for role_id lookup.
+ *
+ * @module src/database/seeders/20250721230502_users
+ */
+
 import { Knex } from 'knex';
-import { Role, RoleData } from '../../models/role-model';
 const crypto = require('../../utilities/crypto');
 
 // Get role id by name using Knex
@@ -12,28 +20,26 @@ const getRoleId = async (knex: Knex, name: string): Promise<number> => {
 };
 
 export async function seed(knex: Knex): Promise<void> {
-  // Deletes ALL existing entries
   await knex('users').del();
 
-  // Inserts seed entries
-  await knex('users').insert([
-    {
-      name: 'Superadmin',
-      email: 'superadmin@careers.candidatecollege.org',
-      password: await crypto.hash('Password123!'),
-      role_id: await getRoleId(knex, 'superadmin'),
-    },
-    {
-      name: 'Recruiter John Doe',
-      email: 'recruiter1@careers.candidatecollege.org',
-      password: await crypto.hash('Password123!'),
-      role_id: await getRoleId(knex, 'hrstaff'),
-    },
-    {
-      name: 'Head of HR',
-      email: 'headhr@careers.candidatecollege.org',
-      password: await crypto.hash('Password123!'),
-      role_id: await getRoleId(knex, 'headhr'),
-    },
-  ]);
+  const roles = [
+    { name: 'superadmin', count: 2 },
+    { name: 'headhr', count: 3 },
+    { name: 'hrstaff', count: 10 },
+  ];
+  let users: any[] = [];
+  let userIndex = 1;
+  for (const role of roles) {
+    const roleId = await getRoleId(knex, role.name);
+    for (let i = 0; i < role.count; i++) {
+      users.push({
+        name: `${role.name.charAt(0).toUpperCase() + role.name.slice(1)} User ${i + 1}`,
+        email: `${role.name}${i + 1}@careers.candidatecollege.org`,
+        password: await crypto.hash('Password123!'),
+        role_id: roleId,
+      });
+      userIndex++;
+    }
+  }
+  await knex('users').insert(users);
 }

@@ -1,7 +1,7 @@
 /**
  * Job Categories Seeder
  *
- * Seeds the job_categories table with realistic sample data for development, testing, and demo environments.
+ * Seeds the job_categories table with at least 15 categories for development, testing, and demo environments.
  * Ensures idempotency and referential integrity. Uses seeder-utils for logging and error handling.
  *
  * @module src/database/seeders/job-categories
@@ -50,6 +50,15 @@ const jobCategories = [
   },
   { name: 'Design', slug: 'design', description: 'Creating visual and user experience designs.' },
   { name: 'Operations', slug: 'operations', description: 'Streamlining business processes.' },
+  { name: 'Legal', slug: 'legal', description: 'Legal and compliance.' },
+  { name: 'Procurement', slug: 'procurement', description: 'Purchasing and vendor management.' },
+  { name: 'Research', slug: 'research', description: 'Research and development.' },
+  { name: 'Logistics', slug: 'logistics', description: 'Logistics and supply chain.' },
+  {
+    name: 'Quality Assurance',
+    slug: 'quality-assurance',
+    description: 'Testing and quality control.',
+  },
 ];
 
 export async function seed(knex: Knex): Promise<void> {
