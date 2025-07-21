@@ -7,7 +7,7 @@
     "start": "node dist/app.js",
     "build": "tsc && tsc-alias",
     "dev": "nodemon",
-    "db": "knex --knexfile src/config/database/init.ts",
+    "db": "ts-node -r tsconfig-paths/register ./node_modules/knex/bin/cli.js --knexfile src/config/database/init.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
