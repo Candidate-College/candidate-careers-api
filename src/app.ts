@@ -8,7 +8,6 @@ const apiRoutes = require('@/routes');
 const corsOptions = require('@/config/cors');
 const logger = require('@/utilities/logger');
 const responseMiddleware = require('@/middlewares/response-middleware');
-const { authorize } = require('@/middlewares/authorization/authorize');
 const { activityLogger } = require('@/middlewares/activity-logger');
 
 const app = express();
@@ -20,7 +19,7 @@ app.use(cookie());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.any());
-app.use(activityLogger());
+// app.use(activityLogger());
 app.use(responseMiddleware);
 // Authorization middleware applied to all /api routes
 // Public health check endpoint

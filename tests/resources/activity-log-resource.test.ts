@@ -40,7 +40,7 @@ describe('ActivityLog Resource', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: 'hashed_password_should_be_filtered',
-      role: 'user',
+      role: { name: 'user' },
       created_at: new Date('2023-01-01T09:00:00Z'),
       updated_at: new Date('2023-01-01T09:30:00Z'),
     },

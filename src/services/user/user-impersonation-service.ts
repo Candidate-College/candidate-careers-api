@@ -199,7 +199,7 @@ export class UserImpersonationService {
         id: adminId,
         name: 'System',
         email: 'system@example.com',
-        role: 'admin',
+        role: { name: 'admin' },
         created_at: new Date(),
         updated_at: new Date(),
       },

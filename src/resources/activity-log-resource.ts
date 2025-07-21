@@ -210,7 +210,7 @@ export class ActivityLogResource {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: user.role.name ?? 'admin',
       created_at: this.formatTimestamp(user.created_at),
       updated_at: this.formatTimestamp(user.updated_at),
     };
