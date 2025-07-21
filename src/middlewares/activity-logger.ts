@@ -5,12 +5,10 @@
  * attempts, data modifications, permission changes, etc.) and forwards them to
  * the central `ActivityLogService` as part of the audit-logging subsystem.
  *
- * The middleware is implemented using the generic `MiddlewareFactory` to stay
- * consistent with the project’s middleware architecture. It extracts the full
- * `Request` object, derives meaningful audit metadata, and performs the logging
- * asynchronously – never blocking the response flow. Errors inside the
- * processor are swallowed after being reported to Winston so that logging
- * failures cannot impact the main request lifecycle.
+ * Logging is performed in a fire-and-forget (non-blocking) manner: the request
+ * chain is never delayed by logging, regardless of database or service latency.
+ * Errors inside the processor are swallowed after being reported to Winston so
+ * that logging failures cannot impact the main request lifecycle.
  *
  * @module middlewares/activity-logger
  */
@@ -72,36 +70,35 @@ const ACTIVITY_LOGGER_NAME = 'activityLogger';
 const activityLoggerConfig: MiddlewareConfig<Request, void, Request> = {
   name: ACTIVITY_LOGGER_NAME,
   inputExtractor: InputExtractors.fullRequest,
-  processor: async (req: Request) => {
-    try {
-      // Extract user context when available (set by auth middleware earlier)
-      const user = (req as AuthenticatedRequest).user ?? null;
-      const userId = user ? user.id ?? null : null;
-      const sessionId = (req.headers['x-session-id'] as string) || null;
-
-      const action = `${req.method} ${req.originalUrl}`;
-      const resourceType = deriveResourceType(req);
-      const description = `Request ${action}`;
-
-      await ActivityLogService.logActivity({
-        userId,
-        sessionId,
-        action,
-        resourceType,
-        description,
-        ipAddress: req.ip,
-        userAgent: (req.headers['user-agent'] as string) || null,
-        // Further auto categorisation inside ActivityLogService but we hint:
-        category: deriveCategory(req),
-      });
-    } catch (error) {
-      // Never throw – log and swallow.
-      logger.error('Activity logging failed', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
+  processor: (req: Request) => {
+    // Fire-and-forget: do not await logging, never block the chain
+    (async () => {
+      try {
+        const user = (req as AuthenticatedRequest).user ?? null;
+        const userId = user ? user.id ?? null : null;
+        const sessionId = (req.headers['x-session-id'] as string) || null;
+        const action = `${req.method} ${req.originalUrl}`;
+        const resourceType = deriveResourceType(req);
+        const description = `Request ${action}`;
+        await ActivityLogService.logActivity({
+          userId,
+          sessionId,
+          action,
+          resourceType,
+          description,
+          ipAddress: req.ip,
+          userAgent: (req.headers['user-agent'] as string) || null,
+          category: deriveCategory(req),
+        });
+      } catch (error) {
+        logger.error('Activity logging failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    })();
+    // Always return immediately
+    return;
   },
-  // Always continue processing regardless of logging result
   continueOnSuccess: true,
   skipOnValidationFailure: true,
 };
