@@ -8,7 +8,7 @@
  */
 
 import type { Knex } from 'knex';
-import { idempotentInsert, logSeeder, handleSeederError } from '@/utilities/seeder-utils';
+import { idempotentInsert, logSeeder, handleSeederError } from '../../utilities/seeder-utils';
 
 function randomFromArray<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -18,7 +18,10 @@ export async function seed(knex: Knex): Promise<void> {
   try {
     const applications = await knex('applications').select('id');
     const users = await knex('users').select('id');
-    if (!applications.length || !users.length) throw new Error('Applications or users missing');
+    if (!applications.length || !users.length) {
+      logSeeder('Skipped seeding application_notes: applications or users missing');
+      return;
+    }
 
     const notes = Array.from({ length: 10 }).map((_, i) => {
       const application = randomFromArray(applications);

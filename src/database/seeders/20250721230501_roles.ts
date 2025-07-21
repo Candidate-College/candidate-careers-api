@@ -1,4 +1,3 @@
-import 'tsconfig-paths/register';
 import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<void> {
@@ -11,4 +10,4 @@ export async function seed(knex: Knex): Promise<void> {
     { name: 'superadmin', display_name: 'Superadmin' },
     { name: 'recruiter', display_name: 'Recruiter' },
   ]);
-};
+}

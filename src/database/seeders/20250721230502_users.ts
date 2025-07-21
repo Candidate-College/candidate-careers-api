@@ -1,12 +1,11 @@
-import 'tsconfig-paths/register';
 import { Knex } from 'knex';
-import { Role, RoleData } from '@/models/role-model';
-const crypto = require('@/utilities/crypto');
+import { Role, RoleData } from '../../models/role-model';
+const crypto = require('../../utilities/crypto');
 
 // Get role id by name. Defaults to 'guest', if not: id of 1
 const getRoleId = async (name: string): Promise<number> => {
-  const role: RoleData = await Role.query().findOne({ name })
-    || await Role.query().findOne({ name: 'guest' });
+  const role: RoleData =
+    (await Role.query().findOne({ name })) || (await Role.query().findOne({ name: 'guest' }));
   return role?.id ?? 1;
 };
 
@@ -29,4 +28,4 @@ export async function seed(knex: Knex): Promise<void> {
       role_id: await getRoleId('recruiter'),
     },
   ]);
-};
+}

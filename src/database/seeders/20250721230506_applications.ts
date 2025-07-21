@@ -8,7 +8,7 @@
  */
 
 import type { Knex } from 'knex';
-import { idempotentInsert, logSeeder, handleSeederError } from '@/utilities/seeder-utils';
+import { idempotentInsert, logSeeder, handleSeederError } from '../../utilities/seeder-utils';
 
 function randomFromArray<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];

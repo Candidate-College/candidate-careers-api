@@ -10,8 +10,12 @@
  */
 
 import type { Knex } from 'knex';
-import { DEFAULT_ROLES, getDefaultRolePermissions, DefaultRoleKey } from '@/config/rbac/default-roles';
-import { SYSTEM_PERMISSIONS } from '@/config/rbac/system-permissions';
+import {
+  DEFAULT_ROLES,
+  getDefaultRolePermissions,
+  DefaultRoleKey,
+} from '../../config/rbac/default-roles';
+import { SYSTEM_PERMISSIONS } from '../../config/rbac/system-permissions';
 
 interface SeedPermission {
   name: string;
@@ -25,14 +29,16 @@ const roles = Object.entries(DEFAULT_ROLES).map(([name, cfg]) => ({
   description: cfg.description,
 }));
 
-const permissions: SeedPermission[] = Object.entries(SYSTEM_PERMISSIONS).map(([name, display_name]) => ({ name, display_name }));
+const permissions: SeedPermission[] = Object.entries(SYSTEM_PERMISSIONS).map(
+  ([name, display_name]) => ({ name, display_name }),
+);
 
 // Helper: build many-to-many mapping
 function buildRolePermissions(): Array<{ role_name: string; perm_name: string }> {
   const mappings: Array<{ role_name: string; perm_name: string }> = [];
-  (Object.keys(DEFAULT_ROLES) as DefaultRoleKey[]).forEach((role) => {
+  (Object.keys(DEFAULT_ROLES) as DefaultRoleKey[]).forEach(role => {
     const perms = getDefaultRolePermissions(role);
-    perms.forEach((perm) => mappings.push({ role_name: role, perm_name: perm }));
+    perms.forEach(perm => mappings.push({ role_name: role, perm_name: perm }));
   });
   return mappings;
 }
@@ -40,18 +46,12 @@ function buildRolePermissions(): Array<{ role_name: string; perm_name: string }>
 export async function seed(knex: Knex): Promise<void> {
   // Roles
   for (const role of roles) {
-    await knex('roles')
-      .insert(role)
-      .onConflict('name')
-      .ignore();
+    await knex('roles').insert(role).onConflict('name').ignore();
   }
 
   // Permissions
   for (const perm of permissions) {
-    await knex('permissions')
-      .insert(perm)
-      .onConflict('name')
-      .ignore();
+    await knex('permissions').insert(perm).onConflict('name').ignore();
   }
 
   // Role-Permissions junction
@@ -65,7 +65,7 @@ export async function seed(knex: Knex): Promise<void> {
        FROM roles r, permissions p
        WHERE r.name = ? AND p.name = ?
        ON CONFLICT (role_id, permission_id) DO NOTHING`,
-      [mapping.role_name, mapping.perm_name]
+      [mapping.role_name, mapping.perm_name],
     );
   }
 }

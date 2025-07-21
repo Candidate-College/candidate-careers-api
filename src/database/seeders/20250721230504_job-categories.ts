@@ -13,7 +13,7 @@ import {
   logSeeder,
   handleSeederError,
   getSeederProfile,
-} from '@/utilities/seeder-utils';
+} from '../../utilities/seeder-utils';
 
 const jobCategories = [
   {
