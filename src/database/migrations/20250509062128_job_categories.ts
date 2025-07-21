@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('job_categories', table => {
     table.increments('id');
     table.string('name', 255).notNullable();
-    table.string('slug', 255).notNullable();
+    table.string('slug', 255).notNullable().unique();
     table.text('description');
     table.specificType('status', 'job_category_status').defaultTo('active');
     table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());

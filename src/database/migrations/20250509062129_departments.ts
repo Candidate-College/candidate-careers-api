@@ -5,7 +5,7 @@ export async function up(knex: Knex): Promise<void> {
 
   await knex.schema.createTable('departments', table => {
     table.increments('id');
-    table.string('name', 255).notNullable();
+    table.string('name', 255).notNullable().unique();
     table.text('description');
     table.specificType('status', 'department_status').defaultTo('active');
     table.integer('created_by').unsigned().references('id').inTable('users').onDelete('CASCADE');

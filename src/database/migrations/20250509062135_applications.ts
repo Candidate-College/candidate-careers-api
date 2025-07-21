@@ -9,8 +9,13 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('applications', table => {
     table.increments('id');
     table.uuid('uuid').notNullable().defaultTo(knex.raw('gen_random_uuid()')).unique();
-    table.integer('job_posting_id').unsigned().references('id').inTable('job_postings').onDelete('CASCADE');
-    table.string('application_number', 50).notNullable();
+    table
+      .integer('job_posting_id')
+      .unsigned()
+      .references('id')
+      .inTable('job_postings')
+      .onDelete('CASCADE');
+    table.string('application_number', 50).notNullable().unique();
     table.string('email', 255).notNullable();
     table.string('full_name', 255).notNullable();
     table.string('domicile', 255).notNullable();
