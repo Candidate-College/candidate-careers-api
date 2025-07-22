@@ -212,3 +212,29 @@ describe('SlugGenerationService - Slug Validation', () => {
     expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
   });
 });
+
+describe('SlugGenerationService - Reserved Slugs', () => {
+  it('should fail or generate alternative for reserved word "admin"', async () => {
+    const { isUnique, reason } = await SlugGenerationService.generateSlug('admin');
+    expect(isUnique).toBe(false);
+    expect(reason).toMatch(/reserved/i);
+  });
+
+  it('should fail or generate alternative for reserved word "api"', async () => {
+    const { isUnique, reason } = await SlugGenerationService.generateSlug('api');
+    expect(isUnique).toBe(false);
+    expect(reason).toMatch(/reserved/i);
+  });
+
+  it('should fail or generate alternative for reserved word "jobs"', async () => {
+    const { isUnique, reason } = await SlugGenerationService.generateSlug('jobs');
+    expect(isUnique).toBe(false);
+    expect(reason).toMatch(/reserved/i);
+  });
+
+  it('should fail validation for manual slug against reserved words', () => {
+    const result = validateSlug('admin');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/reserved/i);
+  });
+});
