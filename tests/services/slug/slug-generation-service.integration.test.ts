@@ -1,6 +1,6 @@
-import SlugGenerationService from '../../src/services/slug-generation-service';
-import { SlugHistoryService } from '../../src/services/slug-history-service';
-import URLConstructionService from '../../src/services/url-construction-service';
+import SlugGenerationService from '../../../src/services/slug-generation-service';
+import { SlugHistoryService } from '../../../src/services/slug-history-service';
+import URLConstructionService from '../../../src/services/url-construction-service';
 
 describe('SlugGenerationService - Integration Testing', () => {
   let db: { id: number; title: string; slug: string }[];

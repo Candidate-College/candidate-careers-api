@@ -1,5 +1,5 @@
-import { SlugHistoryService } from '../../src/services/slug-history-service';
-import { SlugChangeReason } from '../../src/interfaces/slug/slug-history';
+import { SlugHistoryService } from '../../../src/services/slug-history-service';
+import { SlugChangeReason } from '../../../src/interfaces/slug/slug-history';
 
 describe('SlugHistoryService', () => {
   let history: any[];

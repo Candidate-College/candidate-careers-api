@@ -1,5 +1,5 @@
-import SlugGenerationService from '../../src/services/slug-generation-service';
-import { validateSlug } from '../../src/validators/slug-validator';
+import SlugGenerationService from '../../../src/services/slug-generation-service';
+import { validateSlug } from '../../../src/validators/slug-validator';
 
 describe('SlugGenerationService - Basic Slug Generation', () => {
   it('should generate slug from simple title', async () => {

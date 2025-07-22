@@ -2,7 +2,7 @@ jest.mock('slugify', () => () => {
   throw new Error('Internal error');
 });
 
-import SlugGenerationService from '../../src/services/slug-generation-service';
+import SlugGenerationService from '../../../src/services/slug-generation-service';
 
 describe('SlugGenerationService - Error Handling (Mocked)', () => {
   it('should handle service failure during slug generation', async () => {

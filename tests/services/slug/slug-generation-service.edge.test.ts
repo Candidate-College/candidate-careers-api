@@ -1,5 +1,5 @@
-import SlugGenerationService from '../../src/services/slug-generation-service';
-import { validateSlug } from '../../src/validators/slug-validator';
+import SlugGenerationService from '../../../src/services/slug-generation-service';
+import { validateSlug } from '../../../src/validators/slug-validator';
 
 describe('SlugGenerationService - Edge Cases', () => {
   it('should return error or fallback for title with only special characters', async () => {

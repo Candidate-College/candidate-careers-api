@@ -1,4 +1,4 @@
-import URLConstructionService from '../../src/services/url-construction-service';
+import URLConstructionService from '../../../src/services/url-construction-service';
 
 describe('URLConstructionService', () => {
   it('should generate public URL from slug', () => {

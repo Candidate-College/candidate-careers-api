@@ -1,4 +1,4 @@
-import SlugGenerationService from '../../src/services/slug-generation-service';
+import SlugGenerationService from '../../../src/services/slug-generation-service';
 
 describe('SlugGenerationService - SEO Optimization', () => {
   it('should remove stop words from slug', async () => {

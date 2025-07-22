@@ -1,5 +1,5 @@
-import SlugGenerationService from '../../src/services/slug-generation-service';
-import { validateSlug } from '../../src/validators/slug-validator';
+import SlugGenerationService from '../../../src/services/slug-generation-service';
+import { validateSlug } from '../../../src/validators/slug-validator';
 
 describe('SlugGenerationService - Security Testing', () => {
   it('should sanitize SQL injection attempt in title', async () => {
