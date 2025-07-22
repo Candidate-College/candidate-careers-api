@@ -6,36 +6,8 @@
  * @module src/constants/slug-generation-constants
  */
 
-export const RESERVED_SLUGS: string[] = [
-  'admin',
-  'api',
-  'jobs',
-  'login',
-  'register',
-  'dashboard',
-  'settings',
-  'user',
-  'users',
-  'search',
-  'help',
-  'about',
-  'contact',
-  'terms',
-  'privacy',
-];
-
-export const PROFANITY_LIST: string[] = [
-  'fuck',
-  'shit',
-  'bitch',
-  'asshole',
-  'bastard',
-  'dick',
-  'cunt',
-  'piss',
-  'slut',
-  'whore',
-];
+import { RESERVED_SLUGS } from './reserved-slugs';
+import { PROFANITY_LIST } from './profanity-list';
 
 export const DEFAULT_MAX_LENGTH = 100;
 export const DEFAULT_MIN_LENGTH = 3;

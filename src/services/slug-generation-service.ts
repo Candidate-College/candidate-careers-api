@@ -12,9 +12,9 @@ import slugify from 'slugify';
 import { defaultWinstonLogger as logger } from '@/utilities/winston-logger';
 import { SlugGenerationOptions, SlugGenerationResult } from '@/interfaces/slug/slug-generation';
 import { v4 as uuidv4 } from 'uuid';
+import { RESERVED_SLUGS } from '@/constants/reserved-slugs';
+import { PROFANITY_LIST } from '@/constants/profanity-list';
 import {
-  RESERVED_SLUGS,
-  PROFANITY_LIST,
   DEFAULT_MAX_LENGTH,
   DEFAULT_MIN_LENGTH,
   STOP_WORDS,

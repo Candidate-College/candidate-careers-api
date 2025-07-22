@@ -7,12 +7,12 @@
  * @module src/validators/slug-validator
  */
 
+import { RESERVED_SLUGS } from '@/constants/reserved-slugs';
+import { PROFANITY_LIST } from '@/constants/profanity-list';
 import {
   SLUG_REGEX,
   DEFAULT_MIN_LENGTH,
   DEFAULT_MAX_LENGTH,
-  RESERVED_SLUGS,
-  PROFANITY_LIST,
 } from '@/constants/slug-generation-constants';
 import { SlugValidationResult } from '@/interfaces/slug/slug-generation';
 

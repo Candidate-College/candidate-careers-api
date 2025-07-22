@@ -90,5 +90,4 @@ export class SlugHistoryService {
     }
   }
 }
-
 export default SlugHistoryService;
