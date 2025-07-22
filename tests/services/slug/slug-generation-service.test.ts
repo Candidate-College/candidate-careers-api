@@ -2,56 +2,26 @@ import SlugGenerationService from '../../../src/services/slug-generation-service
 import { validateSlug } from '../../../src/validators/slug-validator';
 
 describe('SlugGenerationService - Basic Slug Generation', () => {
-  it('should generate slug from simple title', async () => {
-    const { slug, isUnique } = await SlugGenerationService.generateSlug('Software Engineer');
-    expect(slug).toBe('software-engineer');
-    expect(isUnique).toBe(true);
-  });
+  const cases = [
+    { title: 'Software Engineer', expected: 'software-engineer' },
+    { title: 'Senior Frontend Developer', expected: 'senior-frontend-developer' },
+    { title: 'C++ Developer (Remote)', expected: 'c-developer-remote' },
+    { title: 'React Developer 2025', expected: 'react-developer-2025' },
+    { title: 'JavaScript DEVELOPER', expected: 'javascript-developer' },
+    { title: 'Développeur Frontend', expected: ['développeur-frontend', 'developpeur-frontend'] },
+    { title: 'Software Engineer 🚀', expected: 'software-engineer' },
+    { title: 'Senior!!! Developer???', expected: 'senior-developer' },
+    { title: 'Software    Engineer', expected: 'software-engineer' },
+    { title: 'Senior_Frontend_Developer', expected: 'senior-frontend-developer' },
+  ];
 
-  it('should generate slug from title with spaces', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('Senior Frontend Developer');
-    expect(slug).toBe('senior-frontend-developer');
-  });
-
-  it('should generate slug from title with special characters', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('C++ Developer (Remote)');
-    expect(slug).toBe('c-developer-remote');
-  });
-
-  it('should generate slug from title with numbers', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('React Developer 2025');
-    expect(slug).toBe('react-developer-2025');
-  });
-
-  it('should generate slug from title with mixed case', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('JavaScript DEVELOPER');
-    expect(slug).toBe('javascript-developer');
-  });
-
-  it('should generate slug with unicode characters', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('Développeur Frontend');
-    // Accept either unicode or ascii equivalent
-    expect(slug === 'développeur-frontend' || slug === 'developpeur-frontend').toBe(true);
-  });
-
-  it('should generate slug with emoji', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('Software Engineer 🚀');
-    expect(slug).toBe('software-engineer');
-  });
-
-  it('should generate slug with excessive punctuation', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('Senior!!! Developer???');
-    expect(slug).toBe('senior-developer');
-  });
-
-  it('should generate slug with multiple spaces', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('Software    Engineer');
-    expect(slug).toBe('software-engineer');
-  });
-
-  it('should generate slug with underscores', async () => {
-    const { slug } = await SlugGenerationService.generateSlug('Senior_Frontend_Developer');
-    expect(slug).toBe('senior-frontend-developer');
+  test.each(cases)('should generate slug for "$title"', async ({ title, expected }) => {
+    const { slug } = await SlugGenerationService.generateSlug(title);
+    if (Array.isArray(expected)) {
+      expect(expected.includes(slug)).toBe(true);
+    } else {
+      expect(slug).toBe(expected);
+    }
   });
 
   it('should truncate slug to 100 characters for very long title', async () => {
@@ -158,58 +128,24 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
 });
 
 describe('SlugGenerationService - Slug Validation', () => {
-  it('should validate properly formatted slug', () => {
-    const result = validateSlug('software-engineer');
-    expect(result.isValid).toBe(true);
-  });
+  const validationCases = [
+    { slug: 'software-engineer', valid: true, error: null },
+    { slug: 'Software-Engineer', valid: false, error: /lowercase/i },
+    { slug: 'software_engineer!', valid: false, error: /invalid/i },
+    { slug: 'software engineer', valid: false, error: /format|invalid/i },
+    { slug: 'ab', valid: false, error: /short/i },
+    { slug: 'a'.repeat(101), valid: false, error: /long/i },
+    { slug: '-software-engineer', valid: false, error: /format|invalid/i },
+    { slug: 'software-engineer-', valid: false, error: /format|invalid/i },
+    { slug: 'software--engineer', valid: false, error: /format|invalid/i },
+  ];
 
-  it('should fail validation for uppercase slug', () => {
-    const result = validateSlug('Software-Engineer');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/lowercase/i);
-  });
-
-  it('should fail validation for special characters', () => {
-    const result = validateSlug('software_engineer!');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/invalid/i);
-  });
-
-  it('should fail validation for spaces', () => {
-    const result = validateSlug('software engineer');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
-  });
-
-  it('should fail validation for too short slug', () => {
-    const result = validateSlug('ab');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/short/i);
-  });
-
-  it('should fail validation for too long slug', () => {
-    const longSlug = 'a'.repeat(101);
-    const result = validateSlug(longSlug);
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/long/i);
-  });
-
-  it('should fail validation for leading hyphen', () => {
-    const result = validateSlug('-software-engineer');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
-  });
-
-  it('should fail validation for trailing hyphen', () => {
-    const result = validateSlug('software-engineer-');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
-  });
-
-  it('should fail validation for consecutive hyphens', () => {
-    const result = validateSlug('software--engineer');
-    expect(result.isValid).toBe(false);
-    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
+  test.each(validationCases)('should validate "$slug"', ({ slug, valid, error }) => {
+    const result = validateSlug(slug);
+    expect(result.isValid).toBe(valid);
+    if (!valid && error) {
+      expect((result.errors || []).join(' ')).toMatch(error);
+    }
   });
 });
 
