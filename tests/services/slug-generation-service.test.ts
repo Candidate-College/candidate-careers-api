@@ -458,3 +458,47 @@ describe('SlugGenerationService - Concurrent Operations', () => {
     expect(uniqueResults.size).toBe(30);
   });
 });
+
+describe('SlugGenerationService - Database Integration', () => {
+  it('should save slug correctly during job creation', async () => {
+    const db: { slug: string }[] = [];
+    const slugExists = async (slug: string) => db.some(j => j.slug === slug);
+    const { slug, isUnique } = await SlugGenerationService.generateSlug('Software Engineer');
+    expect(isUnique).toBe(true);
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(slug, slugExists);
+    db.push({ slug: uniqueSlug });
+    expect(db[0].slug).toBe('software-engineer');
+  });
+
+  it('should update slug correctly during job modification', async () => {
+    const db: { slug: string }[] = [{ slug: 'software-engineer' }];
+    const slugExists = async (slug: string) => db.some(j => j.slug === slug);
+    const { slug } = await SlugGenerationService.generateSlug('Senior Frontend Developer');
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(slug, slugExists);
+    db[0].slug = uniqueSlug;
+    expect(db[0].slug).toBe('senior-frontend-developer');
+  });
+
+  it('should handle database constraint violation on duplicate slug', async () => {
+    const db: { slug: string }[] = [{ slug: 'software-engineer' }];
+    const slugExists = async (slug: string) => db.some(j => j.slug === slug);
+    const { slug } = await SlugGenerationService.generateSlug('Software Engineer');
+    // Simulate unique constraint violation
+    let uniqueSlug = await SlugGenerationService.ensureUniqueness(slug, slugExists);
+    expect(uniqueSlug).toBe('software-engineer-1');
+    db.push({ slug: uniqueSlug });
+    // Try again, should get next available
+    uniqueSlug = await SlugGenerationService.ensureUniqueness(slug, slugExists);
+    expect(uniqueSlug).toBe('software-engineer-2');
+  });
+
+  it('should handle database failure during slug generation', async () => {
+    const slugExists = async (_slug: string) => {
+      throw new Error('DB connection failed');
+    };
+    const { slug } = await SlugGenerationService.generateSlug('Software Engineer');
+    await expect(SlugGenerationService.ensureUniqueness(slug, slugExists)).rejects.toThrow(
+      'DB connection failed',
+    );
+  });
+});
