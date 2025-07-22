@@ -59,6 +59,8 @@ export class SlugGenerationService {
       }
       // Replace underscores with spaces before slugify to ensure underscores become hyphens
       base = base.replace(/_/g, ' ');
+      // Limit base length to 200 chars to prevent DoS via long input
+      base = base.substring(0, 200);
       let slug = slugify(base, {
         lower: true,
         strict: true,
