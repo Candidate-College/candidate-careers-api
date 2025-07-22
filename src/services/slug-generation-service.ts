@@ -66,9 +66,9 @@ export class SlugGenerationService {
         trim: true,
       });
       // First trim, then truncate, then trim again to ensure no leading/trailing hyphens after truncation
-      slug = slug.replace(/^-+|-+$/g, '');
+      slug = slug.replace(/^-+/, '').replace(/-+$/, '');
       slug = slug.substring(0, options.maxLength || DEFAULT_MAX_LENGTH);
-      slug = slug.replace(/^-+|-+$/g, '');
+      slug = slug.replace(/^-+/, '').replace(/-+$/, '');
 
       const validation = validateSlug(slug);
       if (!validation.isValid) {
