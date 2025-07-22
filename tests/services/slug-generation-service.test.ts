@@ -238,3 +238,96 @@ describe('SlugGenerationService - Reserved Slugs', () => {
     expect((result.errors || []).join(' ')).toMatch(/reserved/i);
   });
 });
+
+describe('SlugGenerationService - Slug Regeneration', () => {
+  let existingSlugs: Set<string>;
+  let history: any[];
+  const slugExists = async (slug: string) => existingSlugs.has(slug);
+  const trackSlugChange = async (
+    jobId: number,
+    oldSlug: string,
+    newSlug: string,
+    reason: string,
+  ) => {
+    history.push({ jobId, oldSlug, newSlug, reason });
+  };
+  const jobId = 1;
+
+  beforeEach(() => {
+    existingSlugs = new Set();
+    history = [];
+  });
+
+  it('should regenerate slug and track history on title change', async () => {
+    existingSlugs.add('software-engineer');
+    const newSlug = await SlugGenerationService.regenerateSlug(
+      jobId,
+      'Senior Frontend Developer',
+      slugExists,
+      trackSlugChange,
+      'software-engineer',
+    );
+    expect(newSlug).toBe('senior-frontend-developer');
+    expect(history.length).toBe(1);
+    expect(history[0].oldSlug).toBe('software-engineer');
+    expect(history[0].newSlug).toBe('senior-frontend-developer');
+    expect(history[0].reason).toBe('title_update');
+  });
+
+  it('should not track history if title does not change slug', async () => {
+    // Add the current slug to the set, but simulate excludeJobId logic if needed
+    existingSlugs.add('software-engineer');
+    const slugExistsExclude = async (slug: string, excludeJobId?: number | null) => {
+      // Simulate that the current job's slug is not a conflict
+      if (slug === 'software-engineer' && excludeJobId === jobId) return false;
+      return existingSlugs.has(slug);
+    };
+    const newSlug = await SlugGenerationService.regenerateSlug(
+      jobId,
+      'Software Engineer',
+      slugExistsExclude,
+      trackSlugChange,
+      'software-engineer',
+    );
+    expect(newSlug).toBe('software-engineer');
+    expect(history.length).toBe(0);
+  });
+
+  it('should resolve conflict and track history if new slug conflicts', async () => {
+    existingSlugs = new Set(['senior-frontend-developer']);
+    const newSlug = await SlugGenerationService.regenerateSlug(
+      jobId,
+      'Senior Frontend Developer',
+      slugExists,
+      trackSlugChange,
+      'software-engineer',
+    );
+    expect(newSlug).toBe('senior-frontend-developer-1');
+    expect(history.length).toBe(1);
+    expect(history[0].oldSlug).toBe('software-engineer');
+    expect(history[0].newSlug).toBe('senior-frontend-developer-1');
+  });
+
+  it('should maintain complete slug history for multiple updates', async () => {
+    let oldSlug = 'software-engineer';
+    let newSlug = await SlugGenerationService.regenerateSlug(
+      jobId,
+      'Senior Frontend Developer',
+      slugExists,
+      trackSlugChange,
+      oldSlug,
+    );
+    existingSlugs.add(newSlug);
+    oldSlug = newSlug;
+    newSlug = await SlugGenerationService.regenerateSlug(
+      jobId,
+      'Lead Frontend Developer',
+      slugExists,
+      trackSlugChange,
+      oldSlug,
+    );
+    expect(history.length).toBe(2);
+    expect(history[0].newSlug).toBe('senior-frontend-developer');
+    expect(history[1].newSlug).toBe('lead-frontend-developer');
+  });
+});
