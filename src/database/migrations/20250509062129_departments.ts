@@ -13,11 +13,15 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamp('updated_at', { useTz: true }).defaultTo(knex.fn.now());
     table.timestamp('deleted_at', { useTz: true });
 
-    table.index(['status']);
+    table.index(['status'], 'idx_departments_status');
+    table.index(['name'], 'idx_departments_name');
+    table.index(['created_by'], 'idx_departments_created_by');
   });
 }
 
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists('departments');
-  await knex.schema.raw('DROP TYPE IF EXISTS department_status');
+  await knex.schema.raw('DROP INDEX IF EXISTS idx_departments_status');
+  await knex.schema.raw('DROP INDEX IF EXISTS idx_departments_name');
+  await knex.schema.raw('DROP INDEX IF EXISTS idx_departments_created_by');
 }
