@@ -49,25 +49,22 @@ export class SlugGenerationService {
       if (!title || typeof title !== 'string' || !title.trim()) {
         return { slug: '', isUnique: false, reason: 'Title is required' };
       }
-
+      // Use DEFAULT_MIN_LENGTH to check if the title is long enough before slugification
       if (title.trim().length < DEFAULT_MIN_LENGTH) {
-        return {
-          slug: '',
-          isUnique: false,
-          reason: `Title must be at least ${DEFAULT_MIN_LENGTH} characters`,
-        };
+        return { slug: '', isUnique: false, reason: 'Title too short' };
       }
       let base = title.trim();
       if (options.removeStopWords) {
         base = removeStopWords(base);
       }
+      // Replace underscores with spaces before slugify to ensure underscores become hyphens
+      base = base.replace(/_/g, ' ');
       let slug = slugify(base, {
         lower: true,
         strict: true,
         remove: /([\u0300-\u036f])/g,
         trim: true,
       });
-
       slug = slug.replace(/^-+|-+$/g, '').substring(0, options.maxLength || DEFAULT_MAX_LENGTH);
 
       const validation = validateSlug(slug);
