@@ -17,7 +17,6 @@ import {
   PROFANITY_LIST,
   DEFAULT_MAX_LENGTH,
   DEFAULT_MIN_LENGTH,
-  SLUG_REGEX,
   STOP_WORDS,
 } from '@/constants/slug-generation-constants';
 import { validateSlug } from '@/validators/slug-validator';
@@ -50,6 +49,14 @@ export class SlugGenerationService {
       if (!title || typeof title !== 'string' || !title.trim()) {
         return { slug: '', isUnique: false, reason: 'Title is required' };
       }
+
+      if (title.trim().length < DEFAULT_MIN_LENGTH) {
+        return {
+          slug: '',
+          isUnique: false,
+          reason: `Title must be at least ${DEFAULT_MIN_LENGTH} characters`,
+        };
+      }
       let base = title.trim();
       if (options.removeStopWords) {
         base = removeStopWords(base);
@@ -57,9 +64,10 @@ export class SlugGenerationService {
       let slug = slugify(base, {
         lower: true,
         strict: true,
-        remove: /[\u0300-\u036f]/g, // Remove accents
+        remove: /([\u0300-\u036f])/g,
         trim: true,
       });
+
       slug = slug.replace(/^-+|-+$/g, '').substring(0, options.maxLength || DEFAULT_MAX_LENGTH);
 
       const validation = validateSlug(slug);
