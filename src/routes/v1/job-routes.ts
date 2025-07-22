@@ -1,19 +1,21 @@
 /**
  * Job Routes (v1)
  *
- * Currently only mount nested user-role assignment routes. Additional user CRUD
- * endpoints to be implemented in future tasks.
+ * Exposes endpoints for job posting management. Applies authentication and authorization
+ * middleware to ensure only authenticated users with the correct permissions can create jobs.
  *
- * @module src/routes/v1/jobs
+ * @module src/routes/v1/job-routes
  */
 
-import { Router } from 'express';
+const router = require('express').Router();
 
-import { JobController } from '@/controllers/job-controller';
-import { authorize } from '@/middlewares/authorization/authorize';
+const { JobController } = require('@/controllers/job-controller');
+const { authorize } = require('@/middlewares/authorization/authorize');
+const { accessToken } = require('@/middlewares/auth-middleware');
 
-const router = Router();
-
-router.post('/', authorize('jobs.manage'), JobController.createJobPosting);
+// Require authentication for all job routes
+router.use(accessToken);
+// Require jobs.manage permission to create a job posting
+router.post('/', authorize('jobs.create'), JobController.createJobPosting);
 
 module.exports = router;

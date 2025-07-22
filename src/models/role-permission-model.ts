@@ -9,6 +9,8 @@
  */
 
 const Model = require('@/config/database/orm');
+// Move import after Model require to avoid circular dependency issues
+import { Role } from './role-model';
 
 export interface RolePermissionData {
   id: number;
@@ -22,4 +24,24 @@ export class RolePermission extends Model {
   static tableName = 'role_permissions';
   static idColumn = 'id';
   static softDelete = false;
+
+  static get relationMappings() {
+    // Fallback to require if Role is undefined (runtime circular dep workaround)
+    const RoleModel = Role || require('./role-model').Role;
+    return {
+      /**
+       * BelongsToOne: RolePermission → Role
+       *
+       * Enables joinRelated traversals for role_permissions → role → user_roles.
+       */
+      role: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: RoleModel,
+        join: {
+          from: 'role_permissions.role_id',
+          to: 'roles.id',
+        },
+      },
+    };
+  }
 }

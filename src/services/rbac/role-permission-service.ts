@@ -31,7 +31,7 @@ export class RolePermissionService {
    * already has resolves successfully without error.
    */
   static async assignRole(userId: number, roleId: number): Promise<AssignRoleResult> {
-    return transaction(UserRole.knex(), async (trx) => {
+    return transaction(UserRole.knex(), async trx => {
       // Validate role exists
       const role = await Role.query(trx).findById(roleId).whereNull('deleted_at');
       if (!role) {
@@ -58,7 +58,7 @@ export class RolePermissionService {
    * specified role. Revocation of protected roles is forbidden.
    */
   static async revokeRole(userId: number, roleId: number): Promise<RevokeRoleResult> {
-    return transaction(UserRole.knex(), async (trx) => {
+    return transaction(UserRole.knex(), async trx => {
       const role = await Role.query(trx).findById(roleId).whereNull('deleted_at');
       if (!role) throw new Error('Role not found');
 
@@ -80,10 +80,12 @@ export class RolePermissionService {
    * (super_admin role).
    */
   static async hasPermission(userId: number, permissionSlug: string): Promise<boolean> {
-    // Build query: user_roles → role_permissions → permissions
+    // Join: users → roles → role_permissions → permissions
     const permCount = await Permission.query()
-      .joinRelated('[role_permissions.role.user_roles]')
-      .where('user_roles.user_id', userId)
+      .join('role_permissions', 'role_permissions.permission_id', 'permissions.id')
+      .join('roles', 'roles.id', 'role_permissions.role_id')
+      .join('users', 'users.role_id', 'roles.id')
+      .where('users.id', userId)
       .where((qb: any) => {
         qb.where('permissions.name', permissionSlug).orWhere('permissions.name', '*');
       })
