@@ -60,10 +60,17 @@ export async function up(knex: Knex): Promise<void> {
     table.index(['uuid']);
     table.index(['slug']);
     table.index(['status']);
+    table.index(['deleted_at'], 'idx_job_postings_deleted_at');
+    table.index(['deleted_at', 'status'], 'idx_job_postings_deleted_status');
   });
+
+  await knex.schema.raw(`
+    CREATE VIEW active_job_postings AS
+    SELECT * FROM job_postings where deleted_at IS NULL;`)
 }
 
 export async function down(knex: Knex): Promise<void> {
+  await knex.schema.raw('DROP VIEW IF EXISTS active_job_postings');
   await knex.schema.dropTableIfExists('job_postings');
   await knex.schema.raw('DROP TYPE IF EXISTS job_posting_type');
   await knex.schema.raw('DROP TYPE IF EXISTS job_posting_employment_level');
