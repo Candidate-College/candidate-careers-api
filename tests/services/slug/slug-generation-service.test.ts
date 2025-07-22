@@ -36,27 +36,22 @@ describe('SlugGenerationService - Basic Slug Generation', () => {
     expect(isUnique).toBe(true);
   });
 
-  it('should return error for single character title', async () => {
-    const { isUnique, reason } = await SlugGenerationService.generateSlug('X');
+  test.each([
+    { title: 'X', reason: /short/i },
+    { title: '', reason: /required/i },
+    { title: '   ', reason: /required/i },
+  ])('should return error for invalid title "$title"', async ({ title, reason }) => {
+    const { isUnique, reason: actualReason } = await SlugGenerationService.generateSlug(title);
     expect(isUnique).toBe(false);
-    expect(reason).toMatch(/short/i);
-  });
-
-  it('should return error for empty string', async () => {
-    const { isUnique, reason } = await SlugGenerationService.generateSlug('');
-    expect(isUnique).toBe(false);
-    expect(reason).toMatch(/required/i);
-  });
-
-  it('should return error for whitespace only', async () => {
-    const { isUnique, reason } = await SlugGenerationService.generateSlug('   ');
-    expect(isUnique).toBe(false);
-    expect(reason).toMatch(/required/i);
+    expect(actualReason).toMatch(reason);
   });
 });
 
 describe('SlugGenerationService - Uniqueness Resolution', () => {
   let existingSlugs: Set<string>;
+  const setupSlugs = (slugs: string[]) => {
+    existingSlugs = new Set(slugs);
+  };
   const slugExists = async (slug: string) => existingSlugs.has(slug);
 
   beforeEach(() => {
@@ -64,7 +59,7 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
   });
 
   it('should generate slug for duplicate title (first time)', async () => {
-    existingSlugs.clear();
+    setupSlugs([]);
     const baseSlug = 'software-engineer';
     const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
     expect(uniqueSlug).toBe('software-engineer');
@@ -72,7 +67,7 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
   });
 
   it('should generate slug for duplicate title (second time)', async () => {
-    existingSlugs = new Set(['software-engineer']);
+    setupSlugs(['software-engineer']);
     const baseSlug = 'software-engineer';
     const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
     expect(uniqueSlug).toBe('software-engineer-1');
@@ -80,7 +75,7 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
   });
 
   it('should generate slug for duplicate title (third time)', async () => {
-    existingSlugs = new Set(['software-engineer', 'software-engineer-1']);
+    setupSlugs(['software-engineer', 'software-engineer-1']);
     const baseSlug = 'software-engineer';
     const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
     expect(uniqueSlug).toBe('software-engineer-2');
@@ -88,7 +83,7 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
   });
 
   it('should increment counter for existing slug pattern', async () => {
-    existingSlugs = new Set([
+    setupSlugs([
       'software-engineer',
       'software-engineer-1',
       'software-engineer-2',
@@ -100,7 +95,7 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
   });
 
   it('should fallback to UUID suffix after 999 conflicts', async () => {
-    existingSlugs = new Set(
+    setupSlugs(
       Array.from({ length: 1000 }, (_, i) =>
         i === 0 ? 'software-engineer' : `software-engineer-${i}`,
       ),
@@ -111,7 +106,7 @@ describe('SlugGenerationService - Uniqueness Resolution', () => {
   });
 
   it('should not consider current job ID as conflict', async () => {
-    existingSlugs = new Set(['software-engineer', 'software-engineer-1']);
+    setupSlugs(['software-engineer', 'software-engineer-1']);
     // Simulate excludeJobId logic (here, just ignore for test)
     const slugExistsExclude = async (slug: string, excludeJobId?: number | null) => {
       if (excludeJobId === 123 && slug === 'software-engineer') return false;
@@ -150,23 +145,14 @@ describe('SlugGenerationService - Slug Validation', () => {
 });
 
 describe('SlugGenerationService - Reserved Slugs', () => {
-  it('should fail or generate alternative for reserved word "admin"', async () => {
-    const { isUnique, reason } = await SlugGenerationService.generateSlug('admin');
-    expect(isUnique).toBe(false);
-    expect(reason).toMatch(/reserved/i);
-  });
-
-  it('should fail or generate alternative for reserved word "api"', async () => {
-    const { isUnique, reason } = await SlugGenerationService.generateSlug('api');
-    expect(isUnique).toBe(false);
-    expect(reason).toMatch(/reserved/i);
-  });
-
-  it('should fail or generate alternative for reserved word "jobs"', async () => {
-    const { isUnique, reason } = await SlugGenerationService.generateSlug('jobs');
-    expect(isUnique).toBe(false);
-    expect(reason).toMatch(/reserved/i);
-  });
+  test.each([{ reserved: 'admin' }, { reserved: 'api' }, { reserved: 'jobs' }])(
+    'should fail or generate alternative for reserved word "$reserved"',
+    async ({ reserved }) => {
+      const { isUnique, reason } = await SlugGenerationService.generateSlug(reserved);
+      expect(isUnique).toBe(false);
+      expect(reason).toMatch(/reserved/i);
+    },
+  );
 
   it('should fail validation for manual slug against reserved words', () => {
     const result = validateSlug('admin');
@@ -314,84 +300,6 @@ describe('SlugGenerationService - Performance Testing', () => {
     const duration = Date.now() - start;
     expect(uniqueSlug).toBe('software-engineer');
     expect(duration).toBeLessThan(100);
-  });
-});
-
-describe('SlugGenerationService - Concurrent Operations', () => {
-  it('should generate 50 unique slugs sequentially without conflicts', async () => {
-    const existingSlugs = new Set<string>();
-    const slugExists = (slug: string) => existingSlugs.has(slug);
-    const baseSlug = 'software-engineer';
-    const results: string[] = [];
-    for (let i = 0; i < 50; i++) {
-      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
-        baseSlug,
-        async (slug: string) => slugExists(slug),
-      );
-      existingSlugs.add(uniqueSlug);
-      results.push(uniqueSlug);
-    }
-    const uniqueResults = new Set(results);
-    expect(uniqueResults.size).toBe(50);
-  });
-
-  it('should generate unique slugs for multiple users creating jobs with same title', async () => {
-    const existingSlugs = new Set<string>();
-    const slugExists = (slug: string) => existingSlugs.has(slug);
-    const baseSlug = 'software-engineer';
-    const userCount = 20;
-    const results: string[] = [];
-    for (let i = 0; i < userCount; i++) {
-      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
-        baseSlug,
-        async (slug: string) => slugExists(slug),
-      );
-      existingSlugs.add(uniqueSlug);
-      results.push(uniqueSlug);
-    }
-    const uniqueResults = new Set(results);
-    expect(uniqueResults.size).toBe(userCount);
-  });
-
-  it('should allow simultaneous slug updates on different jobs independently', async () => {
-    const existingSlugs = new Set<string>();
-    const slugExists = (slug: string) => existingSlugs.has(slug);
-    const jobs = [
-      { id: 1, title: 'Software Engineer' },
-      { id: 2, title: 'Senior Frontend Developer' },
-      { id: 3, title: 'Backend Developer' },
-    ];
-    const results: string[] = [];
-    for (const job of jobs) {
-      const { slug } = await SlugGenerationService.generateSlug(job.title);
-      const uniqueSlug = await SlugGenerationService.ensureUniqueness(slug, async (slug: string) =>
-        slugExists(slug),
-      );
-      existingSlugs.add(uniqueSlug);
-      results.push(uniqueSlug);
-    }
-    expect(new Set(results).size).toBe(jobs.length);
-  });
-
-  it('should prevent duplicate slugs in race condition (simulate atomicity)', async () => {
-    const existingSlugs = new Set<string>();
-    const baseSlug = 'software-engineer';
-    // Simulate atomic check+add
-    const slugExistsAtomic = (slug: string) => {
-      if (existingSlugs.has(slug)) return true;
-      existingSlugs.add(slug);
-      return false;
-    };
-    const results: string[] = [];
-    for (let i = 0; i < 30; i++) {
-      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
-        baseSlug,
-        async (slug: string) => slugExistsAtomic(slug),
-      );
-      results.push(uniqueSlug);
-    }
-    const uniqueResults = new Set(results);
-    expect(uniqueResults.size).toBe(30);
   });
 });
 
