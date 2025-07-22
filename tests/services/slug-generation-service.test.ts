@@ -1,4 +1,5 @@
 import SlugGenerationService from '../../src/services/slug-generation-service';
+import { validateSlug } from '../../src/validators/slug-validator';
 
 describe('SlugGenerationService - Basic Slug Generation', () => {
   it('should generate slug from simple title', async () => {
@@ -81,5 +82,133 @@ describe('SlugGenerationService - Basic Slug Generation', () => {
     const { isUnique, reason } = await SlugGenerationService.generateSlug('   ');
     expect(isUnique).toBe(false);
     expect(reason).toMatch(/required/i);
+  });
+});
+
+describe('SlugGenerationService - Uniqueness Resolution', () => {
+  let existingSlugs: Set<string>;
+  const slugExists = async (slug: string) => existingSlugs.has(slug);
+
+  beforeEach(() => {
+    existingSlugs = new Set();
+  });
+
+  it('should generate slug for duplicate title (first time)', async () => {
+    existingSlugs.clear();
+    const baseSlug = 'software-engineer';
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    expect(uniqueSlug).toBe('software-engineer');
+    existingSlugs.add(uniqueSlug);
+  });
+
+  it('should generate slug for duplicate title (second time)', async () => {
+    existingSlugs = new Set(['software-engineer']);
+    const baseSlug = 'software-engineer';
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    expect(uniqueSlug).toBe('software-engineer-1');
+    existingSlugs.add(uniqueSlug);
+  });
+
+  it('should generate slug for duplicate title (third time)', async () => {
+    existingSlugs = new Set(['software-engineer', 'software-engineer-1']);
+    const baseSlug = 'software-engineer';
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    expect(uniqueSlug).toBe('software-engineer-2');
+    existingSlugs.add(uniqueSlug);
+  });
+
+  it('should increment counter for existing slug pattern', async () => {
+    existingSlugs = new Set([
+      'software-engineer',
+      'software-engineer-1',
+      'software-engineer-2',
+      'software-engineer-3',
+    ]);
+    const baseSlug = 'software-engineer';
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    expect(uniqueSlug).toBe('software-engineer-4');
+  });
+
+  it('should fallback to UUID suffix after 999 conflicts', async () => {
+    existingSlugs = new Set(
+      Array.from({ length: 1000 }, (_, i) =>
+        i === 0 ? 'software-engineer' : `software-engineer-${i}`,
+      ),
+    );
+    const baseSlug = 'software-engineer';
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    expect(uniqueSlug).toMatch(/^software-engineer-[a-f0-9]{8}$/);
+  });
+
+  it('should not consider current job ID as conflict', async () => {
+    existingSlugs = new Set(['software-engineer', 'software-engineer-1']);
+    // Simulate excludeJobId logic (here, just ignore for test)
+    const slugExistsExclude = async (slug: string, excludeJobId?: number | null) => {
+      if (excludeJobId === 123 && slug === 'software-engineer') return false;
+      return existingSlugs.has(slug);
+    };
+    const baseSlug = 'software-engineer';
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+      baseSlug,
+      slugExistsExclude,
+      123,
+    );
+    expect(uniqueSlug).toBe('software-engineer');
+  });
+});
+
+describe('SlugGenerationService - Slug Validation', () => {
+  it('should validate properly formatted slug', () => {
+    const result = validateSlug('software-engineer');
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should fail validation for uppercase slug', () => {
+    const result = validateSlug('Software-Engineer');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/lowercase/i);
+  });
+
+  it('should fail validation for special characters', () => {
+    const result = validateSlug('software_engineer!');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/invalid/i);
+  });
+
+  it('should fail validation for spaces', () => {
+    const result = validateSlug('software engineer');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
+  });
+
+  it('should fail validation for too short slug', () => {
+    const result = validateSlug('ab');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/short/i);
+  });
+
+  it('should fail validation for too long slug', () => {
+    const longSlug = 'a'.repeat(101);
+    const result = validateSlug(longSlug);
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/long/i);
+  });
+
+  it('should fail validation for leading hyphen', () => {
+    const result = validateSlug('-software-engineer');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
+  });
+
+  it('should fail validation for trailing hyphen', () => {
+    const result = validateSlug('software-engineer-');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
+  });
+
+  it('should fail validation for consecutive hyphens', () => {
+    const result = validateSlug('software--engineer');
+    expect(result.isValid).toBe(false);
+    expect((result.errors || []).join(' ')).toMatch(/format|invalid/i);
   });
 });
