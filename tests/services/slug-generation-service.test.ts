@@ -1,4 +1,4 @@
-import SlugGenerationService from '@/services/slug-generation-service';
+import SlugGenerationService from '../../src/services/slug-generation-service';
 
 describe('SlugGenerationService - Basic Slug Generation', () => {
   it('should generate slug from simple title', async () => {
