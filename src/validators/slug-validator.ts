@@ -42,6 +42,9 @@ export function validateSlug(slug: string): SlugValidationResult {
   if (!SLUG_REGEX.test(slug)) {
     errors.push('Slug format invalid');
   }
+  if (/[A-Z]/.test(slug)) {
+    errors.push('Slug must be lowercase');
+  }
   if (isReservedSlug(slug)) {
     errors.push('Slug is reserved');
   }
