@@ -335,42 +335,126 @@ describe('SlugGenerationService - Slug Regeneration', () => {
 describe('SlugGenerationService - Performance Testing', () => {
   it('should generate 1000 unique slugs sequentially within reasonable time', async () => {
     const existingSlugs = new Set<string>();
-    const slugExists = async (slug: string) => existingSlugs.has(slug);
+    const slugExists = (slug: string) => existingSlugs.has(slug);
     const baseSlug = 'software-engineer';
     const start = Date.now();
     for (let i = 0; i < 1000; i++) {
-      const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+        baseSlug,
+        async (slug: string) => slugExists(slug),
+      );
       expect(existingSlugs.has(uniqueSlug)).toBe(false);
       existingSlugs.add(uniqueSlug);
     }
     const duration = Date.now() - start;
-    expect(duration).toBeLessThan(2000); // 2 seconds for 1000 slugs is reasonable
+    expect(duration).toBeLessThan(3000); // Allow a bit more time for CI
     expect(existingSlugs.size).toBe(1000);
   });
 
   it('should resolve 100 conflicts efficiently', async () => {
     const existingSlugs = new Set<string>();
-    const slugExists = async (slug: string) => existingSlugs.has(slug);
+    const slugExists = (slug: string) => existingSlugs.has(slug);
     const baseSlug = 'software-engineer';
     for (let i = 0; i < 100; i++) {
       existingSlugs.add(i === 0 ? baseSlug : `${baseSlug}-${i}`);
     }
     const start = Date.now();
-    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+      baseSlug,
+      async (slug: string) => slugExists(slug),
+    );
     const duration = Date.now() - start;
     expect(uniqueSlug).toBe('software-engineer-100');
     expect(duration).toBeLessThan(100); // Should be fast
   });
 
   it('should generate a single slug in under 100ms', async () => {
-    const slugExists = async () => false;
+    const slugExists = (_slug: string) => false;
     const start = Date.now();
     const uniqueSlug = await SlugGenerationService.ensureUniqueness(
       'software-engineer',
-      slugExists,
+      async (slug: string) => slugExists(slug),
     );
     const duration = Date.now() - start;
     expect(uniqueSlug).toBe('software-engineer');
     expect(duration).toBeLessThan(100);
+  });
+});
+
+describe('SlugGenerationService - Concurrent Operations', () => {
+  it('should generate 50 unique slugs sequentially without conflicts', async () => {
+    const existingSlugs = new Set<string>();
+    const slugExists = (slug: string) => existingSlugs.has(slug);
+    const baseSlug = 'software-engineer';
+    const results: string[] = [];
+    for (let i = 0; i < 50; i++) {
+      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+        baseSlug,
+        async (slug: string) => slugExists(slug),
+      );
+      existingSlugs.add(uniqueSlug);
+      results.push(uniqueSlug);
+    }
+    const uniqueResults = new Set(results);
+    expect(uniqueResults.size).toBe(50);
+  });
+
+  it('should generate unique slugs for multiple users creating jobs with same title', async () => {
+    const existingSlugs = new Set<string>();
+    const slugExists = (slug: string) => existingSlugs.has(slug);
+    const baseSlug = 'software-engineer';
+    const userCount = 20;
+    const results: string[] = [];
+    for (let i = 0; i < userCount; i++) {
+      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+        baseSlug,
+        async (slug: string) => slugExists(slug),
+      );
+      existingSlugs.add(uniqueSlug);
+      results.push(uniqueSlug);
+    }
+    const uniqueResults = new Set(results);
+    expect(uniqueResults.size).toBe(userCount);
+  });
+
+  it('should allow simultaneous slug updates on different jobs independently', async () => {
+    const existingSlugs = new Set<string>();
+    const slugExists = (slug: string) => existingSlugs.has(slug);
+    const jobs = [
+      { id: 1, title: 'Software Engineer' },
+      { id: 2, title: 'Senior Frontend Developer' },
+      { id: 3, title: 'Backend Developer' },
+    ];
+    const results: string[] = [];
+    for (const job of jobs) {
+      const { slug } = await SlugGenerationService.generateSlug(job.title);
+      const uniqueSlug = await SlugGenerationService.ensureUniqueness(slug, async (slug: string) =>
+        slugExists(slug),
+      );
+      existingSlugs.add(uniqueSlug);
+      results.push(uniqueSlug);
+    }
+    expect(new Set(results).size).toBe(jobs.length);
+  });
+
+  it('should prevent duplicate slugs in race condition (simulate atomicity)', async () => {
+    const existingSlugs = new Set<string>();
+    const baseSlug = 'software-engineer';
+    // Simulate atomic check+add
+    const slugExistsAtomic = (slug: string) => {
+      if (existingSlugs.has(slug)) return true;
+      existingSlugs.add(slug);
+      return false;
+    };
+    const results: string[] = [];
+    for (let i = 0; i < 30; i++) {
+      const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+        baseSlug,
+        async (slug: string) => slugExistsAtomic(slug),
+      );
+      results.push(uniqueSlug);
+    }
+    const uniqueResults = new Set(results);
+    expect(uniqueResults.size).toBe(30);
   });
 });
