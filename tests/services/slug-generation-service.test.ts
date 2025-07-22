@@ -331,3 +331,46 @@ describe('SlugGenerationService - Slug Regeneration', () => {
     expect(history[1].newSlug).toBe('lead-frontend-developer');
   });
 });
+
+describe('SlugGenerationService - Performance Testing', () => {
+  it('should generate 1000 unique slugs sequentially within reasonable time', async () => {
+    const existingSlugs = new Set<string>();
+    const slugExists = async (slug: string) => existingSlugs.has(slug);
+    const baseSlug = 'software-engineer';
+    const start = Date.now();
+    for (let i = 0; i < 1000; i++) {
+      const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+      expect(existingSlugs.has(uniqueSlug)).toBe(false);
+      existingSlugs.add(uniqueSlug);
+    }
+    const duration = Date.now() - start;
+    expect(duration).toBeLessThan(2000); // 2 seconds for 1000 slugs is reasonable
+    expect(existingSlugs.size).toBe(1000);
+  });
+
+  it('should resolve 100 conflicts efficiently', async () => {
+    const existingSlugs = new Set<string>();
+    const slugExists = async (slug: string) => existingSlugs.has(slug);
+    const baseSlug = 'software-engineer';
+    for (let i = 0; i < 100; i++) {
+      existingSlugs.add(i === 0 ? baseSlug : `${baseSlug}-${i}`);
+    }
+    const start = Date.now();
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(baseSlug, slugExists);
+    const duration = Date.now() - start;
+    expect(uniqueSlug).toBe('software-engineer-100');
+    expect(duration).toBeLessThan(100); // Should be fast
+  });
+
+  it('should generate a single slug in under 100ms', async () => {
+    const slugExists = async () => false;
+    const start = Date.now();
+    const uniqueSlug = await SlugGenerationService.ensureUniqueness(
+      'software-engineer',
+      slugExists,
+    );
+    const duration = Date.now() - start;
+    expect(uniqueSlug).toBe('software-engineer');
+    expect(duration).toBeLessThan(100);
+  });
+});
