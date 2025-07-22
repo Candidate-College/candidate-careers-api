@@ -1,7 +1,9 @@
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.raw(`CREATE TYPE job_posting_type AS ENUM ('internship', 'staff', 'freelance', 'contract')`);
+  await knex.schema.raw(
+    `CREATE TYPE job_posting_type AS ENUM ('internship', 'staff', 'freelance', 'contract')`,
+  );
   await knex.schema.raw(`
     CREATE TYPE job_posting_employment_level AS ENUM
     ('entry', 'junior', 'mid', 'senior', 'lead', 'head', 'co_head')
@@ -16,9 +18,19 @@ export async function up(knex: Knex): Promise<void> {
     table.increments('id');
     table.uuid('uuid').notNullable().defaultTo(knex.raw('gen_random_uuid()')).unique();
     table.string('title').notNullable();
-    table.string('slug');
-    table.integer('department_id').unsigned().references('id').inTable('departments').onDelete('CASCADE');
-    table.integer('job_category_id').unsigned().references('id').inTable('job_categories').onDelete('CASCADE');
+    table.string('slug').unique();
+    table
+      .integer('department_id')
+      .unsigned()
+      .references('id')
+      .inTable('departments')
+      .onDelete('CASCADE');
+    table
+      .integer('job_category_id')
+      .unsigned()
+      .references('id')
+      .inTable('job_categories')
+      .onDelete('CASCADE');
     table.specificType('job_type', 'job_posting_type');
     table.specificType('employment_level', 'job_posting_employment_level');
     table.specificType('priority_level', 'job_posting_priority_level').defaultTo('normal');

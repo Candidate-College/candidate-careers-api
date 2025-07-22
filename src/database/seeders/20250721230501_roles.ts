@@ -1,4 +1,3 @@
-import 'tsconfig-paths/register';
 import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<void> {
@@ -7,8 +6,8 @@ export async function seed(knex: Knex): Promise<void> {
 
   // Inserts seed entries
   await knex('roles').insert([
-    { name: 'guest', display_name: 'Guest' },
+    { name: 'headhr', display_name: 'Head of HR' },
     { name: 'superadmin', display_name: 'Superadmin' },
-    { name: 'recruiter', display_name: 'Recruiter' },
+    { name: 'hrstaff', display_name: 'HR Staff' },
   ]);
-};
+}
