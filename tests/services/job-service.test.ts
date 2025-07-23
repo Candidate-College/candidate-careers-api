@@ -37,9 +37,10 @@ describe('JobService.createJobPosting', () => {
   const UUID = 'uuid-1234';
   const BASE_INPUT: Partial<Job> = {
     title: 'Senior Software Engineer',
-    description: 'A'.repeat(60),
-    requirements: 'B'.repeat(30),
-    responsibilities: 'C'.repeat(30),
+    description:
+      'A detailed job description that meets the minimum length requirements for validation testing purposes.',
+    requirements: 'Must have experience with modern JavaScript frameworks.',
+    responsibilities: 'Responsible for designing and implementing frontend features.',
     department_id: 1,
     job_category_id: 2,
     job_type: 'staff',

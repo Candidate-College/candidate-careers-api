@@ -31,8 +31,15 @@ function validateStringField(
     }
   }
   if (rules.allowHTML) {
-    const sanitized = DOMPurify.sanitize(value);
-    if (sanitized !== value) {
+    const sanitized = DOMPurify.sanitize(value, {
+      ALLOWED_TAGS: ['b', 'i', 'u', 'a', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em'],
+      ALLOWED_ATTR: ['href', 'title', 'target'],
+    });
+
+    const parser = new DOMParser();
+    const originalDOM = parser.parseFromString(value, 'text/html');
+    const sanitizedDOM = parser.parseFromString(sanitized, 'text/html');
+    if (originalDOM.body.innerHTML !== sanitizedDOM.body.innerHTML) {
       errors[field] = `${field} contains disallowed or unsafe HTML content`;
       return undefined;
     }
