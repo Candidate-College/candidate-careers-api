@@ -6,7 +6,6 @@ export class JobController {
   static async createJobPosting(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user?.id;
-      console.log(req.user);
 
       if (!userId) {
         return res.status(401).json({
