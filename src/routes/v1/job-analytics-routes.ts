@@ -12,7 +12,7 @@ const { accessToken } = require('../../middlewares/auth-middleware');
 const { authorize } = require('../../middlewares/authorization/authorize');
 const validate = require('../../middlewares/request-validation-middleware');
 const fields = require('../../validators/job-analytics-validator');
-const JobAnalyticsController = require('../../controllers/job-analytics-controller');
+const { JobAnalyticsController } = require('../../controllers/job-analytics-controller');
 
 // RBAC: analytics.view required for all endpoints
 router.use(accessToken, authorize('analytics.view'));
