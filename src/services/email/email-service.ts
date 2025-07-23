@@ -6,7 +6,41 @@
  * @module services/email/email-service
  */
 
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
+
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASSWORD;
+const smtpHost = process.env.SMTP_HOST;
+const smtpPort = process.env.SMTP_PORT;
+
+const { defaultWinstonLogger: winston } = require('@/utilities/winston-logger');
+
+if (!smtpUser || !smtpPass || !smtpHost || !smtpPort) {
+  winston.error('EmailService: SMTP credentials missing or invalid', {
+    SMTP_USER: smtpUser,
+    SMTP_HOST: smtpHost,
+    SMTP_PORT: smtpPort,
+    // Do not log password
+  });
+  throw new Error('SMTP credentials missing or invalid. Please check your .env configuration.');
+}
+
+const _emailService = {
+  transporter: nodemailer.createTransport({
+    host: smtpHost,
+    port: Number(smtpPort),
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  }),
+};
+
+winston.info('EmailService: SMTP transporter initialized', {
+  SMTP_USER: smtpUser,
+  SMTP_HOST: smtpHost,
+  SMTP_PORT: smtpPort,
+});
 
 export class EmailService {
   private readonly transporter: any;
@@ -120,7 +154,7 @@ export class EmailService {
       // Send email to all recipients
       for (const to of recipients) {
         try {
-          await emailService.transporter.sendMail({
+          await _emailService.transporter.sendMail({
             from: 'no-reply@careers.local',
             to,
             subject,
