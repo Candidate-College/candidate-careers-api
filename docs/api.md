@@ -1,5 +1,7 @@
 <!-- omit in toc -->
+
 # API Specification
+
 **Base URL**: `http://localhost:3000`
 
 **Authentication**: Refresh token via `Cookie: refresh_token=<REFRESH_TOKEN>`
@@ -7,7 +9,9 @@
 **Authorization**: Access token via Header `Authorization: Bearer <ACCESS_TOKEN>`
 
 <!-- omit in toc -->
+
 ## Table of Content
+
 - [**Standard Response**](#standard-response)
   - [**Success Response**](#success-response)
   - [**Error Response**](#error-response)
@@ -24,7 +28,9 @@
   - [**Delete an Event**](#delete-an-event)
 
 ## **Standard Response**
+
 ### **Success Response**
+
 ```
 {
   "statusCode": "number",
@@ -32,7 +38,9 @@
   "data": "object[] | object"
 }
 ```
+
 ### **Error Response**
+
 ```
 {
   "statusCode": "number",
@@ -40,12 +48,15 @@
   "errors": "Record<string, string[]>",
 }
 ```
+
 ## **Authentication (non MFA)**
+
 ### **Register**
+
 - **Method**: POST
 - **Path**: `/api/v1/auth/register`
 - **Headers**:
-    - **Content-Type**: `application/json`, `application/x-www-form-urlencoded`, `multipart/form-data`
+  - **Content-Type**: `application/json`, `application/x-www-form-urlencoded`, `multipart/form-data`
 - **Body**:
   ```
   {
@@ -54,7 +65,7 @@
     "password": "string|min:6"
   }
   ```
-**Response**:
+  **Response**:
 - Success:
   ```
   {
@@ -89,6 +100,7 @@
   ```
 
 ### **Login**
+
 - **Method**: POST
 - **Path**: `/api/v1/auth/login`
 - **Headers**:
@@ -100,7 +112,7 @@
     "password": "string|min:6"
   }
   ```
-Response:
+  Response:
 - Success:
   - **Set-Cookie**: `refresh_token=<REFRESH_TOKEN>`
   ```
@@ -142,12 +154,14 @@ Response:
   ```
 
 ### **Refresh Access Token**
+
 - Method: POST
 - Path: `/api/v1/auth/refresh`
 - Header:
   - **Cookie**: `refresh_token=<REFRESH_TOKEN>`
 
 Response:
+
 - Success:
   - **Set-Cookie**: `refresh_token=<NEW_REFRESH_TOKEN>`
   ```
@@ -185,12 +199,14 @@ Response:
   ```
 
 ### **Logout**
+
 - **Method**: DELETE
 - **Path**: `/api/v1/auth/logout`
 - **Headers**:
   - **Cookie**: `refresh_token=<REFRESH_TOKEN>`
 
 Response:
+
 - Success:
   - **Set-Cookie**: `refresh_token=`
   ```
@@ -231,7 +247,9 @@ Response:
   ```
 
 ## **Role & Permission Management**
+
 ### **Create Role**
+
 - **Method**: POST
 - **Path**: `/api/v1/roles`
 - **Headers**:
@@ -248,6 +266,7 @@ Response:
   - **201** Role created `{ success: true, data: Partial<RoleData> }`
 
 ### **Assign Permissions to Role**
+
 - **Method**: POST
 - **Path**: `/api/v1/roles/:id/permissions`
 - **Headers**: Auth as above
@@ -258,12 +277,14 @@ Response:
 - **Response**: **200** `{ success: true, inserted: 3 }`
 
 ### **Revoke Permission from Role**
+
 - **Method**: DELETE
 - **Path**: `/api/v1/roles/:id/permissions/:permId`
 - **Headers**: Auth as above
 - **Response**: **204** _No body_
 
 ### **Assign Roles to User**
+
 - **Method**: POST
 - **Path**: `/api/v1/users/:id/roles`
 - **Headers**:
@@ -275,6 +296,7 @@ Response:
 - **Response**: **200** `{ success: true, inserted: 2 }`
 
 ### **Revoke Role from User**
+
 - **Method**: DELETE
 - **Path**: `/api/v1/users/:id/roles/:roleId`
 - **Headers**: Auth as above
@@ -283,7 +305,9 @@ Response:
 ---
 
 ## **Basic CRUD Example (Events)**
+
 ### **Get All Events**
+
 - **Method**: GET
 - **Path**: `/api/v1/events`
 - **Query Parameters**:
@@ -293,6 +317,7 @@ Response:
   - **sortDirection**: `string|only:asc,desc`
 
 Response:
+
 - Success:
   ```
   {
@@ -328,10 +353,12 @@ Response:
   ```
 
 ### **Get Event by Slug**
+
 - **Method**: GET
 - **Path**: `/api/v1/events/:slug`
 
 Response:
+
 - Success:
   ```
   {
@@ -367,6 +394,7 @@ Response:
   ```
 
 ### **Create a new Event**
+
 - **Method**: POST
 - **Path**: `/api/v1/events`
 - **Headers**:
@@ -384,7 +412,7 @@ Response:
     "ends_at": "timestamp"
   }
   ```
-Response:
+  Response:
 - Success:
   ```
   {
@@ -426,6 +454,7 @@ Response:
   ```
 
 ### **Update an Event**
+
 - **Method**: PATCH
 - **Path**: `/api/v1/events/:slug`
 - **Headers**:
@@ -443,7 +472,7 @@ Response:
     "ends_at": "timestamp|optional"
   }
   ```
-Response:
+  Response:
 - Success:
   ```
   {
@@ -492,12 +521,14 @@ Response:
   ```
 
 ### **Delete an Event**
+
 - **Method**: DELETE
 - **Path**: `/api/v1/events/:slug`
 - **Headers**:
   - **Authentication**: `Bearer <ACCESS_TOKEN>`
 
 Response:
+
 - Success:
   ```
   {
@@ -538,3 +569,86 @@ Response:
     "message": "Internal server error"
   }
   ```
+
+# Job Analytics API Documentation
+
+## Endpoints
+
+### 1. GET /api/v1/jobs/{uuid}/analytics
+
+- Returns analytics for a single job posting.
+- Query params: period, granularity, include_comparisons, metrics, start_date, end_date
+- Auth: HR roles
+
+#### Example Request
+
+```
+GET /api/v1/jobs/f8c1f4d3-aa1d-495c-809e-77f35425ca8f/analytics?period=30d&granularity=day
+```
+
+#### Example Response
+
+```json
+{
+  "status": 200,
+  "message": "Job analytics retrieved successfully",
+  "data": {
+    "analytics": [...],
+    "metrics": {...},
+    "insights": [...]
+  }
+}
+```
+
+### 2. GET /api/v1/jobs/analytics/bulk
+
+- Returns analytics for multiple jobs.
+- Query params: job_uuids, period, metrics, sort_by, order
+- Auth: HR roles
+
+### 3. GET /api/v1/analytics/departments/{department_id}
+
+- Returns department-wide analytics.
+- Query params: period, start_date, end_date
+- Auth: HR roles
+
+### 4. GET /api/v1/analytics/overview
+
+- Returns platform-wide analytics and KPIs.
+- Query params: period, start_date, end_date
+- Auth: Super Admin, Head of HR
+
+### 5. GET /api/v1/analytics/export
+
+- Exports analytics data (CSV/JSON)
+- Query params: format, period, include_jobs, include_departments
+- Auth: Super Admin, Head of HR
+
+## Error Codes
+
+- 200: Success
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not found
+- 422: Validation error
+- 500: Internal server error
+
+## Metrics Calculation
+
+- **Conversion Rate:** `(applications / views) * 100` (rounded to 2 decimals)
+- **Trend Analysis:**
+  - Increasing: >10% up from previous period
+  - Decreasing: >10% down from previous period
+  - Stable: within ±10%
+- **Performance Score:** Weighted sum of views, conversion rate, applications vs. benchmarks
+
+## Export Formats
+
+- **CSV:** Comma-separated values, one row per analytics record
+- **JSON:** Array of analytics records
+
+## Example Export Request
+
+```
+GET /api/v1/analytics/export?format=csv&period=30d&include_jobs=true&include_departments=true
+```
