@@ -11,7 +11,7 @@ export class JobController {
       if (!userId) {
         return res.status(401).json({
           status: 401,
-          message: 'Unauthorized. You must be leogged in to create a job posting.',
+          message: 'Unauthorized. You must be logged in to create a job posting.',
         });
       }
 

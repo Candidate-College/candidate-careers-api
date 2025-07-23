@@ -1,5 +1,3 @@
-// src/utils/validateJobPosting.ts
-
 export function validateJobPosting(input: any, schema: Record<string, any>) {
   const errors: Record<string, string> = {};
 
@@ -10,6 +8,10 @@ export function validateJobPosting(input: any, schema: Record<string, any>) {
     if (value === undefined || value === null) {
       if (!rules.optional) {
         errors[field] = `${field} is required`;
+        continue;
+      }
+      if ('default' in rules) {
+        input[field] = rules.default;
       }
       continue;
     }
@@ -23,6 +25,12 @@ export function validateJobPosting(input: any, schema: Record<string, any>) {
         errors[field] = `${field} must be at least ${rules.min} characters`;
       if (rules.max && value.length > rules.max)
         errors[field] = `${field} must be at most ${rules.max} characters`;
+
+      if (rules.noHTML && /<\/?[a-z][\s\S]*>/i.test(value))
+        errors[field] = `${field} must not contain HTML tags`;
+
+      if (rules.allowHTML && /<script.*?>.*?<\/script>/gi.test(value))
+        errors[field] = `${field} must not contain script tags`;
     }
 
     if (rules.type === 'number') {

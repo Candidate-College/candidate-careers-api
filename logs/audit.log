@@ -52,3 +52,20 @@
 {"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T12:34:22.310Z"}
 {"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T13:19:50.006Z"}
 {"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T13:22:14.536Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"roles.view","timestamp":"2025-07-23T07:40:46.495Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-23T08:23:44.164Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-23T08:23:44.182Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-23T08:23:44.186Z","userId":10}
+{"count":15,"level":"warn","message":"Security alert triggered","reason":"High activity volume","timestamp":"2025-07-23T08:23:47.327Z"}
+{"count":5,"level":"warn","message":"Security alert triggered","reason":"Repeated failures for update_record","timestamp":"2025-07-23T08:23:47.327Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-23T08:23:47.545Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-23T08:23:47.570Z"}
+{"level":"warn","message":"SlugGenerationService.regenerateSlug validation failed","reason":"Title is required","timestamp":"2025-07-23T08:23:48.067Z"}
+{"err":{},"level":"error","message":"SlugGenerationService.generateSlug error","timestamp":"2025-07-23T08:23:50.350Z"}
+{"err":{},"level":"error","message":"SlugGenerationService.generateSlug error","timestamp":"2025-07-23T08:23:50.433Z"}
+{"err":{},"level":"error","message":"SlugGenerationService.generateSlug error","timestamp":"2025-07-23T08:23:50.466Z"}
+{"level":"warn","message":"URLConstructionService: Invalid slug","slug":"","timestamp":"2025-07-23T08:23:51.165Z"}
+{"level":"warn","message":"URLConstructionService: Invalid uuid","timestamp":"2025-07-23T08:23:51.220Z","uuid":""}
+{"level":"warn","message":"URLConstructionService: Invalid slug","slug":"","timestamp":"2025-07-23T08:23:51.235Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-23T08:23:57.312Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-23T08:23:57.341Z","userId":1}
