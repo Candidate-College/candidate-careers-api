@@ -1,6 +1,7 @@
 import { Job } from '@/models/job-model';
 import { JSDOM } from 'jsdom';
 import createDOMPurify from 'dompurify';
+import { ALLOWED_HTML_TAGS, ALLOWED_HTML_ATTR } from '@/constants/job-posting-constant';
 
 const window = new JSDOM('').window as unknown as Window;
 const DOMPurify = createDOMPurify(window as any);
@@ -32,8 +33,8 @@ function validateStringField(
   }
   if (rules.allowHTML) {
     const sanitized = DOMPurify.sanitize(value, {
-      ALLOWED_TAGS: ['b', 'i', 'u', 'a', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em'],
-      ALLOWED_ATTR: ['href', 'title', 'target'],
+      ALLOWED_TAGS: ALLOWED_HTML_TAGS,
+      ALLOWED_ATTR: ALLOWED_HTML_ATTR,
     });
 
     const parser = new DOMParser();
