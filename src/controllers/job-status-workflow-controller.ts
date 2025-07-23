@@ -28,10 +28,17 @@ if (!('findByUuids' in JobRepository)) {
 
 export class JobStatusWorkflowController {
   /**
-   * Publish job posting
+   * Helper to handle status transitions (publish, close, archive, reopen)
+   * @private
    */
-  static async publish(req: AuthenticatedRequest, res: Response) {
-    winston.info('JobStatusWorkflowController.publish: start', {
+  private static async handleStatusTransition(
+    req: AuthenticatedRequest,
+    res: Response,
+    validatorFn: (data: any) => void,
+    to: JobStatus,
+    operation: string,
+  ) {
+    winston.info(`JobStatusWorkflowController.${operation}: start`, {
       uuid: req.params.uuid,
       userId: req.user?.id,
     });
@@ -42,13 +49,12 @@ export class JobStatusWorkflowController {
         return res.status(401).json({ status: 401, message: 'Unauthorized: user not found' });
       }
       const data = req.body;
-      jobStatusWorkflowValidator.validatePublish(data);
+      validatorFn(data);
       const job = await (JobRepository as any).findByUuid(uuid);
       if (!job) {
         return res.status(404).json({ status: 404, message: 'Job not found' });
       }
       const from: JobStatus = job.status;
-      const to: JobStatus = 'published';
       const result = await JobStatusWorkflowService.transitionStatus(
         job.id,
         from,
@@ -57,10 +63,10 @@ export class JobStatusWorkflowController {
         userId,
       );
       if (!result.success) {
-        winston.warn('Publish job failed', { uuid, error: result.error });
+        winston.warn(`${operation} job failed`, { uuid, error: result.error });
         return res.status(409).json({ status: 409, message: result.error });
       }
-      winston.info('JobStatusWorkflowController.publish: success', { uuid, userId });
+      winston.info(`JobStatusWorkflowController.${operation}: success`, { uuid, userId });
       return res.status(200).json({
         status: 200,
         message: `Job status changed from ${from} to ${to} successfully`,
@@ -72,159 +78,61 @@ export class JobStatusWorkflowController {
         },
       });
     } catch (err: any) {
-      winston.error('Publish job error', { error: err.message, stack: err.stack });
+      winston.error(`${operation} job error`, { error: err.message, stack: err.stack });
       return res.status(500).json({ status: 500, message: err.message || 'Internal server error' });
     }
+  }
+
+  /**
+   * Publish job posting
+   */
+  static async publish(req: AuthenticatedRequest, res: Response) {
+    return JobStatusWorkflowController.handleStatusTransition(
+      req,
+      res,
+      jobStatusWorkflowValidator.validatePublish,
+      'published',
+      'publish',
+    );
   }
 
   /**
    * Close job posting
    */
   static async close(req: AuthenticatedRequest, res: Response) {
-    winston.info('JobStatusWorkflowController.close: start', {
-      uuid: req.params.uuid,
-      userId: req.user?.id,
-    });
-    try {
-      const { uuid } = req.params;
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ status: 401, message: 'Unauthorized: user not found' });
-      }
-      const data = req.body;
-      jobStatusWorkflowValidator.validateClose(data);
-      const job = await (JobRepository as any).findByUuid(uuid);
-      if (!job) {
-        return res.status(404).json({ status: 404, message: 'Job not found' });
-      }
-      const from: JobStatus = job.status;
-      const to: JobStatus = 'closed';
-      const result = await JobStatusWorkflowService.transitionStatus(
-        job.id,
-        from,
-        to,
-        data,
-        userId,
-      );
-      if (!result.success) {
-        winston.warn('Close job failed', { uuid, error: result.error });
-        return res.status(409).json({ status: 409, message: result.error });
-      }
-      winston.info('JobStatusWorkflowController.close: success', { uuid, userId });
-      return res.status(200).json({
-        status: 200,
-        message: `Job status changed from ${from} to ${to} successfully`,
-        data: {
-          transition: {
-            from_status: from,
-            to_status: to,
-          },
-        },
-      });
-    } catch (err: any) {
-      winston.error('Close job error', { error: err.message, stack: err.stack });
-      return res.status(500).json({ status: 500, message: err.message || 'Internal server error' });
-    }
+    return JobStatusWorkflowController.handleStatusTransition(
+      req,
+      res,
+      jobStatusWorkflowValidator.validateClose,
+      'closed',
+      'close',
+    );
   }
 
   /**
    * Archive job posting
    */
   static async archive(req: AuthenticatedRequest, res: Response) {
-    winston.info('JobStatusWorkflowController.archive: start', {
-      uuid: req.params.uuid,
-      userId: req.user?.id,
-    });
-    try {
-      const { uuid } = req.params;
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ status: 401, message: 'Unauthorized: user not found' });
-      }
-      const data = req.body;
-      jobStatusWorkflowValidator.validateArchive(data);
-      const job = await (JobRepository as any).findByUuid(uuid);
-      if (!job) {
-        return res.status(404).json({ status: 404, message: 'Job not found' });
-      }
-      const from: JobStatus = job.status;
-      const to: JobStatus = 'archived';
-      const result = await JobStatusWorkflowService.transitionStatus(
-        job.id,
-        from,
-        to,
-        data,
-        userId,
-      );
-      if (!result.success) {
-        winston.warn('Archive job failed', { uuid, error: result.error });
-        return res.status(409).json({ status: 409, message: result.error });
-      }
-      winston.info('JobStatusWorkflowController.archive: success', { uuid, userId });
-      return res.status(200).json({
-        status: 200,
-        message: `Job status changed from ${from} to ${to} successfully`,
-        data: {
-          transition: {
-            from_status: from,
-            to_status: to,
-          },
-        },
-      });
-    } catch (err: any) {
-      winston.error('Archive job error', { error: err.message, stack: err.stack });
-      return res.status(500).json({ status: 500, message: err.message || 'Internal server error' });
-    }
+    return JobStatusWorkflowController.handleStatusTransition(
+      req,
+      res,
+      jobStatusWorkflowValidator.validateArchive,
+      'archived',
+      'archive',
+    );
   }
 
   /**
    * Reopen job posting
    */
   static async reopen(req: AuthenticatedRequest, res: Response) {
-    winston.info('JobStatusWorkflowController.reopen: start', {
-      uuid: req.params.uuid,
-      userId: req.user?.id,
-    });
-    try {
-      const { uuid } = req.params;
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ status: 401, message: 'Unauthorized: user not found' });
-      }
-      const data = req.body;
-      jobStatusWorkflowValidator.validateReopen(data);
-      const job = await (JobRepository as any).findByUuid(uuid);
-      if (!job) {
-        return res.status(404).json({ status: 404, message: 'Job not found' });
-      }
-      const from: JobStatus = job.status;
-      const to: JobStatus = 'published';
-      const result = await JobStatusWorkflowService.transitionStatus(
-        job.id,
-        from,
-        to,
-        data,
-        userId,
-      );
-      if (!result.success) {
-        winston.warn('Reopen job failed', { uuid, error: result.error });
-        return res.status(409).json({ status: 409, message: result.error });
-      }
-      winston.info('JobStatusWorkflowController.reopen: success', { uuid, userId });
-      return res.status(200).json({
-        status: 200,
-        message: `Job status changed from ${from} to ${to} successfully`,
-        data: {
-          transition: {
-            from_status: from,
-            to_status: to,
-          },
-        },
-      });
-    } catch (err: any) {
-      winston.error('Reopen job error', { error: err.message, stack: err.stack });
-      return res.status(500).json({ status: 500, message: err.message || 'Internal server error' });
-    }
+    return JobStatusWorkflowController.handleStatusTransition(
+      req,
+      res,
+      jobStatusWorkflowValidator.validateReopen,
+      'published',
+      'reopen',
+    );
   }
 
   /**
@@ -246,12 +154,10 @@ export class JobStatusWorkflowController {
       const fromStatuses: JobStatus[] = jobs.map((j: Job) => j.status);
       const uniqueFrom = Array.from(new Set(fromStatuses));
       if (uniqueFrom.length !== 1) {
-        return res
-          .status(400)
-          .json({
-            status: 400,
-            message: 'All jobs must have the same current status for bulk operation',
-          });
+        return res.status(400).json({
+          status: 400,
+          message: 'All jobs must have the same current status for bulk operation',
+        });
       }
       const from: JobStatus = uniqueFrom[0];
       const to: JobStatus = target_status;
