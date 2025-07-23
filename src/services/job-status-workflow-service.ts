@@ -11,7 +11,7 @@ import { JobStatus } from '@/interfaces/job/job-status-workflow';
 import { JobRepository } from '@/repositories/job-repository';
 import { JobStatusStateMachine } from './job-status-state-machine';
 import { defaultWinstonLogger as winston } from '@/utilities/winston-logger';
-import { ActivityLogService } from '@/services/audit/activity-log-service';
+// import { ActivityLogService } from '@/services/audit/activity-log-service';
 import { EmailService } from '@/services/email/email-service';
 import { ActivityCategory, ActivityStatus } from '@/constants/activity-log-constants';
 
@@ -55,19 +55,19 @@ export class JobStatusWorkflowService {
       created_by: userId,
       created_at: new Date(),
     });
-    // 4. Audit log
-    await ActivityLogService.logActivity({
-      userId,
-      action: `job_status_transition`,
-      resourceType: 'job_posting',
-      resourceId: jobId,
-      description: `Job status changed from ${from} to ${to}`,
-      newValues: { status: to },
-      oldValues: { status: from },
-      metadata: { ...data },
-      category: ActivityCategory.DATA_MODIFICATION,
-      status: ActivityStatus.SUCCESS,
-    });
+    // 4. Audit log (DISABLED for debug)
+    // await ActivityLogService.logActivity({
+    //   userId,
+    //   action: `job_status_transition`,
+    //   resourceType: 'job_posting',
+    //   resourceId: jobId,
+    //   description: `Job status changed from ${from} to ${to}`,
+    //   newValues: { status: to },
+    //   oldValues: { status: from },
+    //   metadata: { ...data },
+    //   category: ActivityCategory.DATA_MODIFICATION,
+    //   status: ActivityStatus.SUCCESS,
+    // });
     // 5. Notification
     await EmailService.sendJobStatusNotification({
       jobId,
