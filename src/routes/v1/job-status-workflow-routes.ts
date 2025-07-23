@@ -16,14 +16,14 @@ const { accessToken } = require('@/middlewares/auth-middleware');
 router.use(accessToken);
 
 // Publish job posting
-router.post('/jobs/:uuid/publish', authorize('jobs.publish'), JobStatusWorkflowController.publish);
+router.post('/:uuid/publish', authorize('jobs.publish'), JobStatusWorkflowController.publish);
 // Close job posting
-router.post('/jobs/:uuid/close', authorize('jobs.publish'), JobStatusWorkflowController.close);
+router.post('/:uuid/close', authorize('jobs.publish'), JobStatusWorkflowController.close);
 // Archive job posting
-router.post('/jobs/:uuid/archive', authorize('jobs.publish'), JobStatusWorkflowController.archive);
+router.post('/:uuid/archive', authorize('jobs.publish'), JobStatusWorkflowController.archive);
 // Reopen job posting
-router.post('/jobs/:uuid/reopen', authorize('jobs.publish'), JobStatusWorkflowController.reopen);
+router.post('/:uuid/reopen', authorize('jobs.publish'), JobStatusWorkflowController.reopen);
 // Bulk status update
-router.post('/jobs/bulk-status', authorize('jobs.publish'), JobStatusWorkflowController.bulkStatus);
+router.post('/bulk-status', authorize('jobs.publish'), JobStatusWorkflowController.bulkStatus);
 
 module.exports = router;
