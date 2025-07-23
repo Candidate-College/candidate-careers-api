@@ -11,10 +11,10 @@ import { Department } from './department-model';
 const Model = require('@/config/database/orm');
 
 export class DepartmentAnalyticsDaily extends Model {
-  static tableName = 'department_analytics_daily';
-  static idColumn = 'id';
+  static readonly tableName = 'department_analytics_daily';
+  static readonly idColumn = 'id';
 
-  static relationMappings = {
+  static readonly relationMappings = {
     department: {
       relation: Model.BelongsToOneRelation,
       modelClass: Department,
