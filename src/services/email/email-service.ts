@@ -1,16 +1,48 @@
 /**
- * EmailService
+ * Email Service
  *
- * Provides a thin abstraction over nodemailer to send transactional emails.
- * Currently supports sending welcome emails to newly registered users. In tests
- * the transport is automatically mocked to avoid real network calls.
+ * Provides email sending utilities for the application, including job status workflow notifications.
  *
- * @module src/services/email/email-service
+ * @module services/email/email-service
  */
 
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
 
-class EmailService {
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASSWORD;
+const smtpHost = process.env.SMTP_HOST;
+const smtpPort = process.env.SMTP_PORT;
+
+const { defaultWinstonLogger: winston } = require('@/utilities/winston-logger');
+
+if (!smtpUser || !smtpPass || !smtpHost || !smtpPort) {
+  winston.error('EmailService: SMTP credentials missing or invalid', {
+    SMTP_USER: smtpUser,
+    SMTP_HOST: smtpHost,
+    SMTP_PORT: smtpPort,
+    // Do not log password
+  });
+  throw new Error('SMTP credentials missing or invalid. Please check your .env configuration.');
+}
+
+const _emailService = {
+  transporter: nodemailer.createTransport({
+    host: smtpHost,
+    port: Number(smtpPort),
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  }),
+};
+
+winston.info('EmailService: SMTP transporter initialized', {
+  SMTP_USER: smtpUser,
+  SMTP_HOST: smtpHost,
+  SMTP_PORT: smtpPort,
+});
+
+export class EmailService {
   private readonly transporter: any;
 
   constructor() {
@@ -81,6 +113,66 @@ class EmailService {
       subject: 'Role Update - CC Career',
       html,
     });
+  }
+
+  /**
+   * Send job status transition notification email to stakeholders.
+   * @param params - Notification parameters (jobId, fromStatus, toStatus, userId, etc)
+   */
+  static async sendJobStatusNotification(params: {
+    jobId: number;
+    fromStatus: string;
+    toStatus: string;
+    userId: number;
+    [key: string]: any;
+  }): Promise<void> {
+    try {
+      // Lookup recipients (stub: send to admin and job owner)
+      // In real implementation, fetch job posting, owner, and relevant HR emails
+      const recipients = params.recipients || [
+        process.env.DEFAULT_NOTIFICATION_EMAIL || 'admin@careers.local',
+      ];
+      const subject = `Job Status Changed: ${params.fromStatus} → ${params.toStatus}`;
+      const html = `
+        <p>Job Posting ID: <strong>${params.jobId}</strong></p>
+        <p>Status changed from <strong>${params.fromStatus}</strong> to <strong>${
+        params.toStatus
+      }</strong> by user ID <strong>${params.userId}</strong>.</p>
+        ${params.transition_reason ? `<p>Reason: ${params.transition_reason}</p>` : ''}
+        ${params.close_notes ? `<p>Notes: ${params.close_notes}</p>` : ''}
+        <p>Timestamp: ${new Date().toLocaleString()}</p>
+      `;
+      // Use winston logger for audit
+      const { defaultWinstonLogger: winston } = require('@/utilities/winston-logger');
+      winston.info('EmailService: sendJobStatusNotification', {
+        jobId: params.jobId,
+        fromStatus: params.fromStatus,
+        toStatus: params.toStatus,
+        userId: params.userId,
+        recipients,
+      });
+      // Send email to all recipients
+      for (const to of recipients) {
+        try {
+          await _emailService.transporter.sendMail({
+            from: 'no-reply@careers.local',
+            to,
+            subject,
+            html,
+          });
+        } catch (err: any) {
+          winston.error('EmailService: sendJobStatusNotification failed', {
+            error: err.message,
+            to,
+          });
+          // Do not throw, just log and continue
+        }
+      }
+    } catch (err: any) {
+      // Log error, do not throw
+      const { defaultWinstonLogger: winston } = require('@/utilities/winston-logger');
+      winston.error('EmailService: sendJobStatusNotification outer error', { error: err.message });
+    }
   }
 }
 

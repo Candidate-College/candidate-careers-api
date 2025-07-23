@@ -69,3 +69,4 @@
 {"level":"warn","message":"URLConstructionService: Invalid slug","slug":"","timestamp":"2025-07-23T08:23:51.235Z"}
 {"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-23T08:23:57.312Z"}
 {"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-23T08:23:57.341Z","userId":1}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T08:37:24.964Z"}
