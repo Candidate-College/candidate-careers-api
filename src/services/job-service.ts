@@ -15,17 +15,17 @@ export class JobService {
       throw { status: 422, message: 'Validation failed', errors: validationResult.errors };
     }
 
-    const { id, ...validatedDataWithoutId } = validationResult.data;
+    const validatedData = validationResult.data;
 
-    if (!(await JobRepository.isDepartmentActive(validatedDataWithoutId.department_id))) {
+    if (!(await JobRepository.isDepartmentActive(validatedData.department_id))) {
       throw { status: 422, message: 'The provided Department ID is invalid or inactive.' };
     }
 
-    if (!(await JobRepository.isJobCategoryActive(validatedDataWithoutId.job_category_id))) {
+    if (!(await JobRepository.isJobCategoryActive(validatedData.job_category_id))) {
       throw { status: 422, message: 'The provided Job Category ID is invalid or inactive.' };
     }
 
-    const slugResult = await SlugGenerationService.generateSlug(validatedDataWithoutId.title);
+    const slugResult = await SlugGenerationService.generateSlug(validatedData.title);
 
     if (!slugResult.isUnique || !slugResult.slug) {
       throw {
@@ -43,17 +43,17 @@ export class JobService {
     );
 
     const processedJobData = {
-      ...validatedDataWithoutId,
+      ...validatedData,
       uuid: randomUUID(),
       slug: uniqueSlug,
-      description: validatedDataWithoutId.description,
-      requirements: validatedDataWithoutId.requirements,
-      responsibilities: validatedDataWithoutId.responsibilities,
+      description: validatedData.description,
+      requirements: validatedData.requirements,
+      responsibilities: validatedData.responsibilities,
       views_count: 0,
       applications_count: 0,
-      priority_level: validatedDataWithoutId.priority_level ?? 'normal',
-      status: validatedDataWithoutId.status ?? 'draft',
-      published_at: validatedDataWithoutId.status === 'published' ? now : undefined,
+      priority_level: validatedData.priority_level ?? 'normal',
+      status: validatedData.status ?? 'draft',
+      published_at: validatedData.status === 'published' ? now : undefined,
       created_by: createdBy,
     };
 
