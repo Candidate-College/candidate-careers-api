@@ -10,9 +10,9 @@ import { DepartmentAnalyticsDaily } from './department-analytics-daily-model';
 const Model = require('@/config/database/orm');
 
 export class Department extends Model {
-  static tableName = 'departments';
+  static readonly tableName = 'departments';
 
-  static relationMappings = {
+  static readonly relationMappings = {
     departmentAnalyticsDaily: {
       relation: Model.HasManyRelation,
       modelClass: DepartmentAnalyticsDaily,

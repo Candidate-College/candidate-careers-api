@@ -8,12 +8,7 @@
  */
 
 import type { Knex } from 'knex';
-import {
-  idempotentInsert,
-  logSeeder,
-  handleSeederError,
-  getSeederProfile,
-} from '../../utilities/seeder-utils';
+import { idempotentInsert, logSeeder, handleSeederError } from '../../utilities/seeder-utils';
 
 const departments = [
   {

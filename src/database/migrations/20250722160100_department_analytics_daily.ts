@@ -26,7 +26,7 @@ export async function up(knex: Knex): Promise<void> {
     table.decimal('average_conversion_rate', 5, 2).defaultTo(0.0);
     table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
     table.timestamp('updated_at', { useTz: true }).defaultTo(knex.fn.now());
-    table.unique(['department_id', 'analytics_date'], 'uk_dept_analytics_daily');
+    table.unique(['department_id', 'analytics_date'], { indexName: 'uk_dept_analytics_daily' });
     table.index(['analytics_date'], 'idx_dept_analytics_date');
   });
 }
