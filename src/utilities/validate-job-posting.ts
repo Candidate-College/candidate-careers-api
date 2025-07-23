@@ -5,6 +5,91 @@ import createDOMPurify from 'dompurify';
 const window = new JSDOM('').window as unknown as Window;
 const DOMPurify = createDOMPurify(window as any);
 
+function validateStringField(
+  field: string,
+  value: any,
+  rules: any,
+  errors: Record<string, string>,
+) {
+  if (typeof value !== 'string') {
+    errors[field] = `${field} must be a string`;
+    return undefined;
+  }
+  if (rules.min && value.length < rules.min) {
+    errors[field] = `${field} must be at least ${rules.min} characters`;
+    return undefined;
+  }
+  if (rules.max && value.length > rules.max) {
+    errors[field] = `${field} must be at most ${rules.max} characters`;
+    return undefined;
+  }
+  if (rules.noHTML) {
+    const plain = DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+    if (plain !== value) {
+      errors[field] = `${field} must not contain HTML tags`;
+      return undefined;
+    }
+  }
+  if (rules.allowHTML) {
+    const sanitized = DOMPurify.sanitize(value);
+    if (sanitized !== value) {
+      errors[field] = `${field} contains disallowed or unsafe HTML content`;
+      return undefined;
+    }
+  }
+  return value;
+}
+
+function validateNumberField(
+  field: string,
+  value: any,
+  rules: any,
+  errors: Record<string, string>,
+) {
+  if (typeof value !== 'number' || isNaN(value)) {
+    errors[field] = `${field} must be a number`;
+    return undefined;
+  }
+  if (rules.int && !Number.isInteger(value)) {
+    errors[field] = `${field} must be an integer`;
+    return undefined;
+  }
+  if (rules.min && value < rules.min) {
+    errors[field] = `${field} must be at least ${rules.min}`;
+    return undefined;
+  }
+  if (rules.max && value > rules.max) {
+    errors[field] = `${field} must be at most ${rules.max}`;
+    return undefined;
+  }
+  if (rules.positive && value <= 0) {
+    errors[field] = `${field} must be positive`;
+    return undefined;
+  }
+  return value;
+}
+
+function validateEnumField(field: string, value: any, rules: any, errors: Record<string, string>) {
+  if (!rules.values.includes(value)) {
+    errors[field] = `${field} must be one of ${rules.values.join(', ')}`;
+    return undefined;
+  }
+  return value;
+}
+
+function validateDateField(field: string, value: any, rules: any, errors: Record<string, string>) {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    errors[field] = `${field} must be a valid date`;
+    return undefined;
+  }
+  if (rules.futureOnly && date <= new Date()) {
+    errors[field] = `${field} must be a future date`;
+    return undefined;
+  }
+  return date;
+}
+
 export function validateJobPosting(input: Partial<Job>, schema: Record<string, any>) {
   const errors: Record<string, string> = {};
   const validatedData: Record<string, any> = {};
@@ -20,90 +105,29 @@ export function validateJobPosting(input: Partial<Job>, schema: Record<string, a
       } else if ('default' in rules) {
         validatedData[field] = rules.default;
       }
-    }
-
-    // Type: string
-    if (rules.type === 'string') {
-      if (typeof value !== 'string') {
-        errors[field] = `${field} must be a string`;
-      } else if (rules.min && value.length < rules.min) {
-        errors[field] = `${field} must be at least ${rules.min} characters`;
-      } else if (rules.max && value.length > rules.max) {
-        errors[field] = `${field} must be at most ${rules.max} characters`;
-      }
-
-      // noHTML: reject if input contains any HTML tags
-      if (rules.noHTML) {
-        const plain = DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
-        if (plain !== value) {
-          errors[field] = `${field} must not contain HTML tags`;
-          continue;
-        }
-      }
-
-      // allowHTML: sanitize and reject if unsafe HTML is present
-      if (rules.allowHTML) {
-        const sanitized = DOMPurify.sanitize(value);
-        if (sanitized !== value) {
-          errors[field] = `${field} contains disallowed or unsafe HTML content`;
-          continue;
-        }
-      }
-
-      if (!errors[field]) {
-        validatedData[field] = value;
-      }
-
       continue;
     }
 
-    // Type: number
-    if (rules.type === 'number') {
-      if (typeof value !== 'number' || isNaN(value)) {
-        errors[field] = `${field} must be a number`;
-        continue;
-      }
-
-      if (rules.int && !Number.isInteger(value)) errors[field] = `${field} must be an integer`;
-
-      if (rules.min && value < rules.min) errors[field] = `${field} must be at least ${rules.min}`;
-
-      if (rules.max && value > rules.max) errors[field] = `${field} must be at most ${rules.max}`;
-
-      if (rules.positive && value <= 0) errors[field] = `${field} must be positive`;
-
-      if (!errors[field]) {
-        validatedData[field] = value;
-      }
-
-      continue;
+    let validatedValue;
+    switch (rules.type) {
+      case 'string':
+        validatedValue = validateStringField(field, value, rules, errors);
+        break;
+      case 'number':
+        validatedValue = validateNumberField(field, value, rules, errors);
+        break;
+      case 'enum':
+        validatedValue = validateEnumField(field, value, rules, errors);
+        break;
+      case 'date':
+        validatedValue = validateDateField(field, value, rules, errors);
+        break;
+      default:
+        errors[field] = `${field} has unknown type`;
+        break;
     }
-
-    // Type: enum
-    if (rules.type === 'enum') {
-      if (!rules.values.includes(value)) {
-        errors[field] = `${field} must be one of ${rules.values.join(', ')}`;
-        continue;
-      }
-      validatedData[field] = value;
-      continue;
-    }
-
-    // Type: date
-    if (rules.type === 'date') {
-      const date = new Date(value);
-      if (isNaN(date.getTime())) {
-        errors[field] = `${field} must be a valid date`;
-        continue;
-      }
-
-      if (rules.futureOnly && date <= new Date()) {
-        errors[field] = `${field} must be a future date`;
-        continue;
-      }
-
-      validatedData[field] = date;
-      continue;
+    if (validatedValue !== undefined && !errors[field]) {
+      validatedData[field] = validatedValue;
     }
   }
 
