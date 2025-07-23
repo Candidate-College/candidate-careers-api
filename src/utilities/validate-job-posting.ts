@@ -26,14 +26,11 @@ export function validateJobPosting(input: Partial<Job>, schema: Record<string, a
     if (rules.type === 'string') {
       if (typeof value !== 'string') {
         errors[field] = `${field} must be a string`;
-        continue;
-      }
-
-      if (rules.min && value.length < rules.min)
+      } else if (rules.min && value.length < rules.min) {
         errors[field] = `${field} must be at least ${rules.min} characters`;
-
-      if (rules.max && value.length > rules.max)
+      } else if (rules.max && value.length > rules.max) {
         errors[field] = `${field} must be at most ${rules.max} characters`;
+      }
 
       // noHTML: reject if input contains any HTML tags
       if (rules.noHTML) {

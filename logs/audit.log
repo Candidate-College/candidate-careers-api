@@ -74,3 +74,4 @@
 {"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T11:58:23.598Z"}
 {"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T11:59:16.929Z"}
 {"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T12:10:40.035Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T12:56:17.732Z"}
