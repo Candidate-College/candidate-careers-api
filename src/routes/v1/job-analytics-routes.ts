@@ -19,7 +19,7 @@ router.use(accessToken, authorize('analytics.view'));
 
 // GET /api/v1/jobs/:uuid/analytics
 router.get(
-  '/jobs/:uuid/analytics',
+  '/:uuid/analytics',
   validate(fields, {
     only: [
       'uuid',
@@ -36,7 +36,7 @@ router.get(
 
 // GET /api/v1/jobs/analytics/bulk
 router.get(
-  '/jobs/analytics/bulk',
+  '/analytics/bulk',
   validate(fields, { only: ['job_uuids', 'period', 'metrics', 'sort_by', 'order'] }),
   JobAnalyticsController.getBulkJobAnalytics,
 );
