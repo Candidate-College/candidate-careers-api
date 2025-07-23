@@ -1,17 +1,39 @@
+export const config = { transaction: false };
+
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.raw(
-    `CREATE TYPE job_posting_type AS ENUM ('internship', 'staff', 'freelance', 'contract')`,
-  );
   await knex.schema.raw(`
-    CREATE TYPE job_posting_employment_level AS ENUM
-    ('entry', 'junior', 'mid', 'senior', 'lead', 'head', 'co_head')
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_posting_type') THEN
+        CREATE TYPE job_posting_type AS ENUM ('internship', 'staff', 'freelance', 'contract');
+      END IF;
+    END$$;
   `);
-  await knex.schema.raw(`CREATE TYPE job_posting_priority_level AS ENUM ('normal', 'urgent')`);
   await knex.schema.raw(`
-    CREATE TYPE job_posting_status AS ENUM
-    ('draft', 'published', 'closed', 'archived')
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_posting_employment_level') THEN
+        CREATE TYPE job_posting_employment_level AS ENUM ('entry', 'junior', 'mid', 'senior', 'lead', 'head', 'co_head');
+      END IF;
+    END$$;
+  `);
+  await knex.schema.raw(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_posting_priority_level') THEN
+        CREATE TYPE job_posting_priority_level AS ENUM ('normal', 'urgent');
+      END IF;
+    END$$;
+  `);
+  await knex.schema.raw(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_posting_status') THEN
+        CREATE TYPE job_posting_status AS ENUM ('draft', 'published', 'closed', 'archived');
+      END IF;
+    END$$;
   `);
 
   await knex.schema.createTable('job_postings', table => {

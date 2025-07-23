@@ -42,3 +42,13 @@
 {"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-16T05:04:29.962Z","userId":10}
 {"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-16T05:04:32.049Z"}
 {"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-16T05:04:32.059Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T11:52:15.178Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T11:52:24.444Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T11:56:56.681Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T11:59:53.006Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T12:30:19.466Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T12:31:17.308Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T12:32:09.525Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T12:34:22.310Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T13:19:50.006Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T13:22:14.536Z"}
