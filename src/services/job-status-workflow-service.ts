@@ -39,12 +39,17 @@ export class JobStatusWorkflowService {
       return { success: false, error: validation.error };
     }
     // 2. Update status in DB (atomic)
-    await JobRepository.updateStatusById(jobId, to, {
+    const updateOptions: any = {
       previousStatus: from,
       statusChangedBy: userId,
       statusChangedAt: new Date(),
-      ...data,
-    });
+    };
+    // Map close_reason and close_notes if present
+    if (data.close_reason) updateOptions.closeReason = data.close_reason;
+    if (data.close_notes) updateOptions.closeNotes = data.close_notes;
+    if (data.archive_reason) updateOptions.archiveReason = data.archive_reason;
+    if (data.scheduled_publish_at) updateOptions.scheduledPublishAt = data.scheduled_publish_at;
+    await JobRepository.updateStatusById(jobId, to, updateOptions);
     // 3. Log transition
     await JobRepository.logStatusTransition({
       job_posting_id: jobId,
