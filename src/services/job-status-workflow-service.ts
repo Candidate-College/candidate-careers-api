@@ -15,6 +15,16 @@ import { defaultWinstonLogger as winston } from '@/utilities/winston-logger';
 import { EmailService } from '@/services/email/email-service';
 import { ActivityCategory, ActivityStatus } from '@/constants/activity-log-constants';
 
+async function updateSearchIndex(jobId: number, status: JobStatus) {
+  winston.info('[SearchIndex] Update search index', { jobId, status });
+  // TODO: Integrasi ke search indexer (stub)
+}
+
+async function updateAnalytics(jobId: number, from: JobStatus, to: JobStatus) {
+  winston.info('[Analytics] Update analytics data', { jobId, from, to });
+  // TODO: Integrasi ke analytics service (stub)
+}
+
 export class JobStatusWorkflowService {
   /**
    * Perform a status transition for a single job posting.
@@ -44,7 +54,6 @@ export class JobStatusWorkflowService {
       statusChangedBy: userId,
       statusChangedAt: new Date(),
     };
-    // Map close_reason and close_notes if present
     if (data.close_reason) updateOptions.closeReason = data.close_reason;
     if (data.close_notes) updateOptions.closeNotes = data.close_notes;
     if (data.archive_reason) updateOptions.archiveReason = data.archive_reason;
@@ -60,19 +69,9 @@ export class JobStatusWorkflowService {
       created_by: userId,
       created_at: new Date(),
     });
-    // 4. Audit log (DISABLED for debug)
-    // await ActivityLogService.logActivity({
-    //   userId,
-    //   action: `job_status_transition`,
-    //   resourceType: 'job_posting',
-    //   resourceId: jobId,
-    //   description: `Job status changed from ${from} to ${to}`,
-    //   newValues: { status: to },
-    //   oldValues: { status: from },
-    //   metadata: { ...data },
-    //   category: ActivityCategory.DATA_MODIFICATION,
-    //   status: ActivityStatus.SUCCESS,
-    // });
+    // 4. Update search index & analytics (stub)
+    await updateSearchIndex(jobId, to);
+    await updateAnalytics(jobId, from, to);
     // 5. Notification
     await EmailService.sendJobStatusNotification({
       jobId,
