@@ -1,9 +1,15 @@
+export const config = { transaction: false };
+
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.raw(`
-    CREATE TYPE system_setting_type AS ENUM
-    ('string', 'integer', 'boolean', 'json', 'text')
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'system_setting_type') THEN
+        CREATE TYPE system_setting_type AS ENUM ('string', 'integer', 'boolean', 'json', 'text');
+      END IF;
+    END$$;
   `);
 
   await knex.schema.createTable('system_settings', table => {

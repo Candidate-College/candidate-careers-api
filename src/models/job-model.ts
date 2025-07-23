@@ -1,6 +1,7 @@
 import { Department } from './department-model';
 import { JobCategory } from './job-category-model';
 import { User } from './user-model';
+import { JobStatusTransition } from './job-status-transition-model';
 
 const Model = require('@/config/database/orm');
 
@@ -40,6 +41,11 @@ export class Job extends Model {
         from: 'job_postings.updated_by',
         to: 'users.id',
       },
+    },
+    statusTransitions: {
+      relation: Model.HasManyRelation,
+      modelClass: JobStatusTransition,
+      join: { from: 'job_postings.id', to: 'job_status_transitions.job_posting_id' },
     },
   };
 }

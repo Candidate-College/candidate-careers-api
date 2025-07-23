@@ -1,7 +1,16 @@
+export const config = { transaction: false };
+
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.raw(`CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended')`);
+  await knex.schema.raw(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status') THEN
+        CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
+      END IF;
+    END$$;
+  `);
 
   await knex.schema.createTable('users', table => {
     table.increments('id');
@@ -27,5 +36,4 @@ export async function up(knex: Knex): Promise<void> {
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists('users');
   await knex.schema.raw('DROP TYPE IF EXISTS user_status');
-  await knex.schema.dropTableIfExists('roles');
 }

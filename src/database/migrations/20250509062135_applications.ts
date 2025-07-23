@@ -1,9 +1,15 @@
+export const config = { transaction: false };
+
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.raw(`
-    CREATE TYPE application_status AS ENUM
-    ('pending', 'under_review', 'approved', 'rejected')
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'application_status') THEN
+        CREATE TYPE application_status AS ENUM ('pending', 'under_review', 'approved', 'rejected');
+      END IF;
+    END$$;
   `);
 
   await knex.schema.createTable('applications', table => {
