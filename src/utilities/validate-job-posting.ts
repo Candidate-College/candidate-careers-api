@@ -17,12 +17,9 @@ export function validateJobPosting(input: Partial<Job>, schema: Record<string, a
     if (value === undefined || value === null) {
       if (!rules.optional) {
         errors[field] = `${field} is required`;
-        continue;
-      }
-      if ('default' in rules) {
+      } else if ('default' in rules) {
         validatedData[field] = rules.default;
       }
-      continue;
     }
 
     // Type: string
