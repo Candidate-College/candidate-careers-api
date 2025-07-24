@@ -37,10 +37,11 @@ function validateStringField(
       ALLOWED_ATTR: ALLOWED_HTML_ATTR,
     });
 
-    const parser = new DOMParser();
-    const originalDOM = parser.parseFromString(value, 'text/html');
-    const sanitizedDOM = parser.parseFromString(sanitized, 'text/html');
-    if (originalDOM.body.innerHTML !== sanitizedDOM.body.innerHTML) {
+    const originalDOM = new JSDOM(value);
+    const sanitizedDOM = new JSDOM(sanitized);
+    if (
+      originalDOM.window.document.body.innerHTML !== sanitizedDOM.window.document.body.innerHTML
+    ) {
       errors[field] = `${field} contains disallowed or unsafe HTML content`;
       return undefined;
     }

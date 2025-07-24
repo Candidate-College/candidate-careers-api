@@ -5,8 +5,12 @@ import { SlugGenerationService } from '@/services/slug-generation-service';
 import { validateJobPosting } from '@/utilities/validate-job-posting';
 import jobValidator from '@/validators/job-posting-validator';
 import { randomUUID } from 'crypto';
+import {
+  DepartmentInactiveError,
+  JobCategoryInactiveError,
+  SlugGenerationError,
+} from '@/services/job-service';
 
-// --- Mock all externals ---
 jest.mock('crypto', () => ({ randomUUID: jest.fn() }));
 jest.mock('@/repositories/job-repository', () => ({
   JobRepository: {
@@ -48,11 +52,9 @@ describe('JobService.createJobPosting', () => {
   };
 
   beforeEach(() => {
-    // Control system time
     jest.useFakeTimers().setSystemTime(NOW);
     jest.clearAllMocks();
 
-    // Default happy-path mocks
     mockedRandomUUID.mockReturnValue(UUID);
     mockedJobRepo.isDepartmentActive.mockResolvedValue(true);
     mockedJobRepo.isJobCategoryActive.mockResolvedValue(true);
@@ -62,7 +64,6 @@ describe('JobService.createJobPosting', () => {
     });
     mockedSlugSvc.ensureUniqueness.mockImplementation(async s => s);
 
-    // Ensure create() returns a defined Job
     mockedJobRepo.create.mockResolvedValue({
       id: 123,
       ...BASE_INPUT,
@@ -85,13 +86,17 @@ describe('JobService.createJobPosting', () => {
     const errors = { title: 'title must not contain HTML tags' };
     mockedValidate.mockReturnValue({ success: false, errors });
 
-    await expect(
-      JobService.createJobPosting({ ...BASE_INPUT, title: '<b>Bad</b>' }, CREATED_BY),
-    ).rejects.toEqual({
-      status: 422,
-      message: 'Validation failed',
-      errors,
-    });
+    try {
+      await JobService.createJobPosting({ ...BASE_INPUT, title: '<b>Bad</b>' }, CREATED_BY);
+      fail('Expected error not thrown');
+    } catch (err: any) {
+      expect(err).toMatchObject({
+        type: 'VALIDATION_FAILED',
+        message: 'Input validation failed',
+        details: errors,
+        statusCode: 422,
+      });
+    }
     expect(mockedValidate).toHaveBeenCalledWith(expect.any(Object), jobValidator);
   });
 
@@ -141,20 +146,36 @@ describe('JobService.createJobPosting', () => {
     mockedValidate.mockReturnValue({ success: true, data: BASE_INPUT });
     mockedJobRepo.isDepartmentActive.mockResolvedValue(false);
 
-    await expect(JobService.createJobPosting(BASE_INPUT, CREATED_BY)).rejects.toEqual({
-      status: 422,
-      message: 'The provided Department ID is invalid or inactive.',
-    });
+    try {
+      await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
+      fail('Expected DepartmentInactiveError not thrown');
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(DepartmentInactiveError);
+      expect(err.appError).toMatchObject({
+        type: 'VALIDATION_FAILED',
+        message: 'Validation failed',
+        details: { department_id: 'The provided Department ID is invalid or inactive' },
+        statusCode: 422,
+      });
+    }
   });
 
   it('throws 422 for inactive job category', async () => {
     mockedValidate.mockReturnValue({ success: true, data: BASE_INPUT });
     mockedJobRepo.isJobCategoryActive.mockResolvedValue(false);
 
-    await expect(JobService.createJobPosting(BASE_INPUT, CREATED_BY)).rejects.toEqual({
-      status: 422,
-      message: 'The provided Job Category ID is invalid or inactive.',
-    });
+    try {
+      await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
+      fail('Expected JobCategoryInactiveError not thrown');
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(JobCategoryInactiveError);
+      expect(err.appError).toMatchObject({
+        type: 'VALIDATION_FAILED',
+        message: 'Validation failed',
+        details: { job_category_id: 'The provided Job Category ID is invalid or inactive' },
+        statusCode: 422,
+      });
+    }
   });
 
   it('throws 422 when slug generation fails', async () => {
@@ -165,11 +186,18 @@ describe('JobService.createJobPosting', () => {
       reason: 'invalid characters',
     });
 
-    await expect(JobService.createJobPosting(BASE_INPUT, CREATED_BY)).rejects.toEqual({
-      status: 422,
-      message: 'Slug generation failed',
-      errors: { title: 'invalid characters' },
-    });
+    try {
+      await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
+      fail('Expected SlugGenerationError not thrown');
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(SlugGenerationError);
+      expect(err.appError).toMatchObject({
+        type: 'VALIDATION_FAILED',
+        message: 'Slug Generation Failed',
+        details: { title: 'invalid characters' },
+        statusCode: 422,
+      });
+    }
   });
 
   it('allows emoji in title (edge case)', async () => {
@@ -184,17 +212,23 @@ describe('JobService.createJobPosting', () => {
 
   it('rejects <script> in description', async () => {
     const badDesc = '<script>alert("x")</script>' + 'A'.repeat(60);
+    const errors = { description: 'description must not contain script tags' };
     mockedValidate.mockReturnValue({
       success: false,
-      errors: { description: 'description must not contain script tags' },
+      errors: errors,
     });
 
-    await expect(
-      JobService.createJobPosting({ ...BASE_INPUT, description: badDesc }, CREATED_BY),
-    ).rejects.toMatchObject({
-      status: 422,
-      message: 'Validation failed',
-      errors: { description: 'description must not contain script tags' },
-    });
+    try {
+      await JobService.createJobPosting({ ...BASE_INPUT, description: badDesc }, CREATED_BY);
+      fail('Expected validation error not thrown');
+    } catch (err: any) {
+      // ✅ FIX: Check the 'err' object directly, just like in the test that passed.
+      expect(err).toMatchObject({
+        type: 'VALIDATION_FAILED',
+        message: 'Input validation failed',
+        details: errors,
+        statusCode: 422,
+      });
+    }
   });
 });
