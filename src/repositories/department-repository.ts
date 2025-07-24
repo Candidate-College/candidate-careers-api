@@ -23,7 +23,11 @@ export class DepartmentRepository {
         'departments.created_by',
         'departments.created_at',
         'departments.updated_at',
-        'departments.deleted_at'
+        'departments.deleted_at',
+        // Subquery count job postings
+        Department.relatedQuery('jobPostings')
+          .count()
+          .as('job_postings_count')
       )
       .withGraphFetched('creator');
   }
