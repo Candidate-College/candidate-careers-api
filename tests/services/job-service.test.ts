@@ -5,11 +5,6 @@ import { SlugGenerationService } from '@/services/slug-generation-service';
 import { validateJobPosting } from '@/utilities/validate-job-posting';
 import jobValidator from '@/validators/job-posting-validator';
 import { randomUUID } from 'crypto';
-import {
-  DepartmentInactiveError,
-  JobCategoryInactiveError,
-  SlugGenerationError,
-} from '@/services/job-service';
 
 jest.mock('crypto', () => ({ randomUUID: jest.fn() }));
 jest.mock('@/repositories/job-repository', () => ({
@@ -150,7 +145,7 @@ describe('JobService.createJobPosting', () => {
       await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
       fail('Expected DepartmentInactiveError not thrown');
     } catch (err: any) {
-      expect(err).toBeInstanceOf(DepartmentInactiveError);
+      expect(err).toBeInstanceOf(JobService.DepartmentInactiveError);
       expect(err.appError).toMatchObject({
         type: 'VALIDATION_FAILED',
         message: 'Validation failed',
@@ -168,7 +163,7 @@ describe('JobService.createJobPosting', () => {
       await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
       fail('Expected JobCategoryInactiveError not thrown');
     } catch (err: any) {
-      expect(err).toBeInstanceOf(JobCategoryInactiveError);
+      expect(err).toBeInstanceOf(JobService.JobCategoryInactiveError);
       expect(err.appError).toMatchObject({
         type: 'VALIDATION_FAILED',
         message: 'Validation failed',
@@ -190,7 +185,7 @@ describe('JobService.createJobPosting', () => {
       await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
       fail('Expected SlugGenerationError not thrown');
     } catch (err: any) {
-      expect(err).toBeInstanceOf(SlugGenerationError);
+      expect(err).toBeInstanceOf(JobService.SlugGenerationError);
       expect(err.appError).toMatchObject({
         type: 'VALIDATION_FAILED',
         message: 'Slug Generation Failed',
