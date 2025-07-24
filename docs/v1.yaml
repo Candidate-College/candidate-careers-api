@@ -9,150 +9,6 @@ servers:
     description: Local development
 security:
   - bearerAuth: []
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-  schemas:
-    NotificationSettingsPublish:
-      type: object
-      properties:
-        notify_head_of_hr:
-          type: boolean
-        notify_team:
-          type: boolean
-        send_confirmation:
-          type: boolean
-    NotificationSettingsClose:
-      type: object
-      properties:
-        notify_applicants:
-          type: boolean
-        notify_team:
-          type: boolean
-    NotificationSettingsBulk:
-      type: object
-      properties:
-        batch_notifications:
-          type: boolean
-        notify_team:
-          type: boolean
-    NotificationSettingsReopen:
-      type: object
-      properties:
-        notify_previous_applicants:
-          type: boolean
-        notify_team:
-          type: boolean
-    JobStatusTransitionInfo:
-      type: object
-      properties:
-        from_status:
-          type: string
-        to_status:
-          type: string
-        transition_rules_applied:
-          type: array
-          items:
-            type: string
-        automated_actions:
-          type: array
-          items:
-            type: string
-    JobStatusWorkflowJob:
-      type: object
-      properties:
-        uuid:
-          type: string
-        title:
-          type: string
-        status:
-          type: string
-        previous_status:
-          type: string
-        published_at:
-          type: string
-          format: date-time
-        transition_by:
-          type: integer
-        transition_at:
-          type: string
-          format: date-time
-        notification_sent:
-          type: boolean
-    JobStatusWorkflowPublishRequest:
-      type: object
-      properties:
-        publish_immediately:
-          type: boolean
-        scheduled_publish_at:
-          type: string
-          format: date-time
-        notification_settings:
-          $ref: '#/components/schemas/NotificationSettingsPublish'
-        validation_override:
-          type: boolean
-    JobStatusWorkflowPublishResponse:
-      type: object
-      properties:
-        status:
-          type: integer
-        message:
-          type: string
-        data:
-          type: object
-          properties:
-            job:
-              $ref: '#/components/schemas/JobStatusWorkflowJob'
-            transition_info:
-              $ref: '#/components/schemas/JobStatusTransitionInfo'
-    JobStatusWorkflowCloseRequest:
-      type: object
-      properties:
-        close_reason:
-          type: string
-          enum: [position_filled, budget_constraints, requirements_changed, cancelled]
-        close_notes:
-          type: string
-        handle_pending_applications:
-          type: string
-          enum: [reject_all, keep_pending, manual_review]
-        notification_settings:
-          $ref: '#/components/schemas/NotificationSettingsClose'
-    JobStatusWorkflowArchiveRequest:
-      type: object
-      properties:
-        archive_reason:
-          type: string
-        preserve_applications:
-          type: boolean
-        retention_period_days:
-          type: integer
-    JobStatusWorkflowReopenRequest:
-      type: object
-      properties:
-        new_deadline:
-          type: string
-          format: date-time
-        reset_application_count:
-          type: boolean
-        notification_settings:
-          $ref: '#/components/schemas/NotificationSettingsReopen'
-    JobStatusWorkflowBulkRequest:
-      type: object
-      properties:
-        job_uuids:
-          type: array
-          items:
-            type: string
-        target_status:
-          type: string
-        transition_data:
-          type: object
-        notification_settings:
-          $ref: '#/components/schemas/NotificationSettingsBulk'
 paths:
   /jobs/{uuid}/publish:
     post:
@@ -406,31 +262,655 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/UserStatisticsResponse'
+  /jobs:
+    post:
+      summary: Create Job Posting
+      tags: [Jobs]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreateRequest'
+      responses:
+        '201':
+          description: Job posting created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreateResponse'
+        '401':
+          description: Job Posting not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreateUnauthorizedResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    NotificationSettingsPublish:
+      type: object
+      properties:
+        notify_head_of_hr:
+          type: boolean
+        notify_team:
+          type: boolean
+        send_confirmation:
+          type: boolean
+    NotificationSettingsClose:
+      type: object
+      properties:
+        notify_applicants:
+          type: boolean
+        notify_team:
+          type: boolean
+    NotificationSettingsBulk:
+      type: object
+      properties:
+        batch_notifications:
+          type: boolean
+        notify_team:
+          type: boolean
+    NotificationSettingsReopen:
+      type: object
+      properties:
+        notify_previous_applicants:
+          type: boolean
+        notify_team:
+          type: boolean
+    JobStatusTransitionInfo:
+      type: object
+      properties:
+        from_status:
+          type: string
+        to_status:
+          type: string
+        transition_rules_applied:
+          type: array
+          items:
+            type: string
+        automated_actions:
+          type: array
+          items:
+            type: string
+    JobStatusWorkflowJob:
+      type: object
+      properties:
+        uuid:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        previous_status:
+          type: string
+        published_at:
+          type: string
+          format: date-time
+        transition_by:
+          type: integer
+        transition_at:
+          type: string
+          format: date-time
+        notification_sent:
+          type: boolean
+    JobStatusWorkflowPublishRequest:
+      type: object
+      properties:
+        publish_immediately:
+          type: boolean
+        scheduled_publish_at:
+          type: string
+          format: date-time
+        notification_settings:
+          $ref: '#/components/schemas/NotificationSettingsPublish'
+        validation_override:
+          type: boolean
+    JobStatusWorkflowPublishResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            job:
+              $ref: '#/components/schemas/JobStatusWorkflowJob'
+            transition_info:
+              $ref: '#/components/schemas/JobStatusTransitionInfo'
+    JobStatusWorkflowCloseRequest:
+      type: object
+      properties:
+        close_reason:
+          type: string
+          enum: [position_filled, budget_constraints, requirements_changed, cancelled]
+        close_notes:
+          type: string
+        handle_pending_applications:
+          type: string
+          enum: [reject_all, keep_pending, manual_review]
+        notification_settings:
+          $ref: '#/components/schemas/NotificationSettingsClose'
+    JobStatusWorkflowArchiveRequest:
+      type: object
+      properties:
+        archive_reason:
+          type: string
+        preserve_applications:
+          type: boolean
+        retention_period_days:
+          type: integer
+    JobStatusWorkflowReopenRequest:
+      type: object
+      properties:
+        new_deadline:
+          type: string
+          format: date-time
+        reset_application_count:
+          type: boolean
+        notification_settings:
+          $ref: '#/components/schemas/NotificationSettingsReopen'
+    JobStatusWorkflowBulkRequest:
+      type: object
+      properties:
+        job_uuids:
+          type: array
+          items:
+            type: string
+        target_status:
+          type: string
+        transition_data:
+          type: object
+        notification_settings:
+          $ref: '#/components/schemas/NotificationSettingsBulk'
+    UserListResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserSummary'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+            filters:
+              type: object
+    UserSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        email: { type: string }
+        name: { type: string }
+        role:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            display_name: { type: string }
+        status: { type: string }
+        email_verified_at: { type: string, format: date-time }
+        last_login_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Pagination:
+      type: object
+      properties:
+        total: { type: integer }
+        per_page: { type: integer }
+        current_page: { type: integer }
+        total_pages: { type: integer }
+        has_next: { type: boolean }
+        has_prev: { type: boolean }
+    UserCreateRequest:
+      type: object
+      required: [email, name, role_id]
+      properties:
+        email: { type: string, format: email }
+        name: { type: string, minLength: 2, maxLength: 100 }
+        role_id: { type: integer }
+        password: { type: string, minLength: 8, maxLength: 128 }
+        send_welcome_email: { type: boolean, default: true }
+        require_password_change: { type: boolean, default: true }
+    UserCreateResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            id: { type: integer }
+            uuid: { type: string, format: uuid }
+            email: { type: string }
+            name: { type: string }
+            role: { $ref: '#/components/schemas/UserRole' }
+            status: { type: string }
+            temporary_password: { type: string }
+            email_verification_sent: { type: boolean }
+            created_at: { type: string, format: date-time }
+    UserRole:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        display_name: { type: string }
+    UserDetailResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            id: { type: integer }
+            uuid: { type: string, format: uuid }
+            email: { type: string }
+            name: { type: string }
+            role:
+              type: object
+              properties:
+                id: { type: integer }
+                name: { type: string }
+                display_name: { type: string }
+                permissions:
+                  type: array
+                  items: { type: string }
+            status: { type: string }
+            email_verified_at: { type: string, format: date-time }
+            last_login_at: { type: string, format: date-time }
+            login_attempts:
+              type: object
+              properties:
+                failed_attempts: { type: integer }
+                last_attempt: { type: string, format: date-time }
+                is_locked: { type: boolean }
+            activity_summary:
+              type: object
+              properties:
+                total_logins: { type: integer }
+                last_activity: { type: string, format: date-time }
+                recent_actions:
+                  type: array
+                  items: { type: string }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+            deleted_at: { type: string, format: date-time }
+    UserUpdateRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        role_id: { type: integer }
+        status: { type: string, enum: [active, inactive, suspended] }
+        send_notification: { type: boolean, default: true }
+    UserDeleteRequest:
+      type: object
+      required: [confirmation]
+      properties:
+        confirmation: { type: string, enum: [DELETE] }
+        reason: { type: string, maxLength: 500 }
+        permanent: { type: boolean }
+    UserDeleteResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+            deletedCount: { type: integer }
+    UserBulkOperationRequest:
+      type: object
+      required: [action, user_uuids]
+      properties:
+        action: { type: string, enum: [activate, deactivate, delete, change_role, suspend] }
+        user_uuids:
+          type: array
+          items: { type: string, format: uuid }
+        params:
+          type: object
+          properties:
+            role_id: { type: integer }
+            send_notification: { type: boolean }
+            reason: { type: string, maxLength: 500 }
+    UserBulkOperationResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+            affectedCount: { type: integer }
+    UserResetPasswordRequest:
+      type: object
+      properties:
+        generate_temporary: { type: boolean, default: true }
+        send_email: { type: boolean, default: true }
+        require_change: { type: boolean, default: true }
+        new_password: { type: string, minLength: 8, maxLength: 128 }
+    UserResetPasswordResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            success: { type: boolean }
+            temporaryPassword: { type: string }
+    UserImpersonateRequest:
+      type: object
+      properties:
+        duration_minutes: { type: integer, minimum: 5, maximum: 480 }
+        reason: { type: string, maxLength: 500 }
+        notify_user: { type: boolean }
+    UserImpersonateResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            token: { type: string }
+            expiresAt: { type: string, format: date-time }
+            adminId: { type: integer }
+            targetUserId: { type: integer }
+            targetUserUuid: { type: string, format: uuid }
+            reason: { type: string }
+            access_token: { type: string }
+    UserSearchSuggestionsResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            suggestions:
+              type: array
+              items:
                 type: object
                 properties:
-                  status:
-                    type: integer
-                  message:
-                    type: string
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        jobId:
-                          type: integer
-                        success:
-                          type: boolean
-                        error:
-                          type: string
-              example:
-                status: 200
-                message: Bulk job status update completed
-                data:
-                  - jobId: 1
-                    success: true
-                  - jobId: 2
-                    success: true
-                  - jobId: 3
-                    success: false
-                    error: 'Invalid transition'
+                  value: { type: string }
+                  type: { type: string, enum: [name, email, domain] }
+                  count: { type: integer }
+    UserStatisticsResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            statistics:
+              type: object
+              properties:
+                total_users: { type: integer }
+                active_users: { type: integer }
+                inactive_users: { type: integer }
+                suspended_users: { type: integer }
+                verified_users: { type: integer }
+                users_by_role:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role_name: { type: string }
+                      count: { type: integer }
+                recent_signups: { type: integer }
+                avg_login_frequency: { type: integer }
+    JobCreateRequest:
+      type: object
+      description: Payload for creating or updating a job posting.
+      required:
+        - title
+        - department_id
+        - job_category_id
+        - job_type
+        - employment_level
+        - description
+        - requirements
+        - responsibilities
+      properties:
+        title:
+          type: string
+          description: The title of the job position.
+          example: 'Senior Backend Developer'
+        department_id:
+          type: integer
+          description: The unique identifier for the department this job belongs to.
+          example: 42
+        job_category_id:
+          type: integer
+          description: The unique identifier for the job category (e.g., Engineering, Marketing).
+          example: 15
+        job_type:
+          type: string
+          description: |
+            The type of employment.
+            * `internship` - Internship position.
+            * `staff` - Permanent staff position.
+            * `freelance` - Freelance or project-based work.
+            * `contract` - A fixed-term contract position.
+          enum:
+            - internship
+            - staff
+            - freelance
+            - contract
+        employment_level:
+          type: string
+          description: The seniority level required for the job.
+          enum:
+            - entry
+            - junior
+            - mid
+            - senior
+            - lead
+            - head
+            - co_head
+        priority_level:
+          type: string
+          description: The priority of the hiring need. Defaults to 'normal' if not specified.
+          enum:
+            - normal
+            - urgent
+          default: normal
+        description:
+          type: string
+          description: A detailed description of the job and the role.
+          minLength: 50
+          maxLength: 10000
+        requirements:
+          type: string
+          description: The skills, qualifications, and experience required for the role.
+          minLength: 20
+          maxLength: 5000
+        responsibilities:
+          type: string
+          description: The key responsibilities and day-to-day tasks for the role.
+          minLength: 20
+          maxLength: 5000
+        benefits:
+          type: string
+          description: 'Optional: A list of benefits provided with the job (e.g., health insurance, remote work options).'
+          maxLength: 3000
+        team_info:
+          type: string
+          description: 'Optional: Information about the team the candidate will be joining.'
+          maxLength: 2000
+        status:
+          type: string
+          description: The visibility status of the job posting. Defaults to 'draft' if not specified.
+          enum:
+            - draft
+            - published
+          default: draft
+        application_deadline:
+          type: string
+          format: date-time
+          description: 'Optional: The timestamp for when applications will close. (ISO 8601 format)'
+          example: '2025-09-30T23:59:59Z'
+        max_applications:
+          type: integer
+          description: 'Optional: The maximum number of applications to accept before automatically closing the job.'
+          example: 150
+    JobCreateResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: The HTTP status code of the response.
+          example: 201
+        message:
+          type: string
+          description: A human-readable message indicating the result.
+          example: 'Job posting created successfully'
+        data:
+          $ref: '#/components/schemas/JobPostingResource'
+    JobPostingResource:
+      type: object
+      description: Contains the detailed information for a single job posting.
+      properties:
+        id:
+          type: integer
+          description: The internal primary key of the job posting.
+          example: 61
+        uuid:
+          type: string
+          format: uuid
+          description: The unique public identifier for the job posting.
+          example: 'b5f51084-3b59-42e2-acca-97cbc926f16a'
+        title:
+          type: string
+          description: The title of the job position.
+          example: 'Senior Backend Developer'
+        slug:
+          type: string
+          description: A URL-friendly version of the title.
+          example: 'senior-backend-developer'
+        department_id:
+          type: integer
+          description: The ID of the associated department.
+          example: 42
+        job_category_id:
+          type: integer
+          description: The ID of the associated job category.
+          example: 15
+        job_type:
+          type: string
+          description: The type of employment (e.g., internship, staff).
+          example: 'internship'
+        employment_level:
+          type: string
+          description: The required seniority level (e.g., entry, mid, senior).
+          example: 'entry'
+        priority_level:
+          type: string
+          description: The hiring priority for the role.
+          example: 'normal'
+        description:
+          type: string
+          description: A detailed description of the job.
+        requirements:
+          type: string
+          description: The skills and qualifications required.
+        responsibilities:
+          type: string
+          description: The key responsibilities for the role.
+        benefits:
+          type: string
+          nullable: true
+          description: A summary of the benefits offered.
+        team_info:
+          type: string
+          nullable: true
+          description: Information about the team.
+        status:
+          type: string
+          description: The current status of the job posting.
+          example: 'draft'
+        views_count:
+          type: integer
+          description: The number of times the job posting has been viewed.
+          example: 0
+        applications_count:
+          type: integer
+          description: The number of applications received.
+          example: 0
+        application_deadline:
+          type: string
+          format: date-time
+          nullable: true
+          description: The deadline for submitting applications.
+          example: '2025-08-30T17:00:00.000Z'
+        max_applications:
+          type: integer
+          nullable: true
+          description: Maximum number of applications to accept.
+          example: 150
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when the job was published. Null if in draft.
+          example: null
+        created_by:
+          type: integer
+          description: The ID of the user who created the posting.
+          example: 17
+        created_at:
+          type: string
+          format: date-time
+          description: The timestamp when the record was created.
+          example: '2025-07-23T07:18:38.604Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: The timestamp when the record was last updated.
+          example: '2025-07-23T07:18:38.604Z'
+    JobCreateUnauthorizedResponse:
+      type: object
+      description: Contains the detailed information for an unauthorized user for create a Job.
+      properties:
+        statusCode:
+          type: integer
+          description: Status Code for unauthorized User
+          example: 401
+        message:
+          type: string
+          description: Message for unauthorized User
+          example: Token has expired
+        error:
+          type: object
+          properties:
+            category:
+              type: string
+              example: AUTHENTICATION
+            type:
+              type: string
+              example: EXPIRED_TOKEN
+            code:
+              type: string
+              example: AUTHENTICATION_EXPIRED_TOKEN
+            retryable:
+              type: boolean
+              example: true

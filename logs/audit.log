@@ -52,3 +52,101 @@
 {"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T12:34:22.310Z"}
 {"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T13:19:50.006Z"}
 {"level":"warn","message":"authorize: unauthenticated access","permission":"jobs.manage","timestamp":"2025-07-22T13:22:14.536Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"roles.view","timestamp":"2025-07-23T07:40:46.495Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-23T08:23:44.164Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-23T08:23:44.182Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-23T08:23:44.186Z","userId":10}
+{"count":15,"level":"warn","message":"Security alert triggered","reason":"High activity volume","timestamp":"2025-07-23T08:23:47.327Z"}
+{"count":5,"level":"warn","message":"Security alert triggered","reason":"Repeated failures for update_record","timestamp":"2025-07-23T08:23:47.327Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-23T08:23:47.545Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-23T08:23:47.570Z"}
+{"level":"warn","message":"SlugGenerationService.regenerateSlug validation failed","reason":"Title is required","timestamp":"2025-07-23T08:23:48.067Z"}
+{"err":{},"level":"error","message":"SlugGenerationService.generateSlug error","timestamp":"2025-07-23T08:23:50.350Z"}
+{"err":{},"level":"error","message":"SlugGenerationService.generateSlug error","timestamp":"2025-07-23T08:23:50.433Z"}
+{"err":{},"level":"error","message":"SlugGenerationService.generateSlug error","timestamp":"2025-07-23T08:23:50.466Z"}
+{"level":"warn","message":"URLConstructionService: Invalid slug","slug":"","timestamp":"2025-07-23T08:23:51.165Z"}
+{"level":"warn","message":"URLConstructionService: Invalid uuid","timestamp":"2025-07-23T08:23:51.220Z","uuid":""}
+{"level":"warn","message":"URLConstructionService: Invalid slug","slug":"","timestamp":"2025-07-23T08:23:51.235Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-23T08:23:57.312Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-23T08:23:57.341Z","userId":1}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T08:37:24.964Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T09:02:14.866Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T11:58:23.598Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T11:59:16.929Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T12:10:40.035Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T12:56:17.732Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:32:09.609Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:37:53.116Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:44:54.012Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:46:18.053Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:48:02.647Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:48:40.835Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:49:37.285Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:50:30.944Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T13:51:42.606Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:18:57.559Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:20:06.411Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:21:14.323Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:21:50.523Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:22:22.924Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:23:53.520Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:28:53.149Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:29:32.795Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:30:52.389Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:32:10.333Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:33:13.608Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:35:09.838Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:35:56.632Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:36:42.097Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:37:58.854Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:39:04.685Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:39:33.658Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:41:23.185Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:49:03.880Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:52:04.623Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:56:44.276Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T14:58:36.791Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:00:28.795Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:03:42.983Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:09:01.712Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:10:20.826Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:10:58.587Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:12:30.616Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:13:05.635Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:26:45.724Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:27:55.111Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:36:38.577Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:37:48.888Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:39:10.601Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:40:54.428Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:42:47.007Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:43:45.786Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:44:26.007Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:49:47.167Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:50:18.346Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T15:51:39.893Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T23:28:40.915Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-23T23:44:55.197Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:01:31.183Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:10:00.624Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:13:14.053Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:14:03.499Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:15:43.104Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:18:34.718Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:20:06.202Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:20:45.922Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:21:44.244Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:24:10.784Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:25:16.419Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:27:32.699Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:30:44.264Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:35:41.819Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:36:48.165Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:38:59.790Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:40:58.716Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:42:13.792Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:42:57.579Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T00:47:28.285Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T02:17:49.619Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T02:20:10.371Z"}
+{"SMTP_HOST":"sandbox.smtp.mailtrap.io","SMTP_PORT":"2525","SMTP_USER":"8d7a4e5c2342e5","level":"info","message":"EmailService: SMTP transporter initialized","timestamp":"2025-07-24T02:24:44.535Z"}

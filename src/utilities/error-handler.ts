@@ -7,22 +7,22 @@
  * @module utilities/errorHandler
  */
 
-import { JsonResponse } from "@/types/express-extension";
+import { JsonResponse } from '@/types/express-extension';
 
 /**
  * Core error categories for the application
  */
 export enum ErrorCategory {
-  AUTHENTICATION = "AUTHENTICATION",
-  AUTHORIZATION = "AUTHORIZATION",
-  VALIDATION = "VALIDATION",
-  NOT_FOUND = "NOT_FOUND",
-  CONFLICT = "CONFLICT",
-  RATE_LIMIT = "RATE_LIMIT",
-  DATABASE = "DATABASE",
-  EXTERNAL_SERVICE = "EXTERNAL_SERVICE",
-  INTERNAL_SERVER = "INTERNAL_SERVER",
-  BAD_REQUEST = "BAD_REQUEST",
+  AUTHENTICATION = 'AUTHENTICATION',
+  AUTHORIZATION = 'AUTHORIZATION',
+  VALIDATION = 'VALIDATION',
+  NOT_FOUND = 'NOT_FOUND',
+  CONFLICT = 'CONFLICT',
+  RATE_LIMIT = 'RATE_LIMIT',
+  DATABASE = 'DATABASE',
+  EXTERNAL_SERVICE = 'EXTERNAL_SERVICE',
+  INTERNAL_SERVER = 'INTERNAL_SERVER',
+  BAD_REQUEST = 'BAD_REQUEST',
 }
 
 /**
@@ -30,40 +30,40 @@ export enum ErrorCategory {
  */
 export enum ErrorType {
   // Authentication errors
-  NO_TOKEN = "NO_TOKEN",
-  INVALID_TOKEN = "INVALID_TOKEN",
-  EXPIRED_TOKEN = "EXPIRED_TOKEN",
-  MALFORMED_TOKEN = "MALFORMED_TOKEN",
-  TOKEN_VERIFICATION_FAILED = "TOKEN_VERIFICATION_FAILED",
+  NO_TOKEN = 'NO_TOKEN',
+  INVALID_TOKEN = 'INVALID_TOKEN',
+  EXPIRED_TOKEN = 'EXPIRED_TOKEN',
+  MALFORMED_TOKEN = 'MALFORMED_TOKEN',
+  TOKEN_VERIFICATION_FAILED = 'TOKEN_VERIFICATION_FAILED',
 
   // Authorization errors
-  INSUFFICIENT_PERMISSIONS = "INSUFFICIENT_PERMISSIONS",
-  ACCESS_DENIED = "ACCESS_DENIED",
+  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
+  ACCESS_DENIED = 'ACCESS_DENIED',
 
   // Validation errors
-  VALIDATION_FAILED = "VALIDATION_FAILED",
-  INVALID_INPUT = "INVALID_INPUT",
-  MISSING_REQUIRED_FIELD = "MISSING_REQUIRED_FIELD",
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  INVALID_INPUT = 'INVALID_INPUT',
+  MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
 
   // Resource errors
-  RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND",
-  RESOURCE_CONFLICT = "RESOURCE_CONFLICT",
+  RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
+  RESOURCE_CONFLICT = 'RESOURCE_CONFLICT',
 
   // Rate limiting
-  RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
-  TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS",
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+  TOO_MANY_ATTEMPTS = 'TOO_MANY_ATTEMPTS',
 
   // Database errors
-  DATABASE_CONNECTION_FAILED = "DATABASE_CONNECTION_FAILED",
-  DATABASE_QUERY_FAILED = "DATABASE_QUERY_FAILED",
+  DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED',
+  DATABASE_QUERY_FAILED = 'DATABASE_QUERY_FAILED',
 
   // External service errors
-  EXTERNAL_API_FAILED = "EXTERNAL_API_FAILED",
-  SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE",
+  EXTERNAL_API_FAILED = 'EXTERNAL_API_FAILED',
+  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
 
   // Internal errors
-  INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
-  CONFIGURATION_ERROR = "CONFIGURATION_ERROR",
+  INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
 }
 
 /**
@@ -95,82 +95,82 @@ const ERROR_CONFIG: Record<
   [ErrorType.NO_TOKEN]: {
     category: ErrorCategory.AUTHENTICATION,
     statusCode: 401,
-    defaultMessage: "Authentication token is required",
+    defaultMessage: 'Authentication token is required',
   },
   [ErrorType.INVALID_TOKEN]: {
     category: ErrorCategory.AUTHENTICATION,
     statusCode: 401,
-    defaultMessage: "Invalid authentication token",
+    defaultMessage: 'Invalid authentication token',
   },
   [ErrorType.EXPIRED_TOKEN]: {
     category: ErrorCategory.AUTHENTICATION,
     statusCode: 401,
-    defaultMessage: "Authentication token has expired",
+    defaultMessage: 'Authentication token has expired',
     retryable: true,
   },
   [ErrorType.MALFORMED_TOKEN]: {
     category: ErrorCategory.AUTHENTICATION,
     statusCode: 400,
-    defaultMessage: "Malformed authentication token",
+    defaultMessage: 'Malformed authentication token',
   },
   [ErrorType.TOKEN_VERIFICATION_FAILED]: {
     category: ErrorCategory.AUTHENTICATION,
     statusCode: 401,
-    defaultMessage: "Token verification failed",
+    defaultMessage: 'Token verification failed',
   },
 
   // Authorization errors
   [ErrorType.INSUFFICIENT_PERMISSIONS]: {
     category: ErrorCategory.AUTHORIZATION,
     statusCode: 403,
-    defaultMessage: "Insufficient permissions to access this resource",
+    defaultMessage: 'Insufficient permissions to access this resource',
   },
   [ErrorType.ACCESS_DENIED]: {
     category: ErrorCategory.AUTHORIZATION,
     statusCode: 403,
-    defaultMessage: "Access denied",
+    defaultMessage: 'Access denied',
   },
 
   // Validation errors
   [ErrorType.VALIDATION_FAILED]: {
     category: ErrorCategory.VALIDATION,
-    statusCode: 400,
-    defaultMessage: "Validation failed",
+    statusCode: 422,
+    defaultMessage: 'Validation failed',
   },
   [ErrorType.INVALID_INPUT]: {
     category: ErrorCategory.VALIDATION,
     statusCode: 400,
-    defaultMessage: "Invalid input provided",
+    defaultMessage: 'Invalid input provided',
   },
   [ErrorType.MISSING_REQUIRED_FIELD]: {
     category: ErrorCategory.VALIDATION,
     statusCode: 400,
-    defaultMessage: "Required field is missing",
+    defaultMessage: 'Required field is missing',
   },
 
   // Resource errors
   [ErrorType.RESOURCE_NOT_FOUND]: {
     category: ErrorCategory.NOT_FOUND,
     statusCode: 404,
-    defaultMessage: "Resource not found",
+    defaultMessage: 'Resource not found',
   },
   [ErrorType.RESOURCE_CONFLICT]: {
     category: ErrorCategory.CONFLICT,
     statusCode: 409,
-    defaultMessage: "Resource conflict",
+    defaultMessage: 'Resource conflict',
   },
 
   // Rate limiting
   [ErrorType.RATE_LIMIT_EXCEEDED]: {
     category: ErrorCategory.RATE_LIMIT,
     statusCode: 429,
-    defaultMessage: "Rate limit exceeded",
+    defaultMessage: 'Rate limit exceeded',
     retryable: true,
   },
   [ErrorType.TOO_MANY_ATTEMPTS]: {
     category: ErrorCategory.RATE_LIMIT,
     statusCode: 429,
-    defaultMessage: "Too many attempts",
+    defaultMessage: 'Too many attempts',
     retryable: true,
   },
 
@@ -178,13 +178,13 @@ const ERROR_CONFIG: Record<
   [ErrorType.DATABASE_CONNECTION_FAILED]: {
     category: ErrorCategory.DATABASE,
     statusCode: 503,
-    defaultMessage: "Database connection failed",
+    defaultMessage: 'Database connection failed',
     retryable: true,
   },
   [ErrorType.DATABASE_QUERY_FAILED]: {
     category: ErrorCategory.DATABASE,
     statusCode: 500,
-    defaultMessage: "Database query failed",
+    defaultMessage: 'Database query failed',
     retryable: true,
   },
 
@@ -192,13 +192,13 @@ const ERROR_CONFIG: Record<
   [ErrorType.EXTERNAL_API_FAILED]: {
     category: ErrorCategory.EXTERNAL_SERVICE,
     statusCode: 502,
-    defaultMessage: "External service failed",
+    defaultMessage: 'External service failed',
     retryable: true,
   },
   [ErrorType.SERVICE_UNAVAILABLE]: {
     category: ErrorCategory.EXTERNAL_SERVICE,
     statusCode: 503,
-    defaultMessage: "Service temporarily unavailable",
+    defaultMessage: 'Service temporarily unavailable',
     retryable: true,
   },
 
@@ -206,12 +206,12 @@ const ERROR_CONFIG: Record<
   [ErrorType.INTERNAL_SERVER_ERROR]: {
     category: ErrorCategory.INTERNAL_SERVER,
     statusCode: 500,
-    defaultMessage: "Internal server error",
+    defaultMessage: 'Internal server error',
   },
   [ErrorType.CONFIGURATION_ERROR]: {
     category: ErrorCategory.INTERNAL_SERVER,
     statusCode: 500,
-    defaultMessage: "Configuration error",
+    defaultMessage: 'Configuration error',
   },
 };
 
@@ -227,7 +227,7 @@ export const createError = (
   type: ErrorType,
   message?: string,
   details?: any,
-  retryAfter?: number
+  retryAfter?: number,
 ): AppError => {
   const config = ERROR_CONFIG[type];
 
@@ -282,24 +282,15 @@ export const sendErrorResponse = (res: JsonResponse, error: AppError): void => {
  * @returns Appropriate AppError object
  */
 export const parseJwtError = (error: any, customMessage?: string): AppError => {
-  if (
-    error.message?.includes("expired") ||
-    error.name === "TokenExpiredError"
-  ) {
+  if (error.message?.includes('expired') || error.name === 'TokenExpiredError') {
     return createError(ErrorType.EXPIRED_TOKEN, customMessage);
   }
 
-  if (
-    error.message?.includes("invalid") ||
-    error.message?.includes("signature")
-  ) {
+  if (error.message?.includes('invalid') || error.message?.includes('signature')) {
     return createError(ErrorType.INVALID_TOKEN, customMessage);
   }
 
-  return createError(
-    ErrorType.TOKEN_VERIFICATION_FAILED,
-    customMessage || error.message
-  );
+  return createError(ErrorType.TOKEN_VERIFICATION_FAILED, customMessage || error.message);
 };
 
 /**
@@ -308,25 +299,16 @@ export const parseJwtError = (error: any, customMessage?: string): AppError => {
  * @param customMessage - Optional custom error message
  * @returns Appropriate AppError object
  */
-export const parseDatabaseError = (
-  error: any,
-  customMessage?: string
-): AppError => {
-  if (error.code === "ECONNREFUSED" || error.message?.includes("connection")) {
+export const parseDatabaseError = (error: any, customMessage?: string): AppError => {
+  if (error.code === 'ECONNREFUSED' || error.message?.includes('connection')) {
     return createError(ErrorType.DATABASE_CONNECTION_FAILED, customMessage);
   }
 
-  if (error.constraint || error.code === "23505") {
-    return createError(
-      ErrorType.RESOURCE_CONFLICT,
-      customMessage || "Duplicate resource"
-    );
+  if (error.constraint || error.code === '23505') {
+    return createError(ErrorType.RESOURCE_CONFLICT, customMessage || 'Duplicate resource');
   }
 
-  return createError(
-    ErrorType.DATABASE_QUERY_FAILED,
-    customMessage || error.message
-  );
+  return createError(ErrorType.DATABASE_QUERY_FAILED, customMessage || error.message);
 };
 
 /**
@@ -335,14 +317,11 @@ export const parseDatabaseError = (
  * @param customMessage - Optional custom error message
  * @returns Appropriate AppError object
  */
-export const parseValidationError = (
-  validationErrors: any,
-  customMessage?: string
-): AppError => {
+export const parseValidationError = (validationErrors: any, customMessage?: string): AppError => {
   return createError(
     ErrorType.VALIDATION_FAILED,
-    customMessage || "Input validation failed",
-    validationErrors
+    customMessage || 'Input validation failed',
+    validationErrors,
   );
 };
 
@@ -352,16 +331,8 @@ export const parseValidationError = (
  * @param customMessage - Optional custom error message
  * @returns AppError object with retry information
  */
-export const createRateLimitError = (
-  retryAfter: number,
-  customMessage?: string
-): AppError => {
-  return createError(
-    ErrorType.RATE_LIMIT_EXCEEDED,
-    customMessage,
-    undefined,
-    retryAfter
-  );
+export const createRateLimitError = (retryAfter: number, customMessage?: string): AppError => {
+  return createError(ErrorType.RATE_LIMIT_EXCEEDED, customMessage, undefined, retryAfter);
 };
 
 /**
@@ -370,10 +341,7 @@ export const createRateLimitError = (
  * @param identifier - Resource identifier
  * @returns AppError object
  */
-export const createNotFoundError = (
-  resourceType: string,
-  identifier?: string
-): AppError => {
+export const createNotFoundError = (resourceType: string, identifier?: string): AppError => {
   const message = identifier
     ? `${resourceType} with identifier '${identifier}' not found`
     : `${resourceType} not found`;
@@ -387,15 +355,10 @@ export const createNotFoundError = (
  * @param customMessage - Optional custom error message
  * @returns AppError object
  */
-export const createInternalError = (
-  error?: any,
-  customMessage?: string
-): AppError => {
+export const createInternalError = (error?: any, customMessage?: string): AppError => {
   const message =
     customMessage ||
-    (process.env.NODE_ENV === "development"
-      ? error?.message
-      : "Internal server error");
+    (process.env.NODE_ENV === 'development' ? error?.message : 'Internal server error');
 
   return createError(ErrorType.INTERNAL_SERVER_ERROR, message);
 };

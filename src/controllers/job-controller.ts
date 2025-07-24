@@ -1,62 +1,82 @@
-import { JobService } from '@/services/job-service';
-import { AuthenticatedRequest } from '@/types/express-extension';
-import { Response } from 'express';
+/**
+ * JobController
+ *
+ * Handles HTTP requests related to job postings. Acts as an interface between
+ * client requests and the JobService business logic.
+ *
+ * @module controllers/job-controller
+ */
 
+import { JobResource } from '@/resources/job-posting-resource';
+import { JobService } from '@/services/job-service';
+import { AuthenticatedRequest, JsonResponse } from '@/types/express-extension';
+import { createInternalError, sendErrorResponse } from '@/utilities/error-handler';
+
+/**
+ * Controller for managing job-related routes and logic.
+ */
 export class JobController {
-  static async createJobPosting(req: AuthenticatedRequest, res: Response) {
+  /**
+   * Create a new job posting.
+   *
+   * @async
+   * @function
+   * @param {AuthenticatedRequest} req - The Express request object extended with user authentication
+   * @param {JsonResponse} res - The Express response object extended for consistent JSON formatting
+   * @returns {Promise<void>} Responds with JSON containing the newly created job or an error
+   *
+   * @example
+   * POST /api/jobs
+   * Body:
+   * {
+   *   "title": "Frontend Developer",
+   *   "department_id": 1,
+   *   ...
+   * }
+   *
+   * Success Response:
+   * {
+   *   "status": 201,
+   *   "message": "Job posting created successfully",
+   *   "data": { ...jobData }
+   * }
+   *
+   * Error Responses:
+   * - 401 Unauthorized if user is not authenticated
+   * - 422 Validation Failed if input is invalid or department/category is inactive
+   * - 500 Internal Server Error for unhandled exceptions
+   */
+  static async createJobPosting(req: AuthenticatedRequest, res: JsonResponse) {
     try {
       const userId = req.user?.id;
-      console.log(req.user);
 
       if (!userId) {
         return res.status(401).json({
           status: 401,
-          message: 'Unauthorized. You must be leogged in to create a job posting.',
+          message: 'Unauthorized. You must be logged in to create a job posting.',
         });
       }
 
-      // 3. Pass the validated user ID to the service.
       const job = await JobService.createJobPosting(req.body, userId);
-
-      // --- End of Fix ---
 
       return res.status(201).json({
         status: 201,
         message: 'Job posting created successfully',
-        data: {
-          id: job.id,
-          uuid: job.uuid,
-          title: job.title,
-          slug: job.slug,
-          department_id: job.department_id,
-          job_category_id: job.job_category_id,
-          job_type: job.job_type,
-          employment_level: job.employment_level,
-          priority_level: job.priority_level,
-          description: job.description,
-          requirements: job.requirements,
-          responsibilities: job.responsibilities,
-          benefits: job.benefits,
-          team_info: job.team_info,
-          status: job.status,
-          views_count: job.views_count,
-          applications_count: job.applications_count,
-          application_deadline: job.application_deadline,
-          max_applications: job.max_applications,
-          published_at: job.published_at,
-          created_by: job.created_by,
-          created_at: job.created_at,
-          updated_at: job.updated_at,
-        },
+        data: JobResource.serialize(job),
       });
-    } catch (error: any) {
-      // This generic error handling remains the same.
-      const err = error as { status?: number; message: string; errors?: any };
-      const status = err.status || 500;
-      return res.status(status).json({
-        message: err.message,
-        errors: err.errors,
-      });
+    } catch (err: any) {
+      // Handle known AppError (custom validation, etc.)
+      if (err.appError) {
+        return sendErrorResponse(res, err.appError);
+      }
+
+      // Handle known error with category/type structure
+      if (err.category && err.type) {
+        return sendErrorResponse(res, err);
+      }
+
+      // Fallback to internal server error
+      return sendErrorResponse(res, createInternalError(err));
     }
   }
 }
