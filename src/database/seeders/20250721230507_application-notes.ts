@@ -16,7 +16,7 @@ function randomFromArray<T>(arr: T[]): T {
 
 export async function seed(knex: Knex): Promise<void> {
   try {
-    const applications = await knex('applications').select('id');
+    const applications = await knex('job_applications').select('id');
     const users = await knex('users').select('id');
     if (!applications.length || !users.length) {
       logSeeder('Skipped seeding application_notes: applications or users missing');

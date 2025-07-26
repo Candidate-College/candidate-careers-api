@@ -32,9 +32,9 @@ export class JobPostingRepository implements IJobPostingRepository {
    */
   async findWithActiveApplication(jobPostingUuid: string): Promise<boolean> {
     // Find job posting by uuid to get id
-    const job = await JobPostings.query().findOne({ uuid: jobPostingUuid }).select('uuid');
+    const job = await JobPostings.query().findOne({ uuid: jobPostingUuid }).select('id', 'uuid');
     if (!job) return false;
-    const application = await JobPostings.relatedQuery('applications')
+    const application = await JobPostings.relatedQuery('jobApplications')
       .for(job.id)
       .whereIn('status', ['pending', 'under_review'])
       .first();

@@ -37,7 +37,7 @@ describe('Seeder Reset Functionality', () => {
     expect(await countTableReset('departments')).toBe(0);
     expect(await countTableReset('job_categories')).toBe(0);
     expect(await countTableReset('job_postings')).toBe(0);
-    expect(await countTableReset('applications')).toBe(0);
+    expect(await countTableReset('job_applications')).toBe(0);
   });
 
   it('should reset only specific entity data (departments)', async () => {
@@ -90,6 +90,6 @@ describe('Seeder Reset Functionality', () => {
     expect(await countTableReset('departments')).toBe(0);
     expect(await countTableReset('job_categories')).toBe(0);
     expect(await countTableReset('job_postings')).toBe(0);
-    expect(await countTableReset('applications')).toBe(0);
+    expect(await countTableReset('job_applications')).toBe(0);
   });
 });

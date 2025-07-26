@@ -33,7 +33,7 @@ describe('Seeder Execution', () => {
     expect(await countTable('departments')).toBeGreaterThanOrEqual(12);
     expect(await countTable('job_categories')).toBeGreaterThanOrEqual(15);
     expect(await countTable('job_postings')).toBeGreaterThanOrEqual(25);
-    expect(await countTable('applications')).toBeGreaterThanOrEqual(50);
+    expect(await countTable('job_applications')).toBeGreaterThanOrEqual(50);
   });
 
   it('should run individual role seeder and create 3 roles with correct permissions', async () => {
@@ -69,8 +69,8 @@ describe('Seeder Execution', () => {
   });
 
   it('should run individual application seeder and create 50+ applications', async () => {
-    await knex('applications').del();
+    await knex('job_applications').del();
     await require('../../../src/database/seeders/20250721230506_applications').seed(knex);
-    expect(await countTable('applications')).toBeGreaterThanOrEqual(50);
+    expect(await countTable('job_applications')).toBeGreaterThanOrEqual(50);
   });
 });

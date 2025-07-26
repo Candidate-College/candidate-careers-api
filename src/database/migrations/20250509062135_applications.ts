@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
     ('pending', 'under_review', 'approved', 'rejected')
   `);
 
-  await knex.schema.createTable('applications', table => {
+  await knex.schema.createTable('job_applications', table => {
     table.increments('id');
     table.uuid('uuid').notNullable().defaultTo(knex.raw('gen_random_uuid()')).unique();
     table
@@ -63,6 +63,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTableIfExists('applications');
+  await knex.schema.dropTableIfExists('job_applications');
   await knex.schema.raw('DROP TYPE IF EXISTS application_status');
 }

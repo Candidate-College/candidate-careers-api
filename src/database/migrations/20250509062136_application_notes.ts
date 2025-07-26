@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<void> {
       .integer('application_id')
       .unsigned()
       .references('id')
-      .inTable('applications')
+      .inTable('job_applications')
       .onDelete('CASCADE');
     table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
     table.text('note').notNullable();

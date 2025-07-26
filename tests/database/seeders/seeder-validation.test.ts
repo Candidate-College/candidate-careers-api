@@ -76,7 +76,7 @@ describe('Seeder Data Validation', () => {
       expect(new Date(job.created_at).getTime()).toBeLessThanOrEqual(now.getTime());
       expect(new Date(job.updated_at).getTime()).toBeLessThanOrEqual(now.getTime());
     }
-    const apps = await knexValidation('applications').select('created_at', 'updated_at');
+    const apps = await knexValidation('job_applications').select('created_at', 'updated_at');
     for (const app of apps) {
       expect(new Date(app.created_at).getTime()).toBeLessThanOrEqual(now.getTime());
       expect(new Date(app.updated_at).getTime()).toBeLessThanOrEqual(now.getTime());

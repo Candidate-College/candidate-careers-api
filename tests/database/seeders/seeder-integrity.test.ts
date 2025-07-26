@@ -33,9 +33,9 @@ describe('Seeder Data Integrity', () => {
       .whereNull('job_categories.id');
     expect(invalidJobCategories.length).toBe(0);
 
-    // Applications: job_posting_id must exist
-    const invalidAppJobs = await db('applications')
-      .leftJoin('job_postings', 'applications.job_posting_id', 'job_postings.id')
+      // Applications: job_posting_id must exist
+  const invalidAppJobs = await db('job_applications')
+    .leftJoin('job_postings', 'job_applications.job_posting_id', 'job_postings.id')
       .whereNull('job_postings.id');
     expect(invalidAppJobs.length).toBe(0);
   });
@@ -62,8 +62,8 @@ describe('Seeder Data Integrity', () => {
   });
 
   it('should have all applications reference existing jobs', async () => {
-    const invalidApps = await db('applications')
-      .leftJoin('job_postings', 'applications.job_posting_id', 'job_postings.id')
+    const invalidApps = await db('job_applications')
+      .leftJoin('job_postings', 'job_applications.job_posting_id', 'job_postings.id')
       .whereNull('job_postings.id');
     expect(invalidApps.length).toBe(0);
   });

@@ -63,10 +63,10 @@ export async function seed(knex: Knex): Promise<void> {
     });
 
     await idempotentInsert(knex, {
-      table: 'applications',
+      table: 'job_applications',
       data: applications,
       conflictColumns: ['application_number'],
-      logLabel: 'applications',
+      logLabel: 'job_applications',
     });
     logSeeder('Seeded applications table');
   } catch (error) {
