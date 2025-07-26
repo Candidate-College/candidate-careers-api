@@ -1,7 +1,5 @@
 const Model = require('@/config/database/orm');
-// @ts-ignore: Department model assumed to exist
 import { Department } from './department-model';
-// @ts-ignore: JobCategory model assumed to exist
 import { JobCategory } from './job-category-model';
 import { User } from './user-model';
 

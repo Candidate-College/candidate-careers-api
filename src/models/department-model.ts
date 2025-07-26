@@ -1,5 +1,5 @@
 import { User, UserData } from './user-model';
-import { JobPostings } from './job-posting-model';
+import { JobPostings } from './job-postings-model';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Model = require('@/config/database/orm');
 

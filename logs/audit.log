@@ -42,3 +42,120 @@
 {"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-16T05:04:29.962Z","userId":10}
 {"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-16T05:04:32.049Z"}
 {"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-16T05:04:32.059Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-25T06:08:41.858Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T06:14:02.813Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T06:14:07.480Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T06:14:07.518Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T06:14:07.523Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T06:14:11.318Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T06:14:11.350Z","userId":1}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-25T06:19:41.064Z"}
+{"error":"Permission.relationMappings.role_permissions: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-25T06:20:44.110Z"}
+{"error":"Cannot read properties of null (reading 'getIdColumnArray')","level":"error","message":"authorize: server error","timestamp":"2025-07-25T06:21:00.530Z"}
+{"error":"Permission.relationMappings.role_permissions: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-25T06:23:34.235Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T06:32:49.596Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T06:32:49.642Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T06:32:52.468Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T06:32:52.491Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T06:32:52.495Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T06:32:54.111Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T06:32:54.123Z","userId":1}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T06:58:15.744Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T06:58:15.787Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T06:58:17.422Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T06:58:17.437Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T06:58:17.440Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T06:58:19.476Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T06:58:19.488Z","userId":1}
+{"error":"Permission.relationMappings.role_permissions: join: either `from` or `to` must point to the owner model table and the other one to the related table. It might be that specified table 'roles' is not correct","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:02:40.350Z"}
+{"error":"Permission.relationMappings.role_permissions: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:04:01.999Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T07:15:26.424Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T07:15:26.458Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T07:15:28.869Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T07:15:28.889Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T07:15:28.894Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T07:15:31.276Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T07:15:31.293Z","userId":1}
+{"error":"Permission.relationMappings.roles: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:22:23.243Z"}
+{"error":"unknown relation \"role\" in a relation expression","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:24:13.754Z"}
+{"error":"unknown relation \"user_roles\" in a relation expression","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:26:22.760Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T07:29:02.168Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T07:29:02.215Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T07:29:04.886Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T07:29:04.914Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T07:29:04.918Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T07:29:07.210Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T07:29:07.226Z","userId":1}
+{"error":"select count(*) as \"count\" from (select \"permissions\".* from \"permissions\" inner join \"role_permissions\" as \"role_permissions_join\" on \"role_permissions_join\".\"permission_id\" = \"permissions\".\"id\" inner join (select \"roles\".* from \"roles\" where \"roles\".\"deleted_at\" is null) as \"role_permissions\" on \"role_permissions_join\".\"role_id\" = \"role_permissions\".\"id\" inner join \"user_roles\" as \"role_permissions:user_roles_join\" on \"role_permissions:user_roles_join\".\"role_id\" = \"role_permissions\".\"id\" inner join (select \"users\".* from \"users\" where \"users\".\"deleted_at\" is null) as \"role_permissions:user_roles\" on \"role_permissions:user_roles_join\".\"user_id\" = \"role_permissions:user_roles\".\"id\" where \"permissions\".\"deleted_at\" is null and \"user_roles\".\"user_id\" = $1 and (\"permissions\".\"deleted_at\" is null and \"permissions\".\"name\" = $2 or \"permissions\".\"name\" = $3) and \"permissions\".\"deleted_at\" is null) as \"temp\" - relation \"user_roles\" does not exist","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:33:21.797Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-25T07:35:04.528Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-25T18:08:19.244Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T18:17:58.974Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T18:17:59.035Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T18:18:00.894Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T18:18:00.925Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T18:18:00.929Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T18:18:03.019Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T18:18:03.030Z","userId":1}
+{"error":"unknown relation \"role\" in a relation expression","level":"error","message":"authorize: server error","timestamp":"2025-07-25T18:18:17.474Z"}
+{"error":"RolePermission.relationMappings.role: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-25T18:24:31.001Z"}
+{"error":"unknown relation \"user_roles\" in a relation expression","level":"error","message":"authorize: server error","timestamp":"2025-07-25T18:28:22.749Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T18:33:23.764Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T18:33:23.793Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T18:33:25.832Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T18:33:25.854Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T18:33:25.858Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T18:33:27.642Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T18:33:27.658Z","userId":1}
+{"error":"unknown relation \"user_roles\" in a relation expression","level":"error","message":"authorize: server error","timestamp":"2025-07-25T18:35:41.085Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T18:38:09.905Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T18:38:09.979Z","userId":1}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T18:38:10.970Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T18:38:11.004Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T18:38:11.007Z","userId":10}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T18:38:11.921Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T18:38:11.938Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T18:40:54.576Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T18:40:54.605Z","userId":1}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T18:40:55.460Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T18:40:55.489Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T18:40:55.494Z","userId":10}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T18:40:56.514Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T18:40:56.535Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-25T18:45:56.872Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-25T18:45:56.892Z","userId":1}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-25T18:45:57.297Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-25T18:45:57.310Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-25T18:45:57.313Z","userId":10}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-25T18:45:58.284Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-25T18:45:58.311Z"}
+{"error":"select count(*) as \"count\" from (select \"permissions\".* from \"permissions\" inner join \"role_permissions\" on \"role_permissions\".\"permission_id\" = \"permissions\".\"id\" inner join (select \"roles\".* from \"roles\" where \"roles\".\"deleted_at\" is null) as \"role_permissions:role\" on \"role_permissions:role\".\"id\" = \"role_permissions\".\"role_id\" inner join \"user_roles\" as \"role_permissions:role:user_roles\" on \"role_permissions:role:user_roles\".\"role_id\" = \"role_permissions:role\".\"id\" where \"permissions\".\"deleted_at\" is null and \"user_roles\".\"user_id\" = $1 and (\"permissions\".\"deleted_at\" is null and \"permissions\".\"name\" = $2 or \"permissions\".\"name\" = $3) and \"permissions\".\"deleted_at\" is null) as \"temp\" - relation \"user_roles\" does not exist","level":"error","message":"authorize: server error","timestamp":"2025-07-25T18:49:01.370Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-26T10:23:04.379Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-26T10:23:04.420Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-26T10:23:05.979Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-26T10:23:05.995Z","userId":1}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-26T10:23:06.770Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-26T10:23:06.802Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-26T10:23:06.807Z","userId":10}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:26:51.463Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:29:55.004Z"}
+{"error":"Permission.relationMappings.roles: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:32:22.573Z"}
+{"error":"Permission.relationMappings.role_permissions: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:33:44.921Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:37:02.467Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:37:07.477Z"}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:38:01.331Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-26T10:42:45.076Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-26T10:42:45.122Z"}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-26T10:42:48.289Z","userId":10}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-26T10:42:47.076Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-26T10:42:47.111Z","userId":1}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-26T10:42:48.313Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-26T10:42:48.317Z","userId":10}
+{"error":"A model class Permission doesn't have relation role_permissions","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:44:35.467Z"}
+{"error":"Permission.relationMappings.role_permissions: modelClass is not defined","level":"error","message":"authorize: server error","timestamp":"2025-07-26T10:52:25.186Z"}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-26T11:03:46.436Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-26T11:03:46.473Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-26T11:03:47.409Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-26T11:03:47.423Z","userId":1}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-26T11:03:47.973Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-26T11:03:47.983Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-26T11:03:47.986Z","userId":10}
