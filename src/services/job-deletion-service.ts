@@ -48,58 +48,104 @@ export class JobDeletionService {
             throw createNotFoundError('JobPosting', jobPostingUuid);
         }
 
-        // Authorization: Only Super Admin or creator can delete
-        const isSuperAdmin = user.role?.name === 'Super Admin';
+        // Check authorization
+        this.validateDeletionAuthorization(jobPosting, user);
+
+        // Check business rules unless bypassed
+        const shouldBypassBusinessRules = option.force === true && this.isSuperAdmin(user);
+        if (!shouldBypassBusinessRules) {
+            await this.validateBusinessRules(jobPosting, jobPostingUuid, option);
+        }
+
+        // Perform soft delete
+        await this.repo.softDelete(jobPostingUuid);
+        
+        // Get updated job data and prepare response
+        return await this.prepareDeletionResponse(jobPostingUuid, user, jobPosting, option);
+    }
+
+    /**
+     * Validate if user has permission to delete the job posting
+     */
+    private validateDeletionAuthorization(jobPosting: any, user: UserData): void {
+        const isSuperAdmin = this.isSuperAdmin(user);
         if (!isSuperAdmin && user.id !== jobPosting.created_by) {
             throw createError(
                 ErrorType.ACCESS_DENIED,
                 'You do not have permission to delete this job posting.'
             );
         }
+    }
 
-        // Only bypass business rules if force is true and user is Super Admin
-        const shouldBypassBusinessRules = option.force === true && isSuperAdmin;
-        if (!shouldBypassBusinessRules) {
-            // Business Rule: If published and has active applications, block deletion
-            if (jobPosting.status === 'published') {
-                const hasActiveApplication = await this.repo.findWithActiveApplication(jobPostingUuid);
-                if (hasActiveApplication && !option.preserveApplications) {
-                    throw createError(
-                        ErrorType.RESOURCE_CONFLICT,
-                        'Cannot delete job with active applications.'
-                    );
-                }
-            }
+    /**
+     * Check if user is Super Admin
+     */
+    private isSuperAdmin(user: UserData): boolean {
+        return user.role?.name === 'Super Admin';
+    }
 
-            // Business Rule: If closed and closed_at < 7 days ago, block deletion
-            if (jobPosting.status === 'closed' && jobPosting.closed_at) {
-                const closedAt = new Date(jobPosting.closed_at);
-                const now = new Date();
-                const diffDays = (now.getTime() - closedAt.getTime()) / (1000 * 60 * 60 * 24);
-                if (diffDays < 7) {
-                    throw createError(
-                        ErrorType.RESOURCE_CONFLICT,
-                        'Cannot delete job within 7 days of being closed.'
-                    );
-                }
-            }
+    /**
+     * Validate business rules for job deletion
+     */
+    private async validateBusinessRules(jobPosting: any, jobPostingUuid: string, option: DeleteJobOptions): Promise<void> {
+        await this.validatePublishedJobWithApplications(jobPosting, jobPostingUuid, option);
+        this.validateClosedJobGracePeriod(jobPosting);
+    }
+
+    /**
+     * Validate published job with active applications
+     */
+    private async validatePublishedJobWithApplications(jobPosting: any, jobPostingUuid: string, option: DeleteJobOptions): Promise<void> {
+        if (jobPosting.status !== 'published') {
+            return;
         }
 
-        // Perform soft delete
-        await this.repo.softDelete(jobPostingUuid);
+        const hasActiveApplication = await this.repo.findWithActiveApplication(jobPostingUuid);
+        if (hasActiveApplication && !option.preserveApplications) {
+            throw createError(
+                ErrorType.RESOURCE_CONFLICT,
+                'Cannot delete job with active applications.'
+            );
+        }
+    }
+
+    /**
+     * Validate closed job grace period (7 days)
+     */
+    private validateClosedJobGracePeriod(jobPosting: any): void {
+        if (jobPosting.status !== 'closed' || !jobPosting.closed_at) {
+            return;
+        }
+
+        const closedAt = new Date(jobPosting.closed_at);
+        const now = new Date();
+        const diffDays = (now.getTime() - closedAt.getTime()) / (1000 * 60 * 60 * 24);
         
-        // Get updated job data after deletion
+        if (diffDays < 7) {
+            throw createError(
+                ErrorType.RESOURCE_CONFLICT,
+                'Cannot delete job within 7 days of being closed.'
+            );
+        }
+    }
+
+    /**
+     * Prepare deletion response with detailed information
+     */
+    private async prepareDeletionResponse(
+        jobPostingUuid: string, 
+        user: UserData, 
+        originalJobPosting: any, 
+        option: DeleteJobOptions
+    ): Promise<DeleteJobResponse> {
         const deletedJob = await this.repo.findJobPostingByUuid(jobPostingUuid);
         if (!deletedJob) {
             throw createError(ErrorType.INTERNAL_SERVER_ERROR, 'Failed to retrieve deleted job data');
         }
 
-        // Calculate recovery deadline (30 days from deletion)
-        const recoveryDeadline = new Date(deletedJob.deleted_at!);
-        recoveryDeadline.setDate(recoveryDeadline.getDate() + 30);
+        const recoveryDeadline = this.calculateRecoveryDeadline(deletedJob.deleted_at!);
 
-        // Prepare response data
-        const response: DeleteJobResponse = {
+        return {
             deleted_job: {
                 uuid: deletedJob.uuid,
                 title: deletedJob.title,
@@ -108,17 +154,24 @@ export class JobDeletionService {
                 deleted_by: user.id,
             },
             related_data: {
-                applications_preserved: option.preserveApplications ? jobPosting.applications_count || 0 : 0,
-                notes_preserved: 0, // TODO: Implement when notes feature is available
-                views_count_archived: jobPosting.views_count || 0,
+                applications_preserved: option.preserveApplications ? originalJobPosting.applications_count || 0 : 0,
+                notes_preserved: 0,
+                views_count_archived: originalJobPosting.views_count || 0,
             },
             recovery_info: {
                 recovery_possible: true,
                 recovery_deadline: recoveryDeadline,
             },
         };
+    }
 
-        return response;
+    /**
+     * Calculate recovery deadline (30 days from deletion)
+     */
+    private calculateRecoveryDeadline(deletedAt: Date): Date {
+        const recoveryDeadline = new Date(deletedAt);
+        recoveryDeadline.setDate(recoveryDeadline.getDate() + 30);
+        return recoveryDeadline;
     }
 
     /**
