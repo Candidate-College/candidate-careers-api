@@ -159,3 +159,10 @@
 {"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-26T11:03:47.973Z","userId":10}
 {"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-26T11:03:47.983Z","userId":10}
 {"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-26T11:03:47.986Z","userId":10}
+{"filters":{},"level":"info","message":"Activity statistics generated","timestamp":"2025-07-26T11:23:56.799Z"}
+{"error":"DB failure","level":"error","message":"Failed to generate activity statistics","timestamp":"2025-07-26T11:23:56.858Z"}
+{"level":"warn","message":"authorize: unauthenticated access","permission":"posts.read","timestamp":"2025-07-26T11:23:57.591Z"}
+{"level":"info","message":"authorize: forbidden","permission":"posts.update","timestamp":"2025-07-26T11:23:57.627Z","userId":1}
+{"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-26T11:23:58.953Z","userId":10}
+{"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-26T11:23:58.973Z","userId":10}
+{"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-26T11:23:58.977Z","userId":10}
