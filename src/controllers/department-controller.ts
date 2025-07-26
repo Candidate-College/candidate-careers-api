@@ -150,7 +150,7 @@ export class DepartmentController {
       const department = await DepartmentService.deleteDepartment(Number(req.params.id), user);
       return res.status(200).json({
         status: 200,
-        message: 'Department soft deleted successfully',
+        message: 'Department deleted successfully',
         data: toDepartmentResource(department),
       });
     } catch (err: any) {

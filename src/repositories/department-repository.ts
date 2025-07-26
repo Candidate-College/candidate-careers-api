@@ -7,8 +7,8 @@ export interface ListDepartmentsFilters {
   limit?: number;
   search?: string;
   status?: 'active' | 'inactive';
-  sort_by?: 'name' | 'created_at';
-  sort_order?: 'asc' | 'desc';
+  sort?: 'name' | 'created_at';
+  order?: 'asc' | 'desc';
 }
 
 export class DepartmentRepository {
@@ -48,8 +48,8 @@ export class DepartmentRepository {
     }
 
     // Sorting
-    const sortBy = filters.sort_by ?? 'created_at';
-    const sortOrder = filters.sort_order ?? 'desc';
+    const sortBy = filters.sort ?? 'created_at';
+    const sortOrder = filters.order ?? 'desc';
     qb = qb.orderBy(`departments.${sortBy}`, sortOrder);
 
     // Pagination
@@ -76,7 +76,7 @@ export class DepartmentRepository {
     return Department.query().patchAndFetchById(id, { deleted_at: new Date() });
   }
 
-  /** Cek nama unik (case-insensitive) */
+  /** Check unique name (case-insensitive) */
   static async existsByName(name: string, excludeId?: number): Promise<boolean> {
     let qb = Department.query()
       .whereRaw('LOWER(name) = ?', [name.toLowerCase()])
@@ -86,7 +86,7 @@ export class DepartmentRepository {
     return !!dept;
   }
 
-  /** Cek constraint: apakah ada job posting aktif (published) yang pakai department ini */
+  /** Check constraint: whether there are active (published) job postings using this department */
   static async hasActiveJobPostings(departmentId: number): Promise<boolean> {
     const { JobPostings } = await import('@/models/job-posting-model');
     const count = await JobPostings.query()

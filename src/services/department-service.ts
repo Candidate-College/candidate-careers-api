@@ -10,8 +10,8 @@ export class DepartmentService {
       limit: query.limit ? Number(query.limit) : undefined,
       search: query.search as string | undefined,
       status: query.status as 'active' | 'inactive' | undefined,
-      sort_by: query.sort_by as 'name' | 'created_at' | undefined,
-      sort_order: query.sort_order as 'asc' | 'desc' | undefined,
+      sort: query.sort_by as 'name' | 'created_at' | undefined,
+      order: query.sort_order as 'asc' | 'desc' | undefined,
     };
     return DepartmentRepository.list(filters);
   }
@@ -36,7 +36,7 @@ export class DepartmentService {
     payload: Partial<DepartmentData>,
     createdBy: UserData,
   ) {
-    // Validasi nama unik (case-insensitive)
+    // Validate unique name (case-insensitive)
     const exists = await DepartmentRepository.existsByName(payload.name!);
     if (exists) {
       throw new Error('Department name must be unique');
@@ -57,7 +57,7 @@ export class DepartmentService {
     payload: Partial<DepartmentData>,
     updatedBy: UserData,
   ) {
-    // Validasi nama unik (case-insensitive)
+    // Validate unique name (case-insensitive)
     if (payload.name) {
       const exists = await DepartmentRepository.existsByName(payload.name, id);
       if (exists) {
@@ -74,7 +74,7 @@ export class DepartmentService {
 
   /** Delete department (with constraint) */
   static async deleteDepartment(id: number, deletedBy: UserData) {
-    // Cek constraint: tidak boleh hapus jika ada job posting aktif
+    // Check constraint: cannot delete if there are active job postings
     const hasActive = await DepartmentRepository.hasActiveJobPostings(id);
     if (hasActive) {
       throw new Error('Department cannot be deleted because it has active job postings');
