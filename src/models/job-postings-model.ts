@@ -1,6 +1,7 @@
 const Model = require('@/config/database/orm');
 import { Department } from './department-model';
 import { JobCategory } from './job-category-model';
+import { Applications } from './applications-model';
 import { User } from './user-model';
 
 /**
@@ -75,6 +76,14 @@ export class JobPostings extends Model {
       join: {
         from: 'job_postings.created_by',
         to: 'users.id',
+      },
+    },
+    applications: {
+      relation: Model.HasManyRelation,
+      modelClass: Applications,
+      join: {
+        from: 'job_postings.id',
+        to: 'job_applications.job_posting_id',
       },
     },
   } as const;

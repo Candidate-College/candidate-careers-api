@@ -48,7 +48,9 @@ export class JobPostingRepository implements IJobPostingRepository {
    * @returns number of rows updated
    */
   async softDelete(jobPostingUuid: string, trx?: Transaction): Promise<number> {
-    const result = await JobPostings.query(trx).findOne({ uuid: jobPostingUuid }).delete();
+    const result = await JobPostings.query(trx)
+      .findOne({ uuid: jobPostingUuid })
+      .patch({ deleted_at: new Date() });
     return result;
   }
 

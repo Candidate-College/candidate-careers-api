@@ -7,6 +7,31 @@ export interface DeleteJobOptions {
     preserveApplications?: boolean;
 }
 
+export interface DeletedJobData {
+    uuid: string;
+    title: string;
+    status: string;
+    deleted_at: Date;
+    deleted_by: number;
+}
+
+export interface RelatedData {
+    applications_preserved: number;
+    notes_preserved: number;
+    views_count_archived: number;
+}
+
+export interface RecoveryInfo {
+    recovery_possible: boolean;
+    recovery_deadline: Date;
+}
+
+export interface DeleteJobResponse {
+    deleted_job: DeletedJobData;
+    related_data: RelatedData;
+    recovery_info: RecoveryInfo;
+}
+
 export class JobDeletionService {
     constructor(private readonly repo: JobPostingRepository) {}
 
@@ -15,8 +40,9 @@ export class JobDeletionService {
      * @param jobPostingUuid - Job posting UUID
      * @param user - UserData performing the action
      * @param option - DeleteJobOptions (force, preserveApplications)
+     * @returns DeleteJobResponse with detailed information about the deletion
      */
-    async deleteJobPosting(jobPostingUuid: string, user: UserData, option: DeleteJobOptions = {}): Promise<void> {
+    async deleteJobPosting(jobPostingUuid: string, user: UserData, option: DeleteJobOptions = {}): Promise<DeleteJobResponse> {
         const jobPosting = await this.repo.findJobPostingByUuid(jobPostingUuid);
         if (!jobPosting || jobPosting.deleted_at) {
             throw createNotFoundError('JobPosting', jobPostingUuid);
@@ -59,7 +85,40 @@ export class JobDeletionService {
             }
         }
 
+        // Perform soft delete
         await this.repo.softDelete(jobPostingUuid);
+        
+        // Get updated job data after deletion
+        const deletedJob = await this.repo.findJobPostingByUuid(jobPostingUuid);
+        if (!deletedJob) {
+            throw createError(ErrorType.INTERNAL_SERVER_ERROR, 'Failed to retrieve deleted job data');
+        }
+
+        // Calculate recovery deadline (30 days from deletion)
+        const recoveryDeadline = new Date(deletedJob.deleted_at!);
+        recoveryDeadline.setDate(recoveryDeadline.getDate() + 30);
+
+        // Prepare response data
+        const response: DeleteJobResponse = {
+            deleted_job: {
+                uuid: deletedJob.uuid,
+                title: deletedJob.title,
+                status: 'deleted',
+                deleted_at: deletedJob.deleted_at!,
+                deleted_by: user.id,
+            },
+            related_data: {
+                applications_preserved: option.preserveApplications ? jobPosting.applications_count || 0 : 0,
+                notes_preserved: 0, // TODO: Implement when notes feature is available
+                views_count_archived: jobPosting.views_count || 0,
+            },
+            recovery_info: {
+                recovery_possible: true,
+                recovery_deadline: recoveryDeadline,
+            },
+        };
+
+        return response;
     }
 
     /**

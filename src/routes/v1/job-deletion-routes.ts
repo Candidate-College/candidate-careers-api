@@ -1,6 +1,5 @@
-import { Router } from 'express';
-import { JobDeletionController } from '@/controllers/job-deletion-controller';
-/* import { authorize } from '@/middlewares/authorization/authorize'; */
+const { Router } = require('express');
+const JobDeletionController = require('@controllers/job-deletion-controller');
 const { authorize } = require('@/middlewares/authorization/authorize');
 const { accessToken } = require('@/middlewares/auth-middleware');
 
