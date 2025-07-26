@@ -8,43 +8,67 @@ import { body, param, query } from 'express-validator';
  * @module src/validators/job-category-validator
  */
 
-export const createJobCategoryValidator = [
-  body('name')
+/**
+ * Helper function to create name validation rule
+ * @param isRequired - Whether the name field is required
+ * @returns Validation rule for name field
+ */
+const createNameValidation = (isRequired: boolean = true) => {
+  const validation = body('name')
     .isString().withMessage('Name must be a string')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ min: 3, max: 255 }).withMessage('Name must be 3-255 characters'),
-  body('description')
+    .isLength({ min: 3, max: 255 }).withMessage('Name must be 3-255 characters');
+  
+  if (isRequired) {
+    return validation.notEmpty().withMessage('Name is required');
+  }
+  return validation.optional().notEmpty().withMessage('Name is required');
+};
+
+/**
+ * Helper function to create description validation rule
+ * @returns Validation rule for description field
+ */
+const createDescriptionValidation = () => {
+  return body('description')
     .optional()
     .isString().withMessage('Description must be a string')
-    .isLength({ max: 1000 }).withMessage('Description max 1000 characters'),
-  body('status')
+    .isLength({ max: 1000 }).withMessage('Description max 1000 characters');
+};
+
+/**
+ * Helper function to create status validation rule
+ * @returns Validation rule for status field
+ */
+const createStatusValidation = () => {
+  return body('status')
     .optional()
-    .isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
-  body('color_code')
+    .isIn(['active', 'inactive']).withMessage('Status must be active or inactive');
+};
+
+/**
+ * Helper function to create color code validation rule
+ * @returns Validation rule for color_code field
+ */
+const createColorCodeValidation = () => {
+  return body('color_code')
     .optional()
     .matches(/^#([A-Fa-f0-9]{6})$/)
-    .withMessage('Color code must be a valid hex color (e.g., #007bff)'),
+    .withMessage('Color code must be a valid hex color (e.g., #007bff)');
+};
+
+export const createJobCategoryValidator = [
+  createNameValidation(true),
+  createDescriptionValidation(),
+  createStatusValidation(),
+  createColorCodeValidation(),
 ];
 
 export const updateJobCategoryValidator = [
-  body('name')
-    .optional()
-    .isString().withMessage('Name must be a string')
-    .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ min: 3, max: 255 }).withMessage('Name must be 3-255 characters'),
-  body('description')
-    .optional()
-    .isString().withMessage('Description must be a string')
-    .isLength({ max: 1000 }).withMessage('Description max 1000 characters'),
-  body('status')
-    .optional()
-    .isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
-  body('color_code')
-    .optional()
-    .matches(/^#([A-Fa-f0-9]{6})$/)
-    .withMessage('Color code must be a valid hex color (e.g., #007bff)'),
+  createNameValidation(false),
+  createDescriptionValidation(),
+  createStatusValidation(),
+  createColorCodeValidation(),
 ];
 
 export const jobCategoryIdParamValidator = [
