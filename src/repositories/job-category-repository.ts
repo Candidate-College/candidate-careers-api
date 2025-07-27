@@ -1,6 +1,7 @@
 import { JobCategory, JobCategoryData } from '@/models/job-category-model';
 import { QueryBuilder } from 'objection';
 import { paginate, PaginatedResult } from '@/utilities/pagination';
+import { Job } from '@/models/job-model';
 
 export interface ListJobCategoriesFilters {
   page?: number;
@@ -93,8 +94,7 @@ export class JobCategoryRepository {
 
   /** Check constraint: whether there are active job postings (published) using this job category */
   static async hasActiveJobPostings(jobCategoryId: number): Promise<boolean> {
-    const { JobPostings } = await import('@/models/job-posting-model');
-    const count = await JobPostings.query()
+    const count = await Job.query()
       .where('job_category_id', jobCategoryId)
       .where('status', 'published')
       .whereNull('deleted_at')

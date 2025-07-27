@@ -1,10 +1,11 @@
 import { User, UserData } from './user-model';
+import { Job } from './job-model';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Model = require('@/config/database/orm');
 
 /**
  * JobCategoryData
- * Interface untuk representasi data job category.
+ * Interface for job category data representation.
  */
 export interface JobCategoryData {
   id: number;
@@ -17,11 +18,12 @@ export interface JobCategoryData {
   updated_at: Date;
   deleted_at?: Date | null;
   creator?: Partial<UserData>;
+  job_postings_count?: number | Array<{ count: number }>;
 }
 
 /**
  * JobCategory
- * Model Objection.js untuk tabel job_categories.
+ * Objection.js model for job_categories table.
  */
 export class JobCategory extends Model {
   static readonly softDelete = true;
@@ -38,7 +40,7 @@ export class JobCategory extends Model {
     },
     jobPostings: {
       relation: Model.HasManyRelation,
-      modelClass: require('./job-posting-model'),
+      modelClass: Job,
       join: {
         from: 'job_categories.id',
         to: 'job_postings.job_category_id',

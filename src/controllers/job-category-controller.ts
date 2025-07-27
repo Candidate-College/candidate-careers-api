@@ -19,7 +19,7 @@ export class JobCategoryController {
   }
 
   /** Helper: Handle error mapping */
-  private static handleError(err: any, res: Response, next: NextFunction) {
+  private static handleError(err: Error, res: Response, next: NextFunction) {
     if (err.message?.includes('unique')) {
       return res.status(409).json({ status: 409, message: err.message });
     }

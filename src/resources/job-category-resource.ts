@@ -1,3 +1,6 @@
+import { JobCategoryData } from '@/models/job-category-model';
+import { PaginatedResult } from '@/utilities/pagination';
+
 export interface JobCategoryResource {
   id: number;
   name: string;
@@ -22,14 +25,22 @@ export interface JobCategoryListResource {
   };
 }
 
-// Fungsi mapping dari JobCategoryData (atau hasil query) ke resource
-export function toJobCategoryResource(cat: any): JobCategoryResource {
+/**
+ * Mapping function from JobCategoryData (or query result) to resource
+ * @param cat - Job category data from database
+ * @returns Formatted job category resource
+ */
+export function toJobCategoryResource(cat: JobCategoryData): JobCategoryResource {
   let jobPostingsCount = 0;
-  if (Array.isArray(cat.job_postings_count)) {
-    jobPostingsCount = Number(cat.job_postings_count[0]?.count || 0);
-  } else if (typeof cat.job_postings_count === 'number') {
-    jobPostingsCount = cat.job_postings_count;
+  
+  if (cat.job_postings_count) {
+    if (Array.isArray(cat.job_postings_count)) {
+      jobPostingsCount = Number(cat.job_postings_count[0]?.count || 0);
+    } else if (typeof cat.job_postings_count === 'number') {
+      jobPostingsCount = cat.job_postings_count;
+    }
   }
+  
   return {
     id: cat.id,
     name: cat.name,
@@ -43,16 +54,21 @@ export function toJobCategoryResource(cat: any): JobCategoryResource {
   };
 }
 
-export function toJobCategoryListResource(paginated: any): JobCategoryListResource {
+/**
+ * Mapping function from paginated job category data to list resource
+ * @param paginated - Paginated result from repository
+ * @returns Formatted job category list resource
+ */
+export function toJobCategoryListResource(paginated: PaginatedResult<JobCategoryData>): JobCategoryListResource {
   return {
     job_categories: (paginated.data || []).map(toJobCategoryResource),
     pagination: {
-      current_page: paginated.currentPage || paginated.current_page || 1,
-      total_pages: paginated.totalPages || paginated.total_pages || 1,
-      total_items: paginated.totalItems || paginated.total_items || 0,
-      items_per_page: paginated.itemsPerPage || paginated.items_per_page || 10,
-      has_next: paginated.hasNext || paginated.has_next || false,
-      has_previous: paginated.hasPrevious || paginated.has_previous || false,
+      current_page: paginated.page,
+      total_pages: paginated.totalPages,
+      total_items: paginated.total,
+      items_per_page: paginated.pageSize,
+      has_next: paginated.page < paginated.totalPages,
+      has_previous: paginated.page > 1,
     },
   };
 } 
