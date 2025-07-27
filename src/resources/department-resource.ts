@@ -21,7 +21,7 @@ export interface DepartmentListResource {
   };
 }
 
-// Fungsi mapping dari DepartmentData (atau hasil query) ke resource
+// Mapping function from DepartmentData (or query result) to resource
 export function toDepartmentResource(dept: any): DepartmentResource {
   let jobPostingsCount = 0;
   if (Array.isArray(dept.job_postings_count)) {

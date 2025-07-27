@@ -10,8 +10,8 @@ export class DepartmentService {
       limit: query.limit ? Number(query.limit) : undefined,
       search: query.search as string | undefined,
       status: query.status as 'active' | 'inactive' | undefined,
-      sort: query.sort_by as 'name' | 'created_at' | undefined,
-      order: query.sort_order as 'asc' | 'desc' | undefined,
+      sort: query.sort as 'name' | 'created_at' | undefined,
+      order: query.order as 'asc' | 'desc' | undefined,
     };
     return DepartmentRepository.list(filters);
   }
