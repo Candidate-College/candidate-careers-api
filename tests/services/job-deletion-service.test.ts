@@ -44,10 +44,27 @@ const createMockJob = (overrides: Partial<any> = {}) => ({
   ...overrides,
 });
 
+/**
+ * Setup mock repository with proper handling of multiple findJobPostingByUuid calls
+ * @param job - The job object to return for findJobPostingByUuid calls
+ * @param hasActiveApplications - Whether the job has active applications
+ */
 const setupMockRepository = (job: any, hasActiveApplications = false) => {
-  mockRepo.findJobPostingByUuid.mockResolvedValueOnce(job);
+  // Clear previous mocks
+  jest.clearAllMocks();
+  
+  // Mock findJobPostingByUuid to return the job for all calls
+  // This handles both the initial call and the call in prepareDeletionResponse
+  mockRepo.findJobPostingByUuid.mockResolvedValue(job);
+  
+  // Mock findWithActiveApplication
   mockRepo.findWithActiveApplication.mockResolvedValue(hasActiveApplications);
-  mockRepo.softDelete.mockResolvedValueOnce(1);
+  
+  // Mock softDelete
+  mockRepo.softDelete.mockResolvedValue(1);
+  
+  // Mock restore (if needed)
+  mockRepo.restore.mockResolvedValue(1);
 };
 
 const verifyBasicDeletionFlow = (uuid: string, shouldCheckApplications = false) => {

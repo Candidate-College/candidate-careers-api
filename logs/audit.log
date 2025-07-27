@@ -166,3 +166,39 @@
 {"level":"info","message":"assignRole: success","roleId":5,"timestamp":"2025-07-26T11:23:58.953Z","userId":10}
 {"level":"info","message":"assignRole: duplicate ignored","roleId":5,"timestamp":"2025-07-26T11:23:58.973Z","userId":10}
 {"level":"info","message":"revokeRole","numDeleted":1,"roleId":5,"timestamp":"2025-07-26T11:23:58.977Z","userId":10}
+{"level":"info","message":"departments: Inserted 12 records (idempotent)","timestamp":"2025-07-27T09:19:58.531Z"}
+{"level":"info","message":"[Seeder] Seeded departments table","timestamp":"2025-07-27T09:19:58.534Z"}
+{"level":"info","message":"job_categories: Inserted 15 records (idempotent)","timestamp":"2025-07-27T09:19:58.540Z"}
+{"level":"info","message":"[Seeder] Seeded job_categories table","timestamp":"2025-07-27T09:19:58.541Z"}
+{"level":"info","message":"job_postings: Inserted 25 records (idempotent)","timestamp":"2025-07-27T09:19:58.576Z"}
+{"level":"info","message":"[Seeder] Seeded job_postings table","timestamp":"2025-07-27T09:19:58.578Z"}
+{"level":"info","message":"job_applications: Inserted 50 records (idempotent)","timestamp":"2025-07-27T09:19:58.653Z"}
+{"level":"info","message":"[Seeder] Seeded applications table","timestamp":"2025-07-27T09:19:58.653Z"}
+{"level":"info","message":"application_notes: Inserted 10 records (idempotent)","timestamp":"2025-07-27T09:19:58.689Z"}
+{"level":"info","message":"[Seeder] Seeded application_notes table","timestamp":"2025-07-27T09:19:58.690Z"}
+{"level":"info","message":"departments: Inserted 12 records (idempotent)","timestamp":"2025-07-27T09:20:04.673Z"}
+{"level":"info","message":"[Seeder] Seeded departments table","timestamp":"2025-07-27T09:20:04.674Z"}
+{"level":"info","message":"job_categories: Inserted 15 records (idempotent)","timestamp":"2025-07-27T09:20:04.686Z"}
+{"level":"info","message":"[Seeder] Seeded job_categories table","timestamp":"2025-07-27T09:20:04.687Z"}
+{"level":"info","message":"job_postings: Inserted 25 records (idempotent)","timestamp":"2025-07-27T09:20:04.712Z"}
+{"level":"info","message":"[Seeder] Seeded job_postings table","timestamp":"2025-07-27T09:20:04.712Z"}
+{"level":"info","message":"job_applications: Inserted 50 records (idempotent)","timestamp":"2025-07-27T09:20:04.798Z"}
+{"level":"info","message":"[Seeder] Seeded applications table","timestamp":"2025-07-27T09:20:04.798Z"}
+{"level":"info","message":"departments: Inserted 12 records (idempotent)","timestamp":"2025-07-27T09:39:26.739Z"}
+{"level":"info","message":"[Seeder] Seeded departments table","timestamp":"2025-07-27T09:39:26.743Z"}
+{"level":"info","message":"job_categories: Inserted 15 records (idempotent)","timestamp":"2025-07-27T09:39:26.749Z"}
+{"level":"info","message":"[Seeder] Seeded job_categories table","timestamp":"2025-07-27T09:39:26.750Z"}
+{"level":"info","message":"job_postings: Inserted 25 records (idempotent)","timestamp":"2025-07-27T09:39:26.768Z"}
+{"level":"info","message":"[Seeder] Seeded job_postings table","timestamp":"2025-07-27T09:39:26.769Z"}
+{"level":"info","message":"job_applications: Inserted 50 records (idempotent)","timestamp":"2025-07-27T09:39:26.835Z"}
+{"level":"info","message":"[Seeder] Seeded applications table","timestamp":"2025-07-27T09:39:26.836Z"}
+{"level":"info","message":"application_notes: Inserted 10 records (idempotent)","timestamp":"2025-07-27T09:39:26.847Z"}
+{"level":"info","message":"[Seeder] Seeded application_notes table","timestamp":"2025-07-27T09:39:26.848Z"}
+{"level":"info","message":"departments: Inserted 12 records (idempotent)","timestamp":"2025-07-27T09:39:32.048Z"}
+{"level":"info","message":"[Seeder] Seeded departments table","timestamp":"2025-07-27T09:39:32.050Z"}
+{"level":"info","message":"job_categories: Inserted 15 records (idempotent)","timestamp":"2025-07-27T09:39:32.063Z"}
+{"level":"info","message":"[Seeder] Seeded job_categories table","timestamp":"2025-07-27T09:39:32.064Z"}
+{"level":"info","message":"job_postings: Inserted 25 records (idempotent)","timestamp":"2025-07-27T09:39:32.086Z"}
+{"level":"info","message":"[Seeder] Seeded job_postings table","timestamp":"2025-07-27T09:39:32.088Z"}
+{"level":"info","message":"job_applications: Inserted 50 records (idempotent)","timestamp":"2025-07-27T09:39:32.205Z"}
+{"level":"info","message":"[Seeder] Seeded applications table","timestamp":"2025-07-27T09:39:32.241Z"}
