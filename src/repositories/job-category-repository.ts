@@ -7,12 +7,12 @@ export interface ListJobCategoriesFilters {
   limit?: number;
   search?: string;
   status?: 'active' | 'inactive';
-  sort_by?: 'name' | 'created_at';
-  sort_order?: 'asc' | 'desc';
+  sort?: 'name' | 'created_at';
+  order?: 'asc' | 'desc';
 }
 
 export class JobCategoryRepository {
-  /** Base query untuk job category, join creator dan count job postings */
+  /** Base query for job category, join creator and count job postings */
   private static baseQuery(): QueryBuilder<JobCategory, JobCategoryData[]> {
     return JobCategory.query()
       .select(
@@ -33,7 +33,7 @@ export class JobCategoryRepository {
       .withGraphFetched('creator');
   }
 
-  /** List job categories dengan filter, search, sort, dan pagination */
+  /** List job categories with filter, search, sort, and pagination */
   static async list(filters: ListJobCategoriesFilters): Promise<PaginatedResult<JobCategoryData>> {
     let qb = this.baseQuery();
 
@@ -53,8 +53,8 @@ export class JobCategoryRepository {
     }
 
     // Sorting
-    const sortBy = filters.sort_by ?? 'created_at';
-    const sortOrder = filters.sort_order ?? 'desc';
+    const sortBy = filters.sort ?? 'created_at';
+    const sortOrder = filters.order ?? 'desc';
     qb = qb.orderBy(`job_categories.${sortBy}`, sortOrder);
 
     // Pagination
@@ -81,7 +81,7 @@ export class JobCategoryRepository {
     return JobCategory.query().patchAndFetchById(id, { deleted_at: new Date() });
   }
 
-  /** Cek nama unik (case-insensitive) */
+  /** Check unique name (case-insensitive) */
   static async existsByName(name: string, excludeId?: number): Promise<boolean> {
     let qb = JobCategory.query()
       .whereRaw('LOWER(name) = ?', [name.toLowerCase()])
@@ -91,7 +91,7 @@ export class JobCategoryRepository {
     return !!cat;
   }
 
-  /** Cek constraint: apakah ada job posting aktif (published) yang pakai job category ini */
+  /** Check constraint: whether there are active job postings (published) using this job category */
   static async hasActiveJobPostings(jobCategoryId: number): Promise<boolean> {
     const { JobPostings } = await import('@/models/job-posting-model');
     const count = await JobPostings.query()

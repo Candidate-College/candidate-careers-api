@@ -10,8 +10,8 @@ export class JobCategoryService {
       limit: query.limit ? Number(query.limit) : undefined,
       search: query.search as string | undefined,
       status: query.status as 'active' | 'inactive' | undefined,
-      sort_by: query.sort_by as 'name' | 'created_at' | undefined,
-      sort_order: query.sort_order as 'asc' | 'desc' | undefined,
+      sort: query.sort as 'name' | 'created_at' | undefined,
+      order: query.order as 'asc' | 'desc' | undefined,
     };
     return JobCategoryRepository.list(filters);
   }
@@ -33,7 +33,7 @@ export class JobCategoryService {
 
   /** Create job category (only super_admin, head_of_hr) */
   static async createJobCategory(payload: Partial<JobCategoryData>, createdBy: UserData) {
-    // Validasi nama unik (case-insensitive)
+    // Validate unique name (case-insensitive)
     const exists = await JobCategoryRepository.existsByName(payload.name!);
     if (exists) {
       throw new Error('Job category name must be unique');
@@ -51,7 +51,7 @@ export class JobCategoryService {
 
   /** Update job category (only super_admin, head_of_hr) */
   static async updateJobCategory(id: number, payload: Partial<JobCategoryData>, updatedBy: UserData) {
-    // Validasi nama unik (case-insensitive)
+    // Validate unique name (case-insensitive)
     if (payload.name) {
       const exists = await JobCategoryRepository.existsByName(payload.name, id);
       if (exists) {
@@ -68,7 +68,7 @@ export class JobCategoryService {
 
   /** Delete job category (only super_admin, with constraint) */
   static async deleteJobCategory(id: number, deletedBy: UserData) {
-    // Cek constraint: tidak boleh hapus jika ada job posting aktif
+    // Check constraint: cannot delete if there are active job postings
     const hasActive = await JobCategoryRepository.hasActiveJobPostings(id);
     if (hasActive) {
       throw new Error('Job category cannot be deleted because it has active job postings');

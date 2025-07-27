@@ -129,7 +129,7 @@ export class JobCategoryController {
       const jobCategory = await JobCategoryService.deleteJobCategory(Number(req.params.id), user);
       return res.status(200).json({
         status: 200,
-        message: 'Job category soft deleted successfully',
+        message: 'Job category deleted successfully',
         data: toJobCategoryResource(jobCategory),
       });
     } catch (err: any) {

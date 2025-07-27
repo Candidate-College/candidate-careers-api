@@ -22,7 +22,7 @@ const createNameValidation = (isRequired: boolean = true) => {
   if (isRequired) {
     return validation.notEmpty().withMessage('Name is required');
   }
-  return validation.optional().notEmpty().withMessage('Name is required');
+  return validation.optional();
 };
 
 /**

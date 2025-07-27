@@ -33,4 +33,5 @@ export async function down(knex: Knex): Promise<void> {
   await knex.schema.raw('DROP INDEX IF EXISTS idx_job_categories_status');
   await knex.schema.raw('DROP INDEX IF EXISTS idx_job_categories_name');
   await knex.schema.raw('DROP INDEX IF EXISTS idx_job_categories_created_at');
+  await knex.schema.raw('DROP TYPE IF EXISTS job_category_status');
 }
