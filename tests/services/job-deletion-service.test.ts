@@ -1,5 +1,5 @@
-import { JobDeletionService } from '../../src/services/job-deletion-service';
-import { JobPostingRepository } from '../../src/repositories/job-deletion-repository';
+import { JobPostingService } from '../../src/services/job-posting-service';
+import { JobPostingRepository } from '../../src/repositories/job-posting-repository';
 
 // Complete mock users
 const mockAdminUser = {
@@ -28,7 +28,7 @@ const mockRepo = {
   restore: jest.fn(),
 };
 
-const service = new JobDeletionService(mockRepo as unknown as JobPostingRepository);
+const service = new JobPostingService(mockRepo as unknown as JobPostingRepository);
 
 // Helper functions to reduce duplication
 const createMockJob = (overrides: Partial<any> = {}) => ({

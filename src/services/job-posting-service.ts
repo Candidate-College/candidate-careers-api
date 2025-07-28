@@ -1,7 +1,6 @@
-import { JobPostingRepository } from "@/repositories/job-postings-repository";
+import { IJobPostingRepository } from "@/repositories/job-posting-repository";
 import { UserData } from "@/models/user-model";
 import { createNotFoundError, createError, ErrorType } from "@/utilities/error-handler";
-
 export interface DeleteJobOptions {
     force?: boolean;
     preserveApplications?: boolean;
@@ -32,8 +31,10 @@ export interface DeleteJobResponse {
     recovery_info: RecoveryInfo;
 }
 
-export class JobDeletionService {
-    constructor(private readonly repo: JobPostingRepository) {}
+export class JobPostingService {
+    constructor(private readonly repo: IJobPostingRepository) {}
+
+    
 
     /**
      * Delete a job posting with authorization and business rule checks

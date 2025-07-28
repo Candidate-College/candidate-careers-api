@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { JobDeletionService, DeleteJobResponse } from '@/services/job-deletion-service';
-import { JobPostingRepository } from '@/repositories/job-postings-repository';
+import { JobPostingService, DeleteJobResponse } from '@/services/job-posting-service';
+import { JobPostingRepository } from '@/repositories/job-posting-repository';
 import { sendErrorResponse } from '@/utilities/error-handler';
 import { UserData } from '@/models/user-model';
 import { JsonResponse } from '@/types/express-extension';
 
 const repo = new JobPostingRepository();
-const service = new JobDeletionService(repo);
+const service = new JobPostingService(repo);
 
-export class JobDeletionController {
+export class JobPostingController {
   /**
    * Delete a job posting (soft delete)
    * Route: DELETE /api/v1/jobs/:uuid
