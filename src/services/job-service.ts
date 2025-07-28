@@ -10,11 +10,11 @@
 
 import { Job } from '@/models/job-model';
 import { JobRepository } from '@/repositories/job-repository';
+import { AppError, createError, ErrorType, parseValidationError } from '@/utilities/error-handler';
 import { validateJobPosting } from '@/utilities/validate-job-posting';
 import jobValidator from '@/validators/job-posting-validator';
 import { randomUUID } from 'crypto';
 import { SlugGenerationService } from './slug-generation-service';
-import { AppError, createError, ErrorType, parseValidationError } from '@/utilities/error-handler';
 
 /**
  * Custom error for handling inactive or invalid departments.
@@ -137,5 +137,24 @@ export class JobService {
     };
 
     return await JobRepository.create(processedJobData);
+  }
+
+  static async getPublicJobBySlug(
+    slug: string,
+    options: { trackView?: boolean } = {},
+  ): Promise<Job> {
+    const { trackView = false } = options;
+    const job = await JobRepository.findPublicJobBySlug(slug);
+
+    if (!job) {
+      throw createError(ErrorType.RESOURCE_NOT_FOUND, 'Job Postings not found');
+    }
+
+    if (trackView) {
+      await JobRepository.incrementViewCount(job.id);
+      job.views_count += 1;
+    }
+
+    return job;
   }
 }

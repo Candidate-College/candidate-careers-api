@@ -1,6 +1,11 @@
 import { Job } from '@/models/job-model';
 import { JobRepository } from '@/repositories/job-repository';
-import { JobService } from '@/services/job-service';
+import {
+  DepartmentInactiveError,
+  JobCategoryInactiveError,
+  JobService,
+  SlugGenerationError,
+} from '@/services/job-service';
 import { SlugGenerationService } from '@/services/slug-generation-service';
 import { validateJobPosting } from '@/utilities/validate-job-posting';
 import jobValidator from '@/validators/job-posting-validator';
@@ -13,6 +18,8 @@ jest.mock('@/repositories/job-repository', () => ({
     isJobCategoryActive: jest.fn(),
     slugExists: jest.fn(),
     create: jest.fn(),
+    findPublicJobBySlug: jest.fn(),
+    incrementViewCount: jest.fn(),
   },
 }));
 jest.mock('@/services/slug-generation-service', () => ({
@@ -30,7 +37,7 @@ const mockedJobRepo = JobRepository as jest.Mocked<typeof JobRepository>;
 const mockedSlugSvc = SlugGenerationService as jest.Mocked<typeof SlugGenerationService>;
 const mockedValidate = validateJobPosting as jest.Mock;
 
-describe('JobService.createJobPosting', () => {
+describe('createJobPosting', () => {
   const NOW = new Date('2025-07-23T12:00:00.000Z');
   const CREATED_BY = 42;
   const UUID = 'uuid-1234';
@@ -145,7 +152,7 @@ describe('JobService.createJobPosting', () => {
       await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
       fail('Expected DepartmentInactiveError not thrown');
     } catch (err: any) {
-      expect(err).toBeInstanceOf(JobService.DepartmentInactiveError);
+      expect(err).toBeInstanceOf(DepartmentInactiveError);
       expect(err.appError).toMatchObject({
         type: 'VALIDATION_FAILED',
         message: 'Validation failed',
@@ -163,7 +170,7 @@ describe('JobService.createJobPosting', () => {
       await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
       fail('Expected JobCategoryInactiveError not thrown');
     } catch (err: any) {
-      expect(err).toBeInstanceOf(JobService.JobCategoryInactiveError);
+      expect(err).toBeInstanceOf(JobCategoryInactiveError);
       expect(err.appError).toMatchObject({
         type: 'VALIDATION_FAILED',
         message: 'Validation failed',
@@ -185,7 +192,7 @@ describe('JobService.createJobPosting', () => {
       await JobService.createJobPosting(BASE_INPUT, CREATED_BY);
       fail('Expected SlugGenerationError not thrown');
     } catch (err: any) {
-      expect(err).toBeInstanceOf(JobService.SlugGenerationError);
+      expect(err).toBeInstanceOf(SlugGenerationError);
       expect(err.appError).toMatchObject({
         type: 'VALIDATION_FAILED',
         message: 'Slug Generation Failed',
@@ -223,6 +230,95 @@ describe('JobService.createJobPosting', () => {
         message: 'Input validation failed',
         details: errors,
         statusCode: 422,
+      });
+    }
+  });
+});
+
+describe('getPublicJobBySlug', () => {
+  it('should return the job postings data if slug is valid', async () => {
+    const mockJobData = {
+      id: 123,
+      title: 'Frontend Developer',
+      slug: 'exists-slug',
+      description: 'Develop UI components',
+    };
+
+    mockedJobRepo.findPublicJobBySlug.mockResolvedValue(mockJobData);
+
+    const result = await JobService.getPublicJobBySlug('exists-slug');
+
+    expect(result).toEqual(mockJobData);
+  });
+
+  it('should return job postings if track_view is false and not adding views_count by 1', async () => {
+    const mockJobData = {
+      id: 123,
+      title: 'Frontend Developer',
+      slug: 'exists-slug',
+      description: 'Develop UI components',
+      views_count: 100,
+    };
+
+    mockedJobRepo.findPublicJobBySlug.mockResolvedValue(mockJobData as Job);
+    const result = await JobService.getPublicJobBySlug('engineer-role');
+
+    expect(result).toEqual(mockJobData);
+    expect(result.views_count).toBe(100);
+    expect(mockedJobRepo.incrementViewCount).not.toHaveBeenCalled();
+  });
+
+  it('should return job postings if track_view query is not included and not adding views_count by 1', async () => {
+    const mockJobData = {
+      id: 123,
+      title: 'Frontend Developer',
+      slug: 'exists-slug',
+      description: 'Develop UI components',
+      views_count: 100,
+    };
+
+    mockedJobRepo.findPublicJobBySlug.mockResolvedValue(mockJobData as Job);
+    const result = await JobService.getPublicJobBySlug('engineer-role');
+
+    expect(result).toEqual(mockJobData);
+    expect(result.views_count).toBe(100);
+    expect(mockedJobRepo.incrementViewCount).not.toHaveBeenCalled();
+  });
+
+  it('not adding views_count by 1 if track_view is false', async () => {
+    const mockJobData = { id: 1, views_count: 100 };
+
+    mockedJobRepo.findPublicJobBySlug.mockResolvedValue(mockJobData as Job);
+
+    const result = await JobService.getPublicJobBySlug('engineer-role');
+
+    expect(result.views_count).toBe(100);
+    expect(mockedJobRepo.incrementViewCount).not.toHaveBeenCalled();
+  });
+
+  it('add views_count by 1 if track_view is true', async () => {
+    const mockJobData = { id: 1, views_count: 100 };
+
+    mockedJobRepo.findPublicJobBySlug.mockResolvedValue(mockJobData as Job);
+
+    const result = await JobService.getPublicJobBySlug('engineer-role', { trackView: true });
+
+    expect(result.views_count).toBe(101);
+    expect(mockedJobRepo.incrementViewCount).toHaveBeenCalledWith(1);
+  });
+
+  it('should return 404 status and error message if job not found by slug', async () => {
+    mockedJobRepo.findPublicJobBySlug.mockResolvedValue(null); // simulate "not found"
+
+    try {
+      await JobService.getPublicJobBySlug('non-exist-slug');
+    } catch (err: any) {
+      expect(err).toHaveProperty('statusCode', 404);
+      expect(err).toMatchObject({
+        statusCode: 404,
+        message: 'Job Postings not found',
+        category: 'NOT_FOUND',
+        type: 'RESOURCE_NOT_FOUND',
       });
     }
   });

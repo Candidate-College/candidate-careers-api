@@ -7,15 +7,17 @@
  * @module src/routes/v1/job-routes
  */
 
+import { accessToken } from '@/middlewares/auth-middleware';
+
 const router = require('express').Router();
 
 const { JobController } = require('@/controllers/job-controller');
 const { authorize } = require('@/middlewares/authorization/authorize');
-const { accessToken } = require('@/middlewares/auth-middleware');
 
-// Require authentication for all job routes
-router.use(accessToken);
-// Require jobs.manage permission to create a job posting
-router.post('/', authorize('jobs.create'), JobController.createJobPosting);
+// Require jobs.create permission to create a job posting
+router.post('/', accessToken, authorize('jobs.create'), JobController.createJobPosting);
+
+// Require jobs.view permission to get job posting by slug
+router.get('/:slug', JobController.getPublicJobBySlug);
 
 module.exports = router;

@@ -7,11 +7,11 @@
  *
  * @module repositories/job-repository
  */
-import { Job } from '@/models/job-model';
-import { JobCategory } from '@/models/job-category-model';
 import { Department } from '@/models/department-model';
+import { JobCategory } from '@/models/job-category-model';
+import { Job } from '@/models/job-model';
 import { JobStatusTransition } from '@/models/job-status-transition-model';
-import { Transaction } from 'objection';
+import { QueryBuilder, Transaction } from 'objection';
 
 export class JobRepository {
   /**
@@ -146,14 +146,31 @@ export class JobRepository {
   }
 
   /**
-   * Retrieves all status transitions for a specific job posting.
+   * Retrieves a publicly accessible job posting by its slug.
+   * Only returns jobs with a 'published' status and selects public-safe fields.
    *
-   * @param {number} jobId - ID of the job posting.
-   * @returns {Promise<JobStatusTransition[]>} Array of job status transitions sorted chronologically.
+   * @param {string} slug - The slug of the job posting.
+   * @returns {Promise<Job | undefined>} The found job record, or undefined if not found/published.
    */
-  static async findTransitionsByJobId(jobId: number): Promise<JobStatusTransition[]> {
-    return await JobStatusTransition.query()
-      .where('job_posting_id', jobId)
-      .orderBy('created_at', 'asc');
+  static async findPublicJobBySlug(slug: string): Promise<Job | undefined> {
+    return await Job.query()
+      .findOne({ slug: slug, status: 'published' })
+      .withGraphFetched('[departments, job_categories]')
+      .modifyGraph('departments', (builder: QueryBuilder<Department>) => {
+        builder.select('name', 'description');
+      })
+      .modifyGraph('job_categories', (builder: QueryBuilder<JobCategory>) => {
+        builder.select('name');
+      });
+  }
+
+  /**
+   * Atomically increments the view count for a specific job posting.
+   *
+   * @param {number} jobId - The internal ID of the job posting.
+   * @returns {Promise<number>} The number of updated rows (should be 1).
+   */
+  static async incrementViewCount(jobId: number): Promise<number> {
+    return await Job.query().findById(jobId).increment('views_count', 1);
   }
 }

@@ -10,7 +10,12 @@
 import { JobResource } from '@/resources/job-posting-resource';
 import { JobService } from '@/services/job-service';
 import { AuthenticatedRequest, JsonResponse } from '@/types/express-extension';
-import { createInternalError, sendErrorResponse } from '@/utilities/error-handler';
+import {
+  createError,
+  createInternalError,
+  ErrorType,
+  sendErrorResponse,
+} from '@/utilities/error-handler';
 
 /**
  * Controller for managing job-related routes and logic.
@@ -77,6 +82,39 @@ export class JobController {
 
       // Fallback to internal server error
       return sendErrorResponse(res, createInternalError(err));
+    }
+  }
+
+  /**
+   * Handles the retrieval of a public job posting by its slug.
+   *
+   * @param {Request} req - The Express request object.
+   * @param {JsonResponse} res - The Express response object.
+   * @returns {Promise<void>}
+   */
+  static async getPublicJobBySlug(req: any, res: JsonResponse) {
+    try {
+      const { slug } = req.params;
+      const trackView = req.query.track_view === 'true';
+
+      const job = await JobService.getPublicJobBySlug(slug, { trackView });
+
+      console.log('JobControl: ', job);
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Job posting retrieved successfully',
+        data: JobResource.getPublicJobBySlugResponse(job),
+      });
+    } catch (err: any) {
+      if (err.appError) {
+        return sendErrorResponse(res, err.appError);
+      }
+
+      return sendErrorResponse(
+        res,
+        createError(ErrorType[err.type as keyof typeof ErrorType], err.message),
+      );
     }
   }
 }
