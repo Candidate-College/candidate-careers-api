@@ -8,35 +8,54 @@ import { body, param, query } from 'express-validator';
  * @module src/validators/department-validator
  */
 
-export const createDepartmentValidator = [
-  body('name')
+/**
+ * Helper function to create name validation rule
+ * @param isRequired - Whether the name field is required
+ * @returns Validation rule for name field
+ */
+const createNameValidation = (isRequired: boolean = true) => {
+  const validation = body('name')
     .isString().withMessage('Name must be a string')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ min: 3, max: 255 }).withMessage('Name must be 3-255 characters'),
-  body('description')
+    .isLength({ min: 3, max: 255 }).withMessage('Name must be 3-255 characters');
+  
+  if (isRequired) {
+    return validation.notEmpty().withMessage('Name is required');
+  }
+  return validation.optional();
+};
+
+/**
+ * Helper function to create description validation rule
+ * @returns Validation rule for description field
+ */
+const createDescriptionValidation = () => {
+  return body('description')
     .optional()
     .isString().withMessage('Description must be a string')
-    .isLength({ max: 1000 }).withMessage('Description max 1000 characters'),
-  body('status')
+    .isLength({ max: 1000 }).withMessage('Description max 1000 characters');
+};
+
+/**
+ * Helper function to create status validation rule
+ * @returns Validation rule for status field
+ */
+const createStatusValidation = () => {
+  return body('status')
     .optional()
-    .isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
+    .isIn(['active', 'inactive']).withMessage('Status must be active or inactive');
+};
+
+export const createDepartmentValidator = [
+  createNameValidation(true),
+  createDescriptionValidation(),
+  createStatusValidation(),
 ];
 
 export const updateDepartmentValidator = [
-  body('name')
-    .optional()
-    .isString().withMessage('Name must be a string')
-    .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ min: 3, max: 255 }).withMessage('Name must be 3-255 characters'),
-  body('description')
-    .optional()
-    .isString().withMessage('Description must be a string')
-    .isLength({ max: 1000 }).withMessage('Description max 1000 characters'),
-  body('status')
-    .optional()
-    .isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
+  createNameValidation(false),
+  createDescriptionValidation(),
+  createStatusValidation(),
 ];
 
 export const departmentIdParamValidator = [

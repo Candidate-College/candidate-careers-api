@@ -1,6 +1,7 @@
 import { Department, DepartmentData } from '@/models/department-model';
 import { QueryBuilder } from 'objection';
 import { paginate, PaginatedResult } from '@/utilities/pagination';
+import { Job } from '@/models/job-model';
 
 export interface ListDepartmentsFilters {
   page?: number;
@@ -88,8 +89,7 @@ export class DepartmentRepository {
 
   /** Check constraint: whether there are active (published) job postings using this department */
   static async hasActiveJobPostings(departmentId: number): Promise<boolean> {
-    const { JobPostings } = await import('@/models/job-posting-model');
-    const count = await JobPostings.query()
+    const count = await Job.query()
       .where('department_id', departmentId)
       .where('status', 'published')
       .whereNull('deleted_at')

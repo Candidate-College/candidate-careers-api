@@ -1,3 +1,6 @@
+import { DepartmentData } from '@/models/department-model';
+import { PaginatedResult } from '@/utilities/pagination';
+
 export interface DepartmentResource {
   id: number;
   name: string;
@@ -21,36 +24,49 @@ export interface DepartmentListResource {
   };
 }
 
-// Mapping function from DepartmentData (or query result) to resource
-export function toDepartmentResource(dept: any): DepartmentResource {
+/**
+ * Mapping function from DepartmentData (or query result) to resource
+ * @param dept - Department data from database
+ * @returns Formatted department resource
+ */
+export function toDepartmentResource(dept: DepartmentData): DepartmentResource {
   let jobPostingsCount = 0;
-  if (Array.isArray(dept.job_postings_count)) {
-    jobPostingsCount = Number(dept.job_postings_count[0]?.count || 0);
-  } else if (typeof dept.job_postings_count === 'number') {
-    jobPostingsCount = dept.job_postings_count;
+  
+  if (dept.job_postings_count) {
+    if (Array.isArray(dept.job_postings_count)) {
+      jobPostingsCount = Number(dept.job_postings_count[0]?.count || 0);
+    } else if (typeof dept.job_postings_count === 'number') {
+      jobPostingsCount = dept.job_postings_count;
+    }
   }
+  
   return {
     id: dept.id,
     name: dept.name,
     description: dept.description,
     status: dept.status,
     job_postings_count: jobPostingsCount,
-    created_by: dept.created_by,
+    created_by: dept.created_by || 0,
     created_at: dept.created_at instanceof Date ? dept.created_at.toISOString() : String(dept.created_at),
     updated_at: dept.updated_at instanceof Date ? dept.updated_at.toISOString() : String(dept.updated_at),
   };
 }
 
-export function toDepartmentListResource(paginated: any): DepartmentListResource {
+/**
+ * Mapping function from paginated department data to list resource
+ * @param paginated - Paginated result from repository
+ * @returns Formatted department list resource
+ */
+export function toDepartmentListResource(paginated: PaginatedResult<DepartmentData>): DepartmentListResource {
   return {
     departments: (paginated.data || []).map(toDepartmentResource),
     pagination: {
-      current_page: paginated.currentPage || paginated.current_page || 1,
-      total_pages: paginated.totalPages || paginated.total_pages || 1,
-      total_items: paginated.totalItems || paginated.total_items || 0,
-      items_per_page: paginated.itemsPerPage || paginated.items_per_page || 10,
-      has_next: paginated.hasNext || paginated.has_next || false,
-      has_previous: paginated.hasPrevious || paginated.has_previous || false,
+      current_page: paginated.page,
+      total_pages: paginated.totalPages,
+      total_items: paginated.total,
+      items_per_page: paginated.pageSize,
+      has_next: paginated.page < paginated.totalPages,
+      has_previous: paginated.page > 1,
     },
   };
 } 

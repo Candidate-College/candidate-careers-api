@@ -23,23 +23,23 @@ export class DepartmentController {
   /**
    * Helper: Handle error mapping
    */
-  private static handleError(err: any, res: Response, next: NextFunction) {
-    if (err.message?.includes('unique')) {
-      return res.status(409).json({ status: 409, message: err.message });
-    }
-    if (err.message?.includes('active job postings')) {
-      return res.status(409).json({ status: 409, message: err.message });
-    }
-    if (err.message?.includes('not found')) {
-      return res.status(404).json({ status: 404, message: err.message });
-    }
-    if (err.message?.includes('Forbidden')) {
-      return res.status(403).json({ status: 403, message: err.message });
-    }
-    if (err.message?.includes('authentication')) {
-      return res.status(401).json({ status: 401, message: err.message });
-    }
-    return next(err);
+  private static handleError(err: Error, res: Response, next: NextFunction) {
+  if (err instanceof Error && err.message.includes('unique')) {
+    return res.status(409).json({ status: 409, message: err.message });
+  }
+  if (err instanceof Error && err.message.includes('active job postings')) {
+    return res.status(409).json({ status: 409, message: err.message });
+  }
+  if (err instanceof Error && err.message.includes('not found')) {
+    return res.status(404).json({ status: 404, message: err.message });
+  }
+  if (err instanceof Error && err.message.includes('Forbidden')) {
+    return res.status(403).json({ status: 403, message: err.message });
+  }
+  if (err instanceof Error && err.message.includes('authentication')) {
+    return res.status(401).json({ status: 401, message: err.message });
+  }
+  return next(err);
   }
 
   /**
@@ -147,11 +147,10 @@ export class DepartmentController {
       }
       const user = DepartmentController.getUserOr401(req, res);
       if (!user) return;
-      const department = await DepartmentService.deleteDepartment(Number(req.params.id), user);
+      await DepartmentService.deleteDepartment(Number(req.params.id), user);
       return res.status(200).json({
         status: 200,
         message: 'Department deleted successfully',
-        data: toDepartmentResource(department),
       });
     } catch (err: any) {
       return DepartmentController.handleError(err, res, next);

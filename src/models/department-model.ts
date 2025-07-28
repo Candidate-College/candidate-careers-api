@@ -1,12 +1,12 @@
 import { User, UserData } from './user-model';
-import { JobPostings } from './job-posting-model';
+import { Job } from './job-model';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Model = require('@/config/database/orm');
 
 /**
  * DepartmentData
  *
- * Interface untuk representasi data department.
+ * Interface for department data representation.
  */
 export interface DepartmentData {
   id: number;
@@ -18,12 +18,13 @@ export interface DepartmentData {
   updated_at: Date;
   deleted_at?: Date | null;
   creator?: Partial<UserData>; // relasi ke user pembuat
+  job_postings_count?: number | Array<{ count: number }>;
 }
 
 /**
  * Department
  *
- * Model Objection.js untuk tabel departments.
+ * Objection.js model for departments table.
  */
 export class Department extends Model {
   static readonly softDelete = true;
@@ -40,7 +41,7 @@ export class Department extends Model {
     },
     jobPostings: {
       relation: Model.HasManyRelation,
-      modelClass: JobPostings,
+      modelClass: Job,
       join: {
         from: 'departments.id',
         to: 'job_postings.department_id',
