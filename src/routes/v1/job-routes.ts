@@ -17,7 +17,7 @@ const { authorize } = require('@/middlewares/authorization/authorize');
 // Require jobs.create permission to create a job posting
 router.post('/', accessToken, authorize('jobs.create'), JobController.createJobPosting);
 
-// Require jobs.view permission to get job posting by slug
-router.get('/:slug', JobController.getPublicJobBySlug);
+// Require jobs.view permission to get job posting by uuid
+router.get('/:uuid', accessToken, authorize('jobs.view'), JobController.getJobByUUID);
 
 module.exports = router;

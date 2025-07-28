@@ -15,6 +15,9 @@ describe('JobController', () => {
   const mockedcreateJobPostingService = JobService.createJobPosting as jest.Mock;
   const mockedGetJobPostingBySlugService = JobService.getPublicJobBySlug as jest.Mock;
 
+  const mockedGetJobByUUIDService = JobService.getJobByUUID as jest.Mock;
+  const mockedJobSGetJobByUUIDResource = JobResource.getJobByUUIDResponse as jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -343,6 +346,114 @@ describe('JobController', () => {
           code: 'INTERNAL_SERVER_INTERNAL_SERVER_ERROR',
           type: 'INTERNAL_SERVER_ERROR',
         },
+      });
+    });
+  });
+
+  describe('getJobByUUID', () => {
+    const mockPublishedJob = {
+      id: 1,
+      uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
+      title: 'Senior Software Engineer',
+      slug: 'senior-software-engineer',
+      department_id: 10,
+      job_category_id: 20,
+      job_type: 'full-time',
+      employment_level: 'senior',
+      priority_level: 'high',
+      description:
+        'A detailed description of the role focusing on building scalable web applications.',
+      requirements:
+        '5+ years of experience in TypeScript and Node.js. Experience with cloud services (AWS, GCP) is a plus.',
+      responsibilities:
+        'Develop and maintain backend services, write clean and testable code, and collaborate with frontend teams.',
+      benefits:
+        'Comprehensive health insurance, competitive salary, 401k matching, and unlimited paid time off.',
+      team_info:
+        'You will be joining the core platform team, a dynamic group responsible for the main application infrastructure.',
+      status: 'published',
+      views_count: 150,
+      applications_count: 25,
+      application_deadline: new Date('2025-12-31T23:59:59Z'),
+      max_applications: 100,
+      published_at: new Date('2025-01-01T12:00:00Z'),
+      created_by: 5,
+      created_at: new Date('2025-01-01T10:00:00Z'),
+      updated_at: new Date('2025-01-02T11:00:00Z'),
+    };
+    const mockFormattedJob = mockedJobSGetJobByUUIDResource.mockResolvedValue(mockPublishedJob);
+
+    beforeEach(() => {
+      req = {
+        params: { uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef' },
+        query: {},
+      } as unknown as AuthenticatedRequest;
+    });
+
+    it('Should return job posting data if uuid is valid', async () => {
+      mockedGetJobByUUIDService.mockResolvedValue(mockPublishedJob);
+
+      mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJob);
+
+      await JobController.getJobByUUID(req as any, res);
+
+      expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
+        trackView: false,
+        include: [],
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 200,
+        message: 'Job posting retrieved successfully',
+        data: mockFormattedJob,
+      });
+    });
+
+    it('Should return valid data when incudes department in the query', async () => {
+      mockedGetJobByUUIDService.mockResolvedValue(mockPublishedJob);
+
+      const formattedJob = {
+        id: 32,
+        uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
+        title: 'Job Posting 1',
+        slug: 'job-posting-1',
+        department_id: 5,
+        job_category_id: 8,
+        job_type: 'staff',
+        employment_level: 'mid',
+        priority_level: 'normal',
+        description: 'Description for job posting 1',
+        requirements: 'Requirements for job posting 1',
+        responsibilities: 'Responsibilities for job posting 1',
+        benefits: 'Standard benefits',
+        team_info: 'Team info',
+        status: 'published',
+        views_count: 2,
+        applications_count: 0,
+        application_deadline: '2025-08-20T17:00:00.000Z',
+        max_applications: 100,
+        published_at: null,
+        created_by: 30,
+        created_at: '2025-07-22T15:23:24.429Z',
+        updated_at: '2025-07-22T15:23:24.429Z',
+        departments: {
+          id: 5,
+          name: 'Finance',
+          description: 'Oversees budgeting, accounting, and financial planning.',
+        },
+      };
+
+      await JobController.getJobByUUID(req as any, res);
+
+      expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
+        trackView: false,
+        include: ['department'],
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 200,
+        message: 'Job posting retrieved successfully',
+        data: formattedJob,
       });
     });
   });

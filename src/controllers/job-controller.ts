@@ -99,8 +99,6 @@ export class JobController {
 
       const job = await JobService.getPublicJobBySlug(slug, { trackView });
 
-      console.log('JobControl: ', job);
-
       return res.status(200).json({
         status: 200,
         message: 'Job posting retrieved successfully',
@@ -114,6 +112,37 @@ export class JobController {
       return sendErrorResponse(
         res,
         createError(ErrorType[err.type as keyof typeof ErrorType], err.message),
+      );
+    }
+  }
+
+  static async getJobByUUID(req: AuthenticatedRequest, res: JsonResponse) {
+    try {
+      const { uuid } = req.params;
+      const trackView = req.query.track_view === 'true';
+      const include = (req.query.include as string)?.split(',') ?? [];
+
+      const job = await JobService.getJobByUUID(uuid, { trackView, include });
+
+      console.log('JobControlUUID: ', job);
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Job posting retrieved successfully',
+        data: JobResource.getJobByUUIDResponse(job),
+      });
+    } catch (err: any) {
+      if (err.appError) {
+        return sendErrorResponse(res, err.appError);
+      }
+
+      return sendErrorResponse(
+        res,
+        createError(
+          ErrorType[err.type as keyof typeof ErrorType] || ErrorType.INTERNAL_SERVER_ERROR,
+          err?.message,
+          err.message,
+        ),
       );
     }
   }

@@ -11,6 +11,7 @@ import { Department } from '@/models/department-model';
 import { JobCategory } from '@/models/job-category-model';
 import { Job } from '@/models/job-model';
 import { JobStatusTransition } from '@/models/job-status-transition-model';
+import { User } from '@/models/user-model';
 import { QueryBuilder, Transaction } from 'objection';
 
 export class JobRepository {
@@ -172,5 +173,49 @@ export class JobRepository {
    */
   static async incrementViewCount(jobId: number): Promise<number> {
     return await Job.query().findById(jobId).increment('views_count', 1);
+  }
+
+  static async findJobByUUID(uuid: string, include: string[] = []): Promise<Job | undefined> {
+    let jobQuery = Job.query().findOne({ uuid });
+
+    // Mapping alias query param ke relasi model
+    const includeMap: Record<string, string> = {
+      department: 'departments',
+      category: 'job_categories',
+      creator: 'created_by_user',
+    };
+
+    const mappedIncludes = include
+      .map(key => includeMap[key])
+      .filter((relation): relation is string => !!relation);
+
+    if (mappedIncludes.length > 0) {
+      jobQuery = jobQuery.withGraphFetched(`[${mappedIncludes.join(', ')}]`);
+
+      mappedIncludes.forEach(relation => {
+        switch (relation) {
+          case 'departments':
+            jobQuery = jobQuery.modifyGraph('departments', (builder: QueryBuilder<Department>) => {
+              builder.select('id', 'name', 'description');
+            });
+            break;
+          case 'job_categories':
+            jobQuery = jobQuery.modifyGraph(
+              'job_categories',
+              (builder: QueryBuilder<JobCategory>) => {
+                builder.select('id', 'name', 'description');
+              },
+            );
+            break;
+          case 'created_by_user':
+            jobQuery = jobQuery.modifyGraph('created_by_user', (builder: QueryBuilder<User>) => {
+              builder.select('id', 'name', 'email', 'role_id');
+            });
+            break;
+        }
+      });
+    }
+
+    return await jobQuery;
   }
 }

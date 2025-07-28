@@ -157,4 +157,25 @@ export class JobService {
 
     return job;
   }
+
+  static async getJobByUUID(
+    uuid: string,
+    options: { trackView?: boolean; include?: string[] } = {},
+  ): Promise<Job> {
+    const { trackView = false, include = [] } = options;
+    const job = await JobRepository.findJobByUUID(uuid, include);
+
+    if (!job) {
+      throw createError(ErrorType.RESOURCE_NOT_FOUND, 'Job Postings not found');
+    }
+
+    console.log('JobService: ', job);
+
+    if (trackView) {
+      await JobRepository.incrementViewCount(job.id);
+      job.views_count += 1;
+    }
+
+    return job;
+  }
 }

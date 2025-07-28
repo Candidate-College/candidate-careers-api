@@ -4,8 +4,8 @@
  */
 import { Department } from './department-model';
 import { JobCategory } from './job-category-model';
-import { User } from './user-model';
 import { JobStatusTransition } from './job-status-transition-model';
+import { User } from './user-model';
 
 const Model = require('@/config/database/orm');
 
@@ -64,7 +64,7 @@ export class Job extends Model {
     /**
      * Relation to the User who created this job posting.
      */
-    createdBy: {
+    created_by_user: {
       relation: Model.BelongsToOneRelation,
       modelClass: User,
       join: {
@@ -75,7 +75,7 @@ export class Job extends Model {
     /**
      * Relation to the User who last updated this job posting.
      */
-    updatedBy: {
+    updated_by_user: {
       relation: Model.BelongsToOneRelation,
       modelClass: User,
       join: {
