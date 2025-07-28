@@ -1,4 +1,4 @@
-import { JobPostingRepository, IJobPostingRepository } from "@/repositories/job-deletion-repository";
+import { JobPostingRepository, IJobPostingRepository } from "@/repositories/job-posting-repository";
 import { UserData } from "@/models/user-model";
 import { createNotFoundError, createError, ErrorType } from "@/utilities/error-handler";
 

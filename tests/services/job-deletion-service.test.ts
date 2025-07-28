@@ -1,5 +1,5 @@
 import { JobDeletionService } from '../../src/services/job-deletion-service';
-import { JobPostingRepository } from '../../src/repositories/job-deletion-repository';
+import { JobPostingRepository } from '../../src/repositories/job-posting-repository';
 
 // Complete mock users
 const mockAdminUser = {
