@@ -23,8 +23,8 @@ export interface JobPostingsData {
   responsibilities: string;
   benefits?: string | null;
   team_info?: string | null;
-  salary_min?: string | null;
-  salary_max?: string | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
   is_salary_negotiable: boolean;
   location?: string | null;
   is_remote: boolean;
@@ -40,6 +40,14 @@ export interface JobPostingsData {
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;
+  previous_status?: string | null;
+  status_changed_at?: Date | null;
+  status_changed_by?: number | null;
+  close_reason?: string | null;
+  close_notes?: string | null;
+  archive_reason?: string | null;
+  scheduled_publish_at?: Date | null;
+  version: number;
   department?: Department;
   jobCategory?: JobCategory;
   creator?: User;

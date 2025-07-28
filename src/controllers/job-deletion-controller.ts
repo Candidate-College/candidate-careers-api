@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { JobDeletionService, DeleteJobResponse } from '@/services/job-deletion-service';
-import { JobPostingRepository } from '@/repositories/job-deletion-repository';
+import { JobPostingRepository } from '@/repositories/job-postings-repository';
 import { sendErrorResponse } from '@/utilities/error-handler';
 import { UserData } from '@/models/user-model';
 import { JsonResponse } from '@/types/express-extension';

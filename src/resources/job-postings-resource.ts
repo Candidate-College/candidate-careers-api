@@ -1,0 +1,53 @@
+export interface JobUpdateResource {
+    id: number,
+    uuid: string,
+    title: string,
+    slug: string,
+    department_id: number,
+    job_category_id: number,
+    job_type: 'internship' | 'staff' | 'freelance' | 'contract',
+    employment_level: 'entry' | 'junior' | 'mid' | 'senior' | 'lead' | 'head' | 'co_head',
+    priority_level: 'normal' | 'urgent',
+    description: string,
+    requirements: string,
+    responsibilities: string,
+    benefits: string,
+    team_info: string,
+    status: 'draft' | 'published' | 'closed' | 'archived',
+    views_count?: number,
+    applications_count?: number,
+    application_deadline: string,
+    max_applications?: number,
+    published_at: string,
+    created_by: number,
+    updated_at: string,
+    version: number
+}
+
+export function toJobUpdateResource(job: any): JobUpdateResource {
+    return {
+        id: job.id,
+        uuid: job.uuid,
+        title: job.title,
+        slug: job.slug,
+        department_id: job.department_id,
+        job_category_id: job.job_category_id,
+        job_type: job.job_type,
+        employment_level: job.employment_level,
+        priority_level: job.priority_level,
+        description: job.description,
+        requirements: job.requirements,
+        responsibilities: job.responsibilities,
+        benefits: job.benefits,
+        team_info: job.team_info,
+        status: job.status,
+        views_count: job.views_count ?? 0,
+        applications_count: job.applications_count ?? 0,
+        application_deadline: job.application_deadline instanceof Date ? job.application_deadline.toISOString() : String(job.application_deadline),
+        max_applications: job.max_applications ?? 1,
+        published_at: job.published_at instanceof Date ? job.published_at.toISOString() : String(job.published_at),
+        created_by: job.created_by,
+        updated_at: job.updated_at instanceof Date ? job.updated_at.toISOString() : String(job.updated_at),
+        version: job.version
+    };
+}

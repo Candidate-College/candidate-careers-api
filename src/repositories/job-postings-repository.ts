@@ -1,5 +1,7 @@
 import { JobPostings, JobPostingsData } from '@/models/job-postings-model';
 import { Transaction } from 'objection';
+import { IJobUpdatePayload } from '@/interfaces/payloads/job-postings-payload';
+const knex = require('@/config/database/query-builder');
 
 /**
  * Interface for JobPostingRepository
@@ -7,6 +9,7 @@ import { Transaction } from 'objection';
 export interface IJobPostingRepository {
   findJobPostingByUuid(jobPostingUuid: string): Promise<JobPostingsData | null>;
   findWithActiveApplication(jobPostingUuid: string): Promise<boolean>;
+  update(uuid: string, currentVersion: number, payload: Partial<IJobUpdatePayload>): Promise<number>;
   softDelete(jobPostingUuid: string, trx?: Transaction): Promise<number>;
   restore(jobPostingUuid: string, trx?: Transaction): Promise<number>;
 }
@@ -53,6 +56,28 @@ export class JobPostingRepository implements IJobPostingRepository {
       .whereIn('status', ['pending', 'under_review'])
       .first();
     return !!application;
+  }
+
+  /**
+   * Update a job posting with optimistic locking (version increment)
+   * @param uuid - job posting uuid
+   * @param currentVersion - current version for optimistic lock
+   * @param payload - partial update payload
+   * @returns number of rows updated
+   */
+  public async update(uuid: string, currentVersion: number, payload: Partial<IJobUpdatePayload>): Promise<number> {
+    // Prepare update object, increment version atomically
+    const { version, ...updateData } = payload
+    const updatedCount = await JobPostings.query()
+      .where({
+        uuid: uuid,
+        version: currentVersion,
+      })
+      .patch({
+        ...updateData,
+        version: knex.raw('version + 1'),
+      })
+    return updatedCount;
   }
 
   /**
