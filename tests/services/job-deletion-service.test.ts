@@ -1,5 +1,5 @@
 import { JobPostingService } from '../../src/services/job-posting-service';
-import { JobPostingRepository } from '../../src/repositories/job-posting-repository';
+import { JobPostingRepository, IJobPostingRepository } from '../../src/repositories/job-posting-repository';
 
 // Complete mock users
 const mockAdminUser = {
@@ -22,7 +22,7 @@ const mockNonOwnerUser = {
 
 // Mock JobPostingRepository
 const mockRepo = {
-  findJobPostingByUuid: jest.fn(),
+  findByUuid: jest.fn(),
   findWithActiveApplication: jest.fn(),
   softDelete: jest.fn(),
   restore: jest.fn(),
@@ -45,17 +45,17 @@ const createMockJob = (overrides: Partial<any> = {}) => ({
 });
 
 /**
- * Setup mock repository with proper handling of multiple findJobPostingByUuid calls
- * @param job - The job object to return for findJobPostingByUuid calls
+ * Setup mock repository with proper handling of multiple findByUuid calls
+ * @param job - The job object to return for findByUuid calls
  * @param hasActiveApplications - Whether the job has active applications
  */
 const setupMockRepository = (job: any, hasActiveApplications = false) => {
   // Clear previous mocks
   jest.clearAllMocks();
   
-  // Mock findJobPostingByUuid to return the job for all calls
+  // Mock findByUuid to return the job for all calls
   // This handles both the initial call and the call in prepareDeletionResponse
-  mockRepo.findJobPostingByUuid.mockResolvedValue(job);
+  mockRepo.findByUuid.mockResolvedValue(job);
   
   // Mock findWithActiveApplication
   mockRepo.findWithActiveApplication.mockResolvedValue(hasActiveApplications);
@@ -68,7 +68,7 @@ const setupMockRepository = (job: any, hasActiveApplications = false) => {
 };
 
 const verifyBasicDeletionFlow = (uuid: string, shouldCheckApplications = false) => {
-  expect(mockRepo.findJobPostingByUuid).toHaveBeenCalledWith(uuid);
+  expect(mockRepo.findByUuid).toHaveBeenCalledWith(uuid);
   if (shouldCheckApplications) {
     expect(mockRepo.findWithActiveApplication).toHaveBeenCalledWith(uuid);
   } else {

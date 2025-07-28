@@ -1,21 +1,25 @@
 import { JobPostings, JobPostingsData } from '@/models/job-postings-model';
+import { SlugHistoryRecord } from '@/interfaces/slug/slug-history';
 import { Transaction } from 'objection';
-import { IJobUpdatePayload } from '@/interfaces/payloads/job-postings-payload';
+import { IJobUpdatePayload } from '@/interfaces/job/job-posting';
+import { SlugHistory } from '@/models/slug-history-model';
 const knex = require('@/config/database/query-builder');
 
 /**
  * Interface for JobPostingRepository
  */
 export interface IJobPostingRepository {
-  findJobPostingByUuid(jobPostingUuid: string): Promise<JobPostingsData | null>;
+  findByUuid(jobPostingUuid: string): Promise<JobPostingsData | null>;
   findWithActiveApplication(jobPostingUuid: string): Promise<boolean>;
+  isSlugTaken(slug: string, excludeJobId: number): Promise<boolean>;
+  createSlugHistory(record: Omit<SlugHistoryRecord, 'id' | 'createdAt'>): Promise<void>;
   update(uuid: string, currentVersion: number, payload: Partial<IJobUpdatePayload>): Promise<number>;
   softDelete(jobPostingUuid: string, trx?: Transaction): Promise<number>;
   restore(jobPostingUuid: string, trx?: Transaction): Promise<number>;
 }
 
 /**
- * Repository for job_postings table operations, focused on deletion and restoration logic.
+ * Repository for job_postings table operations
  */
 export class JobPostingRepository implements IJobPostingRepository {
   /**
@@ -37,7 +41,7 @@ export class JobPostingRepository implements IJobPostingRepository {
    * @param jobPostingUuid job posting uuid
    * @returns JobPostingsData or null
    */
-  async findJobPostingByUuid(jobPostingUuid: string): Promise<JobPostingsData | null> {
+  async findByUuid(jobPostingUuid: string): Promise<JobPostingsData | null> {
     const job = await this.findJobPostingByUuidWithSelect(jobPostingUuid);
     return job ?? null;
   }
@@ -78,6 +82,36 @@ export class JobPostingRepository implements IJobPostingRepository {
         version: knex.raw('version + 1'),
       })
     return updatedCount;
+  }
+
+  /**
+   * Checks if a slug is already in use by another job.
+   * @param slug - Slug to be checked
+   * @param excludeJobId - ID of the current job, to exclude from the search.
+   * @returns boolean
+   */
+  async isSlugTaken(slug: string, excludeJobId: number): Promise<boolean> {
+    const existingJob = await JobPostings.query()
+      .where({ slug: slug })
+      .whereNot('id', excludeJobId)
+      .first();
+    return !!existingJob;
+  }
+
+  async createSlugHistory(record: Omit<SlugHistoryRecord, 'id' | 'createdAt'>): Promise<void> {
+    try {
+      await SlugHistory.query().insert({
+        job_posting_id: record.jobPostingId,
+        old_slug: record.oldSlug,
+        new_slug: record.newSlug,
+        change_reason: record.changeReason,
+        created_by: record.createdBy || null,
+        created_at: new Date(),
+      });
+    } catch (error) {
+      console.error('Failed to create slug history:', error);
+      // Don't throw error to prevent job update from failing
+    }
   }
 
   /**
