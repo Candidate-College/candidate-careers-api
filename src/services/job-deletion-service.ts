@@ -1,5 +1,6 @@
 import { IJobPostingRepository } from "@/repositories/job-posting-repository";
-import { UserData } from "@/models/user-model";
+import { User, UserData } from "@/models/user-model";
+import { JobPostingsData } from "@/models/job-postings-model";
 import { createNotFoundError, createError, ErrorType } from "@/utilities/error-handler";
 
 export interface DeleteJobOptions {
@@ -58,16 +59,17 @@ export class JobDeletionService {
         }
 
         // Perform soft delete
+        const deletionTimestamp = new Date();
         await this.repo.softDelete(jobPostingUuid);
         
         // Get updated job data and prepare response
-        return await this.prepareDeletionResponse(jobPostingUuid, user, jobPosting, option);
+        return await this.prepareDeletionResponse(user, jobPosting, deletionTimestamp, option);
     }
 
     /**
      * Validate if user has permission to delete the job posting
      */
-    private validateDeletionAuthorization(jobPosting: any, user: UserData): void {
+    private validateDeletionAuthorization(jobPosting: JobPostingsData, user: UserData): void {
         const isSuperAdmin = this.isSuperAdmin(user);
         if (!isSuperAdmin && user.id !== jobPosting.created_by) {
             throw createError(
@@ -87,7 +89,7 @@ export class JobDeletionService {
     /**
      * Validate business rules for job deletion
      */
-    private async validateBusinessRules(jobPosting: any, jobPostingUuid: string, option: DeleteJobOptions): Promise<void> {
+    private async validateBusinessRules(jobPosting: JobPostingsData, jobPostingUuid: string, option: DeleteJobOptions): Promise<void> {
         await this.validatePublishedJobWithApplications(jobPosting, jobPostingUuid, option);
         this.validateClosedJobGracePeriod(jobPosting);
     }
@@ -95,7 +97,7 @@ export class JobDeletionService {
     /**
      * Validate published job with active applications
      */
-    private async validatePublishedJobWithApplications(jobPosting: any, jobPostingUuid: string, option: DeleteJobOptions): Promise<void> {
+    private async validatePublishedJobWithApplications(jobPosting: JobPostingsData, jobPostingUuid: string, option: DeleteJobOptions): Promise<void> {
         if (jobPosting.status !== 'published') {
             return;
         }
@@ -112,7 +114,7 @@ export class JobDeletionService {
     /**
      * Validate closed job grace period (7 days)
      */
-    private validateClosedJobGracePeriod(jobPosting: any): void {
+    private validateClosedJobGracePeriod(jobPosting: JobPostingsData): void {
         if (jobPosting.status !== 'closed' || !jobPosting.closed_at) {
             return;
         }
@@ -133,24 +135,19 @@ export class JobDeletionService {
      * Prepare deletion response with detailed information
      */
     private async prepareDeletionResponse(
-        jobPostingUuid: string, 
-        user: UserData, 
-        originalJobPosting: any, 
+        user: UserData,
+        originalJobPosting: JobPostingsData,
+        deletedAt: Date,
         option: DeleteJobOptions
     ): Promise<DeleteJobResponse> {
-        const deletedJob = await this.repo.findJobPostingByUuid(jobPostingUuid);
-        if (!deletedJob) {
-            throw createError(ErrorType.INTERNAL_SERVER_ERROR, 'Failed to retrieve deleted job data');
-        }
-
-        const recoveryDeadline = this.calculateRecoveryDeadline(deletedJob.deleted_at!);
+        const recoveryDeadline = this.calculateRecoveryDeadline(deletedAt);
 
         return {
             deleted_job: {
-                uuid: deletedJob.uuid,
-                title: deletedJob.title,
+                uuid: originalJobPosting.uuid,
+                title: originalJobPosting.title,
                 status: 'deleted',
-                deleted_at: deletedJob.deleted_at!,
+                deleted_at: deletedAt,
                 deleted_by: user.id,
             },
             related_data: {
@@ -175,6 +172,11 @@ export class JobDeletionService {
     }
 
     /**
+     * Add as a class property for consistency
+     */
+    private readonly RECOVERY_PERIOD_DAYS = 30;
+
+    /**
      * Restore a soft-deleted job posting with authorization and business rule checks
      * @param jobPostingUuid - Job posting UUID
      * @param user - UserData performing the action
@@ -192,8 +194,7 @@ export class JobDeletionService {
         }
 
         // Authorization: Only Super Admin can restore
-        const isSuperAdmin = user.role?.name === 'Super Admin';
-        if (!isSuperAdmin) {
+        if (!this.isSuperAdmin(user)) {
             throw createError(
                 ErrorType.ACCESS_DENIED,
                 'Only Super Admin can restore job postings.'
@@ -204,10 +205,10 @@ export class JobDeletionService {
         const deletedAt = new Date(jobPosting.deleted_at);
         const now = new Date();
         const diffDays = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
-        if (diffDays > 30) {
+        if (diffDays > this.RECOVERY_PERIOD_DAYS) {
             throw createError(
                 ErrorType.RESOURCE_CONFLICT,
-                'Cannot restore job posting deleted more than 30 days ago.'
+                `Cannot restore job posting deleted more than ${this.RECOVERY_PERIOD_DAYS} days ago.`
             );
         }
 

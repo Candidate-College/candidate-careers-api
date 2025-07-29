@@ -21,12 +21,16 @@ export class JobPostingRepository implements IJobPostingRepository {
    * @param selectFields optional array of fields to select
    * @returns JobPostingsData or null
    */
-  private async findJobPostingByUuidWithSelect(jobPostingUuid: string, selectFields?: string[]) {
+  private async findJobPostingByUuidWithSelect(
+    jobPostingUuid: string, 
+    selectFields?: (keyof JobPostingsData)[]
+  ): Promise<JobPostingsData | null> {
     const query = JobPostings.query().findOne({ uuid: jobPostingUuid });
     if (selectFields && selectFields.length > 0) {
       query.select(...selectFields);
     }
-    return await query;
+    const result = await query;
+    return result ?? null;
   }
 
   /**
@@ -35,24 +39,25 @@ export class JobPostingRepository implements IJobPostingRepository {
    * @returns JobPostingsData or null
    */
   async findJobPostingByUuid(jobPostingUuid: string): Promise<JobPostingsData | null> {
-    const job = await this.findJobPostingByUuidWithSelect(jobPostingUuid);
+    const job = await JobPostings.query().findOne({ uuid: jobPostingUuid });
     return job ?? null;
   }
 
   /**
-   * Efficiently check if a job posting has any application with status 'pending' or 'under_review' using .first()
+   * Efficiently check if a job posting has any application with status 'pending' or 'under_review' using a single query
    * @param jobPostingUuid job posting uuid
-   * @returns true if there is at least one such application, false otherwise
+   * @returns true if job posting exists and has at least one active application, false otherwise
    */
   async findWithActiveApplication(jobPostingUuid: string): Promise<boolean> {
-    const job = await this.findJobPostingByUuidWithSelect(jobPostingUuid, ['id', 'uuid']);
-    if (!job) return false;
-    
-    const application = await JobPostings.relatedQuery('jobApplications')
-      .for(job.id)
-      .whereIn('status', ['pending', 'under_review'])
+    const job = await JobPostings.query()
+      .where('uuid', jobPostingUuid)
+      .whereExists(
+        JobPostings.relatedQuery('jobApplications')
+          .whereIn('status', ['pending', 'under_review'])
+      )
       .first();
-    return !!application;
+    
+    return !!job;
   }
 
   /**
@@ -62,10 +67,9 @@ export class JobPostingRepository implements IJobPostingRepository {
    * @returns number of rows updated
    */
   async softDelete(jobPostingUuid: string, trx?: Transaction): Promise<number> {
-    const result = await JobPostings.query(trx)
+    return await JobPostings.query(trx)
       .findOne({ uuid: jobPostingUuid })
       .patch({ deleted_at: new Date() });
-    return result;
   }
 
   /**
@@ -75,9 +79,8 @@ export class JobPostingRepository implements IJobPostingRepository {
    * @returns number of rows updated
    */
   async restore(jobPostingUuid: string, trx?: Transaction): Promise<number> {
-    const result = await JobPostings.query(trx)
+    return await JobPostings.query(trx)
       .findOne({ uuid: jobPostingUuid })
       .patch({ deleted_at: null });
-    return result;
   }
 } 
