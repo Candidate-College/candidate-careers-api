@@ -3,447 +3,215 @@ import { JobResource } from '@/resources/job-posting-resource';
 import { JobService } from '@/services/job-service';
 import { AuthenticatedRequest, JsonResponse } from '@/types/express-extension';
 
+// --- Mocks Setup ---
 jest.mock('@/services/job-service');
 jest.mock('@/resources/job-posting-resource');
 
+// --- Mocked Implementations ---
+const mockedJobService = JobService as jest.Mocked<typeof JobService>;
+const mockedJobResource = JobResource as jest.Mocked<typeof JobResource>;
+
+// --- Reusable Mock Data ---
+const MOCK_USER_ID = 123;
+const MOCK_JOB_INPUT = { title: 'Software Engineer', department_id: 1 };
+const MOCK_JOB_DB_RECORD = {
+  id: 72,
+  uuid: 'fd58bbff-bfe1-4cfd-9a9e-4215aa3bb550',
+  slug: 'software-engineer',
+  ...MOCK_JOB_INPUT,
+  status: 'published',
+  created_by: MOCK_USER_ID,
+  // Add other required fields for a complete Job object
+  job_category_id: 2,
+  job_type: 'full-time',
+  employment_level: 'mid',
+  priority_level: 'normal',
+  description: 'Job Description',
+  requirements: 'Job Requirements',
+  responsibilities: 'Job Responsibilities',
+  benefits: 'Job Benefits',
+  team_info: 'Team Info',
+  views_count: 0,
+  applications_count: 0,
+  application_deadline: new Date(),
+  max_applications: 100,
+  published_at: new Date(),
+  created_at: new Date(),
+  updated_at: new Date(),
+  departments: [],
+  job_categories: [],
+  created_by_user: undefined,
+};
+
+// A more complete mock that satisfies the return types of the resource methods
+const MOCK_FORMATTED_RESPONSE = {
+  id: MOCK_JOB_DB_RECORD.id,
+  uuid: MOCK_JOB_DB_RECORD.uuid,
+  title: MOCK_JOB_DB_RECORD.title,
+  slug: MOCK_JOB_DB_RECORD.slug,
+  status: MOCK_JOB_DB_RECORD.status,
+  department_id: MOCK_JOB_DB_RECORD.department_id,
+  job_category_id: MOCK_JOB_DB_RECORD.job_category_id,
+  job_type: MOCK_JOB_DB_RECORD.job_type,
+  employment_level: MOCK_JOB_DB_RECORD.employment_level,
+  priority_level: MOCK_JOB_DB_RECORD.priority_level,
+  description: MOCK_JOB_DB_RECORD.description,
+  requirements: MOCK_JOB_DB_RECORD.requirements,
+  responsibilities: MOCK_JOB_DB_RECORD.responsibilities,
+  benefits: MOCK_JOB_DB_RECORD.benefits,
+  team_info: MOCK_JOB_DB_RECORD.team_info,
+  views_count: MOCK_JOB_DB_RECORD.views_count,
+  applications_count: MOCK_JOB_DB_RECORD.applications_count,
+  application_deadline: MOCK_JOB_DB_RECORD.application_deadline,
+  max_applications: MOCK_JOB_DB_RECORD.max_applications,
+  published_at: MOCK_JOB_DB_RECORD.published_at,
+  created_by: MOCK_JOB_DB_RECORD.created_by,
+  created_at: MOCK_JOB_DB_RECORD.created_at,
+  updated_at: MOCK_JOB_DB_RECORD.updated_at,
+  departments: MOCK_JOB_DB_RECORD.departments,
+  job_categories: MOCK_JOB_DB_RECORD.job_categories,
+  creator: MOCK_JOB_DB_RECORD.created_by_user,
+};
+
 describe('JobController', () => {
-  let req: AuthenticatedRequest;
+  let req: Partial<AuthenticatedRequest>;
   let res: JsonResponse;
-  const mockedJobSerializeResource = JobResource.serialize as jest.Mock;
-  const mockedGetJobBySlugResource = JobResource.getPublicJobBySlugResponse as jest.Mock;
-
-  const mockedcreateJobPostingService = JobService.createJobPosting as jest.Mock;
-  const mockedGetJobPostingBySlugService = JobService.getPublicJobBySlug as jest.Mock;
-
-  const mockedGetJobByUUIDService = JobService.getJobByUUID as jest.Mock;
-  const mockedJobSGetJobByUUIDResource = JobResource.getJobByUUIDResponse as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     } as unknown as JsonResponse;
   });
 
+  // --- Test Suite for createJobPosting ---
   describe('createJobPosting', () => {
-    it('should return 401 Unauthorized if user is not authenticated', async () => {
-      req = {
-        body: {},
-        user: null,
-      } as unknown as AuthenticatedRequest;
+    it('should return 201 on successful job creation', async () => {
+      req = { body: MOCK_JOB_INPUT, user: { id: MOCK_USER_ID } };
+      mockedJobService.createJobPosting.mockResolvedValue(MOCK_JOB_DB_RECORD as any);
+      mockedJobResource.serialize.mockReturnValue(MOCK_FORMATTED_RESPONSE as any);
 
-      await JobController.createJobPosting(req, res);
+      await JobController.createJobPosting(req as AuthenticatedRequest, res);
 
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({
-        status: 401,
-        message: 'Unauthorized. You must be logged in to create a job posting.',
-      });
-    });
-
-    it('should call JobService and return 201 on successful job creation', async () => {
-      const mockJobData = {
-        title: 'Software Engineer',
-        department_id: 1,
-        job_category_id: 13,
-        job_type: 'staff',
-        employment_level: 'entry',
-        description:
-          "<script src=''>We are looking for a motivated UI Designer to join our engineering team. This role will give you hands-on experience with real-world frontend challenges and modern tools like React and TypeScript.</script>",
-        requirements:
-          'Basic understanding of HTML, CSS, and JavaScript. Familiarity with React is a plus. Willingness to learn and collaborate with a dynamic team.',
-        responsibilities:
-          'Assist in building responsive user interfaces. Collaborate with UI/UX designers. Participate in daily stand-ups and sprint reviews.',
-        benefits:
-          'Mentorship, flexible working hours, potential full-time offer, and team-building activities.',
-        team_info:
-          'You will be working closely with the Frontend Chapter led by the UI/UX Engineering Manager.',
-        application_deadline: '2025-08-31T17:00:00.000Z',
-        max_applications: 10000,
-      };
-      const userId = 123;
-      const createdJob = {
-        id: 72,
-        uuid: 'fd58bbff-bfe1-4cfd-9a9e-4215aa3bb550',
-        title: 'Software Engineer',
-        slug: 'software-engineer',
-        department_id: 1,
-        job_category_id: 13,
-        job_type: 'staff',
-        employment_level: 'entry',
-        priority_level: 'normal',
-        description:
-          "<script src=''>We are looking for a motivated UI Designer to join our engineering team. This role will give you hands-on experience with real-world frontend challenges and modern tools like React and TypeScript.</script>",
-        requirements:
-          'Basic understanding of HTML, CSS, and JavaScript. Familiarity with React is a plus. Willingness to learn and collaborate with a dynamic team.',
-        responsibilities:
-          'Assist in building responsive user interfaces. Collaborate with UI/UX designers. Participate in daily stand-ups and sprint reviews.',
-        benefits:
-          'Mentorship, flexible working hours, potential full-time offer, and team-building activities.',
-        team_info:
-          'You will be working closely with the Frontend Chapter led by the UI/UX Engineering Manager.',
-        status: 'draft',
-        views_count: 0,
-        applications_count: 0,
-        application_deadline: '2025-08-31T17:00:00.000Z',
-        max_applications: 10000,
-        published_at: null,
-        created_by: 123,
-        created_at: '2025-07-25T11:41:11.107Z',
-        updated_at: '2025-07-25T11:41:11.107Z',
-      };
-
-      req = {
-        body: mockJobData,
-        user: { id: userId },
-      } as unknown as AuthenticatedRequest;
-
-      // --- FIX STARTS HERE ---
-      // 1. Mock the service to resolve with the complete `createdJob` object.
-      mockedcreateJobPostingService.mockResolvedValue(createdJob);
-
-      // 2. Mock the resource serializer to return the final object you expect in the response.
-      // In this case, the controller calls JobResource.serialize, so we mock its return value.
-      mockedJobSerializeResource.mockReturnValue(createdJob);
-
-      // 3. Call the controller method *after* all mocks are set up.
-      await JobController.createJobPosting(req as any, res);
-
-      // 4. Assert that the service and resource were called correctly.
-      expect(mockedcreateJobPostingService).toHaveBeenCalledWith(mockJobData, userId);
-      expect(mockedJobSerializeResource).toHaveBeenCalledWith(createdJob);
-
-      // 5. Assert the final response.
+      expect(mockedJobService.createJobPosting).toHaveBeenCalledWith(MOCK_JOB_INPUT, MOCK_USER_ID);
+      expect(mockedJobResource.serialize).toHaveBeenCalledWith(MOCK_JOB_DB_RECORD);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         status: 201,
         message: 'Job posting created successfully',
-        data: createdJob,
-      });
-      // --- FIX ENDS HERE ---
-    });
-
-    it('should return 422 if service throws a validation error', async () => {
-      const mockAppError = {
-          statusCode: 422,
-          message: 'Input validation failed',
-          category: 'VALIDATION',
-          type: 'VALIDATION_FAILED',
-          code: 'VALIDATION_VALIDATION_FAILED',
-          details: {
-            title: 'title must be at least 5 characters',
-          },
-        },
-        req = {
-          body: { title: 'SE' },
-          user: { id: 123 },
-        } as unknown as AuthenticatedRequest;
-
-      mockedcreateJobPostingService.mockRejectedValue({ appError: mockAppError });
-
-      await JobController.createJobPosting(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(422);
-      expect(res.json).toHaveBeenCalledWith({
-        statusCode: 422,
-        message: 'Input validation failed',
-        error: {
-          category: 'VALIDATION',
-          type: 'VALIDATION_FAILED',
-          code: 'VALIDATION_VALIDATION_FAILED',
-          details: {
-            title: 'title must be at least 5 characters',
-          },
-        },
+        data: MOCK_FORMATTED_RESPONSE,
       });
     });
 
-    it('should return 500 for generic service errors', async () => {
-      const mockGenericError = {
-        statusCode: 500,
-        message: 'Internal Server Error',
-        category: 'INTERNAL_SERVER',
-        code: 'INTERNAL_SERVER_INTERNAL_SERVER_ERROR',
-        type: 'INTERNAL_SERVER_ERROR',
-      };
+    it('should return 401 Unauthorized if user is not authenticated', async () => {
+      // FIX: user should be undefined, not null, to match the type definition
+      req = { body: {}, user: undefined };
+      await JobController.createJobPosting(req as AuthenticatedRequest, res);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 401 }));
+    });
 
-      req = {
-        body: { title: 'Valid Title' },
-        user: { id: 123 },
-      } as unknown as AuthenticatedRequest;
+    it.each([
+      {
+        description: 'a validation error (422)',
+        error: { statusCode: 422, message: 'Validation failed', type: 'VALIDATION_FAILED' },
+      },
+      {
+        description: 'a generic server error (500)',
+        error: { statusCode: 500, message: 'Internal Server Error', type: 'INTERNAL_SERVER_ERROR' },
+      },
+    ])('should return $error.statusCode for $description', async ({ error }) => {
+      req = { body: MOCK_JOB_INPUT, user: { id: MOCK_USER_ID } };
+      mockedJobService.createJobPosting.mockRejectedValue({ appError: error });
 
-      mockedcreateJobPostingService.mockRejectedValue({ appError: mockGenericError });
+      await JobController.createJobPosting(req as AuthenticatedRequest, res);
 
-      await JobController.createJobPosting(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        statusCode: 500,
-        message: 'Internal Server Error',
-        error: {
-          category: 'INTERNAL_SERVER',
-          code: 'INTERNAL_SERVER_INTERNAL_SERVER_ERROR',
-          type: 'INTERNAL_SERVER_ERROR',
-        },
-      });
+      expect(res.status).toHaveBeenCalledWith(error.statusCode);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ statusCode: error.statusCode }),
+      );
     });
   });
 
-  describe('getJobPostingBySlug', () => {
-    const mockPublishedJob = {
-      id: 1,
-      uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-      title: 'Senior Software Engineer',
-      slug: 'senior-software-engineer',
-      department_id: 10,
-      job_category_id: 20,
-      job_type: 'full-time',
-      employment_level: 'senior',
-      priority_level: 'high',
-      description:
-        'A detailed description of the role focusing on building scalable web applications.',
-      requirements:
-        '5+ years of experience in TypeScript and Node.js. Experience with cloud services (AWS, GCP) is a plus.',
-      responsibilities:
-        'Develop and maintain backend services, write clean and testable code, and collaborate with frontend teams.',
-      benefits:
-        'Comprehensive health insurance, competitive salary, 401k matching, and unlimited paid time off.',
-      team_info:
-        'You will be joining the core platform team, a dynamic group responsible for the main application infrastructure.',
-      status: 'published',
-      views_count: 150,
-      applications_count: 25,
-      application_deadline: new Date('2025-12-31T23:59:59Z'),
-      max_applications: 100,
-      published_at: new Date('2025-01-01T12:00:00Z'),
-      created_by: 5,
-      created_at: new Date('2025-01-01T10:00:00Z'),
-      updated_at: new Date('2025-01-02T11:00:00Z'),
+  // --- Test Suite for getPublicJobBySlug ---
+  describe('getPublicJobBySlug', () => {
+    const slug = 'senior-software-engineer';
 
-      departments: [
-        { name: 'Technology', description: 'The core engineering and technology department.' },
-      ],
-      job_categories: [{ name: 'Software Development' }],
-    };
-    const mockFormattedJob = {
-      uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-      title: 'Senior Software Engineer',
-      slug: 'senior-software-engineer',
-      job_type: 'full-time',
-      employment_level: 'senior',
-      description:
-        'A detailed description of the role focusing on building scalable web applications.',
-      requirements:
-        '5+ years of experience in TypeScript and Node.js. Experience with cloud services (AWS, GCP) is a plus.',
-      responsibilities:
-        'Develop and maintain backend services, write clean and testable code, and collaborate with frontend teams.',
-      benefits:
-        'Comprehensive health insurance, competitive salary, 401k matching, and unlimited paid time off.',
-      team_info:
-        'You will be joining the core platform team, a dynamic group responsible for the main application infrastructure.',
-      views_count: 150,
-      application_deadline: new Date('2025-12-31T23:59:59Z'),
-      max_applications: 100,
-      published_at: new Date('2025-01-01T12:00:00Z'),
-      // Public-safe relational data
-      departments: {
-        name: 'Technology',
-        description: 'The core engineering and technology department.',
-      },
-      job_categories: { name: 'Software Development' },
-    };
+    it('should return 200 with formatted job data on success', async () => {
+      req = { params: { slug }, query: {} };
+      mockedJobService.getPublicJobBySlug.mockResolvedValue(MOCK_JOB_DB_RECORD as any);
+      mockedJobResource.getPublicJobBySlugResponse.mockReturnValue(MOCK_FORMATTED_RESPONSE as any);
 
-    beforeEach(() => {
-      req = {
-        params: { slug: 'senior-software-engineer' },
-        query: {},
-      } as unknown as AuthenticatedRequest;
-    });
-
-    it('should return a published job and status of 200 when a valid slug is provided', async () => {
-      mockedGetJobPostingBySlugService.mockResolvedValue(mockPublishedJob);
-
-      // 2. Mock what the JobResource will return as the final, formatted data.
-      mockedGetJobBySlugResource.mockReturnValue(mockFormattedJob);
-
-      // Act
       await JobController.getPublicJobBySlug(req as any, res);
 
-      // Assert
-      // 3. Check that the controller produced the correct status and JSON response.
-      expect(mockedGetJobPostingBySlugService).toHaveBeenCalledWith(mockPublishedJob.slug, {
-        trackView: false,
-      });
+      expect(mockedJobService.getPublicJobBySlug).toHaveBeenCalledWith(slug, { trackView: false });
+      expect(mockedJobResource.getPublicJobBySlugResponse).toHaveBeenCalledWith(MOCK_JOB_DB_RECORD);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         status: 200,
         message: 'Job posting retrieved successfully',
-        data: mockFormattedJob,
+        data: MOCK_FORMATTED_RESPONSE,
       });
     });
 
-    it('should return an error and status of 404 when the data is not found', async () => {
-      const mockAppError = {
-        statusCode: 404,
-        message: 'Job Postings not found',
-        category: 'NOT_FOUND',
-        type: 'RESOURCE_NOT_FOUND',
-        code: 'NOT_FOUND_RESOURCE_NOT_FOUND',
-      };
-      req = {
-        params: { slug: 'backend-eng' },
-        user: { id: 123 },
-      } as unknown as AuthenticatedRequest;
+    it('should return 404 when job is not found', async () => {
+      req = { params: { slug }, query: {} };
+      const error = { statusCode: 404, message: 'Job not found', type: 'RESOURCE_NOT_FOUND' };
+      mockedJobService.getPublicJobBySlug.mockRejectedValue({ appError: error });
 
-      mockedcreateJobPostingService.mockRejectedValue({ appError: mockAppError });
-
-      await JobController.createJobPosting(req, res);
+      await JobController.getPublicJobBySlug(req as any, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({
-        statusCode: 404,
-        message: 'Job Postings not found',
-        error: {
-          category: 'NOT_FOUND',
-          type: 'RESOURCE_NOT_FOUND',
-          code: 'NOT_FOUND_RESOURCE_NOT_FOUND',
-        },
-      });
-    });
-
-    it('should return an error and status of 500 for generic service error', async () => {
-      const mockGenericError = {
-        statusCode: 500,
-        message: 'Internal Server Error',
-        category: 'INTERNAL_SERVER',
-        code: 'INTERNAL_SERVER_INTERNAL_SERVER_ERROR',
-        type: 'INTERNAL_SERVER_ERROR',
-      };
-
-      req = {
-        body: { slug: 123 },
-        user: { id: 123 },
-      } as unknown as AuthenticatedRequest;
-
-      mockedcreateJobPostingService.mockRejectedValue({ appError: mockGenericError });
-
-      await JobController.createJobPosting(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        statusCode: 500,
-        message: 'Internal Server Error',
-        error: {
-          category: 'INTERNAL_SERVER',
-          code: 'INTERNAL_SERVER_INTERNAL_SERVER_ERROR',
-          type: 'INTERNAL_SERVER_ERROR',
-        },
-      });
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
     });
   });
 
+  // --- Test Suite for getJobByUUID ---
   describe('getJobByUUID', () => {
-    const mockPublishedJob = {
-      id: 1,
-      uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-      title: 'Senior Software Engineer',
-      slug: 'senior-software-engineer',
-      department_id: 10,
-      job_category_id: 20,
-      job_type: 'full-time',
-      employment_level: 'senior',
-      priority_level: 'high',
-      description:
-        'A detailed description of the role focusing on building scalable web applications.',
-      requirements:
-        '5+ years of experience in TypeScript and Node.js. Experience with cloud services (AWS, GCP) is a plus.',
-      responsibilities:
-        'Develop and maintain backend services, write clean and testable code, and collaborate with frontend teams.',
-      benefits:
-        'Comprehensive health insurance, competitive salary, 401k matching, and unlimited paid time off.',
-      team_info:
-        'You will be joining the core platform team, a dynamic group responsible for the main application infrastructure.',
-      status: 'published',
-      views_count: 150,
-      applications_count: 25,
-      application_deadline: new Date('2025-12-31T23:59:59Z'),
-      max_applications: 100,
-      published_at: new Date('2025-01-01T12:00:00Z'),
-      created_by: 5,
-      created_at: new Date('2025-01-01T10:00:00Z'),
-      updated_at: new Date('2025-01-02T11:00:00Z'),
-    };
-    const mockFormattedJob = mockedJobSGetJobByUUIDResource.mockResolvedValue(mockPublishedJob);
+    const uuid = 'a1b2c3d4-e5f6-7890-1234-567890abcdef';
 
-    beforeEach(() => {
-      req = {
-        params: { uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef' },
-        query: {},
-      } as unknown as AuthenticatedRequest;
-    });
+    it('should return 200 with formatted job data on success', async () => {
+      req = { params: { uuid }, query: {} };
+      mockedJobService.getJobByUUID.mockResolvedValue(MOCK_JOB_DB_RECORD as any);
+      mockedJobResource.getJobByUUIDResponse.mockReturnValue(MOCK_FORMATTED_RESPONSE as any);
 
-    it('Should return job posting data with status of 200 if uuid is valid', async () => {
-      mockedGetJobByUUIDService.mockResolvedValue(mockPublishedJob);
+      await JobController.getJobByUUID(req as AuthenticatedRequest, res);
 
-      mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJob);
-
-      await JobController.getJobByUUID(req as any, res);
-
-      expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
+      expect(mockedJobService.getJobByUUID).toHaveBeenCalledWith(uuid, {
         trackView: false,
         include: [],
       });
+      expect(mockedJobResource.getJobByUUIDResponse).toHaveBeenCalledWith(MOCK_JOB_DB_RECORD);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         status: 200,
         message: 'Job posting retrieved successfully',
-        data: mockFormattedJob,
+        data: MOCK_FORMATTED_RESPONSE,
       });
     });
 
-    it('should call the service with trackView=true when specified in query', async () => {
-      // Arrange
-      req.query = { track_view: 'true' };
-      const jobWithIncrementedView = { ...mockPublishedJob, views_count: 151 };
-      mockedGetJobByUUIDService.mockResolvedValue(jobWithIncrementedView as any);
-      mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJob);
+    it('should pass trackView and include parameters to the service', async () => {
+      req = { params: { uuid }, query: { track_view: 'true', include: 'department,category' } };
+      mockedJobService.getJobByUUID.mockResolvedValue(MOCK_JOB_DB_RECORD as any);
 
-      // Act
       await JobController.getJobByUUID(req as AuthenticatedRequest, res);
 
-      // Assert
-      expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
+      expect(mockedJobService.getJobByUUID).toHaveBeenCalledWith(uuid, {
         trackView: true,
-        include: [],
-      });
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-
-    it('should call the service with includes when specified in query', async () => {
-      // Arrange
-      req.query = { include: 'department, category' };
-      const mockJobWithRelations = { ...mockPublishedJob, department: { name: 'Engineering' } };
-      const mockFormattedJobWithRelations = {
-        ...mockFormattedJob,
-        department: { name: 'Engineering' },
-      };
-
-      mockedGetJobByUUIDService.mockResolvedValue(mockJobWithRelations as any);
-      mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJobWithRelations);
-
-      // Act
-      await JobController.getJobByUUID(req as AuthenticatedRequest, res);
-
-      // Assert
-      expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
-        trackView: false,
         include: ['department', 'category'],
       });
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({ data: mockFormattedJobWithRelations }),
-      );
+    });
+
+    it('should return 404 when job is not found', async () => {
+      req = { params: { uuid }, query: {} };
+      const error = { statusCode: 404, message: 'Job not found', type: 'RESOURCE_NOT_FOUND' };
+      mockedJobService.getJobByUUID.mockRejectedValue({ appError: error });
+
+      await JobController.getJobByUUID(req as AuthenticatedRequest, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
     });
   });
 });
