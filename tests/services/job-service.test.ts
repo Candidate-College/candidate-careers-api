@@ -8,7 +8,6 @@ import {
 } from '@/services/job-service';
 import { SlugGenerationService } from '@/services/slug-generation-service';
 import { validateJobPosting } from '@/utilities/validate-job-posting';
-import jobValidator from '@/validators/job-posting-validator';
 import { randomUUID } from 'crypto';
 
 // --- Mocks Setup ---
