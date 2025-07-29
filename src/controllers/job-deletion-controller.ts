@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { JobDeletionService, DeleteJobResponse, DeleteJobOptions } from '@/services/job-deletion-service';
 import { JobPostingRepository } from '@/repositories/job-posting-repository';
 import { sendErrorResponse, createInternalError, AppError } from '@/utilities/error-handler';
