@@ -114,14 +114,12 @@ export class JobController {
   }
 
   static async getJobByUUID(req: AuthenticatedRequest, res: JsonResponse) {
-    const rawUuid = req.params.uuid;
     try {
-      const sanitizedUuid = rawUuid.replace(/^"|"$/g, '');
-
+      const { uuid } = req.params;
       const trackView = req.query.track_view === 'true';
       const include = (req.query.include as string)?.split(',').map(item => item.trim()) ?? [];
 
-      const job = await JobService.getJobByUUID(sanitizedUuid, { trackView, include });
+      const job = await JobService.getJobByUUID(uuid, { trackView, include });
 
       return res.status(200).json({
         status: 200,
