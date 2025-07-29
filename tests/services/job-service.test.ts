@@ -20,6 +20,7 @@ jest.mock('@/repositories/job-repository', () => ({
     create: jest.fn(),
     findPublicJobBySlug: jest.fn(),
     incrementViewCount: jest.fn(),
+    findJobByUUID: jest.fn(),
   },
 }));
 jest.mock('@/services/slug-generation-service', () => ({
@@ -321,5 +322,101 @@ describe('getPublicJobBySlug', () => {
         type: 'RESOURCE_NOT_FOUND',
       });
     }
+  });
+
+  describe('getJobByUUID', () => {
+    // Mock dan setup awal (asumsikan sudah ada di `beforeEach`)
+    const MOCK_UUID = 'b732a252-5172-4b54-ba3e-b6250865c555';
+
+    beforeEach(() => {
+      jest.clearAllMocks(); // Membersihkan mock sebelum setiap tes
+    });
+
+    // --- Kasus Dasar ---
+    it('should return the job posting if UUID is valid', async () => {
+      // Arrange
+      const mockJob = { id: 1, uuid: MOCK_UUID, title: 'Test Job' };
+      mockedJobRepo.findJobByUUID.mockResolvedValue(mockJob as Job);
+
+      // Act
+      const result = await JobService.getJobByUUID(MOCK_UUID);
+
+      // Assert
+      expect(result).toEqual(mockJob);
+      expect(mockedJobRepo.findJobByUUID).toHaveBeenCalledWith(MOCK_UUID, []); // Memastikan include default adalah array kosong
+    });
+
+    it('should throw a RESOURCE_NOT_FOUND error if job is not found', async () => {
+      mockedJobRepo.findJobByUUID.mockResolvedValue(null); // simulate "not found"
+
+      try {
+        await JobService.getJobByUUID('non-exist-slug');
+      } catch (err: any) {
+        expect(err).toHaveProperty('statusCode', 404);
+        expect(err).toMatchObject({
+          statusCode: 404,
+          message: 'Job Postings not found',
+          category: 'NOT_FOUND',
+          type: 'RESOURCE_NOT_FOUND',
+        });
+      }
+    });
+
+    // --- Logika Pelacakan View (trackView) ---
+    describe('when handling view tracking', () => {
+      it('should increment view count when trackView is true', async () => {
+        // Arrange
+        const mockJob = { id: 123, views_count: 100 };
+        mockedJobRepo.findJobByUUID.mockResolvedValue(mockJob as Job);
+
+        // Act
+        const result = await JobService.getJobByUUID(MOCK_UUID, { trackView: true });
+
+        // Assert
+        expect(mockedJobRepo.incrementViewCount).toHaveBeenCalledWith(mockJob.id);
+        expect(result.views_count).toBe(101);
+      });
+
+      it.each([
+        { options: { trackView: false }, case: 'explicitly false' },
+        { options: {}, case: 'not provided (defaults to false)' },
+      ])('should NOT increment view count when trackView is $case', async ({ options }) => {
+        // Arrange
+        const mockJob = { id: 123, views_count: 100 };
+        mockedJobRepo.findJobByUUID.mockResolvedValue(mockJob as Job);
+
+        // Act
+        const result = await JobService.getJobByUUID(MOCK_UUID, options);
+
+        // Assert
+        expect(mockedJobRepo.incrementViewCount).not.toHaveBeenCalled();
+        expect(result.views_count).toBe(100);
+      });
+    });
+
+    // --- Logika Penyertaan Relasi (include) ---
+    describe('when including relations', () => {
+      const testCases = [
+        { name: 'department', include: ['department'] },
+        { name: 'category', include: ['category'] },
+        { name: 'creator', include: ['creator'] },
+        { name: 'all relations', include: ['department', 'category', 'creator'] },
+      ];
+
+      it.each(testCases)(
+        'should call repository with correct options to include $name',
+        async ({ include }) => {
+          // Arrange
+          const mockJob = { id: 1 };
+          mockedJobRepo.findJobByUUID.mockResolvedValue(mockJob as Job);
+
+          // Act
+          await JobService.getJobByUUID(MOCK_UUID, { include });
+
+          // Assert
+          expect(mockedJobRepo.findJobByUUID).toHaveBeenCalledWith(MOCK_UUID, include);
+        },
+      );
+    });
   });
 });

@@ -70,17 +70,14 @@ export class JobController {
         data: JobResource.serialize(job),
       });
     } catch (err: any) {
-      // Handle known AppError (custom validation, etc.)
       if (err.appError) {
         return sendErrorResponse(res, err.appError);
       }
 
-      // Handle known error with category/type structure
       if (err.category && err.type) {
         return sendErrorResponse(res, err);
       }
 
-      // Fallback to internal server error
       return sendErrorResponse(res, createInternalError(err));
     }
   }
@@ -117,14 +114,14 @@ export class JobController {
   }
 
   static async getJobByUUID(req: AuthenticatedRequest, res: JsonResponse) {
+    const rawUuid = req.params.uuid;
     try {
-      const { uuid } = req.params;
+      const sanitizedUuid = rawUuid.replace(/^"|"$/g, '');
+
       const trackView = req.query.track_view === 'true';
-      const include = (req.query.include as string)?.split(',') ?? [];
+      const include = (req.query.include as string)?.split(',').map(item => item.trim()) ?? [];
 
-      const job = await JobService.getJobByUUID(uuid, { trackView, include });
-
-      console.log('JobControlUUID: ', job);
+      const job = await JobService.getJobByUUID(sanitizedUuid, { trackView, include });
 
       return res.status(200).json({
         status: 200,

@@ -285,12 +285,6 @@ describe('JobController', () => {
     });
 
     it('should return an error and status of 404 when the data is not found', async () => {
-      // mockedGetJobPostingBySlugService.mockResolvedValue(mockPublishedJob);
-
-      // mockedGetJobBySlugResource.mockReturnValue(mockFormattedJob);
-
-      // await JobController.getPublicJobBySlug(req as any, res);
-
       const mockAppError = {
         statusCode: 404,
         message: 'Job Postings not found',
@@ -390,7 +384,7 @@ describe('JobController', () => {
       } as unknown as AuthenticatedRequest;
     });
 
-    it('Should return job posting data if uuid is valid', async () => {
+    it('Should return job posting data with status of 200 if uuid is valid', async () => {
       mockedGetJobByUUIDService.mockResolvedValue(mockPublishedJob);
 
       mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJob);
@@ -409,52 +403,47 @@ describe('JobController', () => {
       });
     });
 
-    it('Should return valid data when incudes department in the query', async () => {
-      mockedGetJobByUUIDService.mockResolvedValue(mockPublishedJob);
+    it('should call the service with trackView=true when specified in query', async () => {
+      // Arrange
+      req.query = { track_view: 'true' };
+      const jobWithIncrementedView = { ...mockPublishedJob, views_count: 151 };
+      mockedGetJobByUUIDService.mockResolvedValue(jobWithIncrementedView as any);
+      mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJob);
 
-      const formattedJob = {
-        id: 32,
-        uuid: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-        title: 'Job Posting 1',
-        slug: 'job-posting-1',
-        department_id: 5,
-        job_category_id: 8,
-        job_type: 'staff',
-        employment_level: 'mid',
-        priority_level: 'normal',
-        description: 'Description for job posting 1',
-        requirements: 'Requirements for job posting 1',
-        responsibilities: 'Responsibilities for job posting 1',
-        benefits: 'Standard benefits',
-        team_info: 'Team info',
-        status: 'published',
-        views_count: 2,
-        applications_count: 0,
-        application_deadline: '2025-08-20T17:00:00.000Z',
-        max_applications: 100,
-        published_at: null,
-        created_by: 30,
-        created_at: '2025-07-22T15:23:24.429Z',
-        updated_at: '2025-07-22T15:23:24.429Z',
-        departments: {
-          id: 5,
-          name: 'Finance',
-          description: 'Oversees budgeting, accounting, and financial planning.',
-        },
-      };
+      // Act
+      await JobController.getJobByUUID(req as AuthenticatedRequest, res);
 
-      await JobController.getJobByUUID(req as any, res);
-
+      // Assert
       expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
-        trackView: false,
-        include: ['department'],
+        trackView: true,
+        include: [],
       });
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        status: 200,
-        message: 'Job posting retrieved successfully',
-        data: formattedJob,
+    });
+
+    it('should call the service with includes when specified in query', async () => {
+      // Arrange
+      req.query = { include: 'department, category' };
+      const mockJobWithRelations = { ...mockPublishedJob, department: { name: 'Engineering' } };
+      const mockFormattedJobWithRelations = {
+        ...mockFormattedJob,
+        department: { name: 'Engineering' },
+      };
+
+      mockedGetJobByUUIDService.mockResolvedValue(mockJobWithRelations as any);
+      mockedJobSGetJobByUUIDResource.mockReturnValue(mockFormattedJobWithRelations);
+
+      // Act
+      await JobController.getJobByUUID(req as AuthenticatedRequest, res);
+
+      // Assert
+      expect(mockedGetJobByUUIDService).toHaveBeenCalledWith(mockPublishedJob.uuid, {
+        trackView: false,
+        include: ['department', 'category'],
       });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ data: mockFormattedJobWithRelations }),
+      );
     });
   });
 });

@@ -11,6 +11,7 @@
 import { Job } from '@/models/job-model';
 import { JobRepository } from '@/repositories/job-repository';
 import { AppError, createError, ErrorType, parseValidationError } from '@/utilities/error-handler';
+import { isValidUUID } from '@/utilities/uuid-validator';
 import { validateJobPosting } from '@/utilities/validate-job-posting';
 import jobValidator from '@/validators/job-posting-validator';
 import { randomUUID } from 'crypto';
@@ -169,7 +170,9 @@ export class JobService {
       throw createError(ErrorType.RESOURCE_NOT_FOUND, 'Job Postings not found');
     }
 
-    console.log('JobService: ', job);
+    if (!isValidUUID(uuid)) {
+      throw createError(ErrorType.VALIDATION_FAILED, 'UUID validation failed');
+    }
 
     if (trackView) {
       await JobRepository.incrementViewCount(job.id);

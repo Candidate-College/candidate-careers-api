@@ -12,6 +12,8 @@ import { JobCategory } from '@/models/job-category-model';
 import { Job } from '@/models/job-model';
 import { JobStatusTransition } from '@/models/job-status-transition-model';
 import { User } from '@/models/user-model';
+import { createError, ErrorType } from '@/utilities/error-handler';
+import { isValidUUID } from '@/utilities/uuid-validator';
 import { QueryBuilder, Transaction } from 'objection';
 
 export class JobRepository {
@@ -176,9 +178,11 @@ export class JobRepository {
   }
 
   static async findJobByUUID(uuid: string, include: string[] = []): Promise<Job | undefined> {
+    if (!isValidUUID(uuid)) {
+      throw createError(ErrorType.VALIDATION_FAILED, 'Invalid UUID format provided');
+    }
     let jobQuery = Job.query().findOne({ uuid });
 
-    // Mapping alias query param ke relasi model
     const includeMap: Record<string, string> = {
       department: 'departments',
       category: 'job_categories',
