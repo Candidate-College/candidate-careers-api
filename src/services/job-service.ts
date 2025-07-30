@@ -164,14 +164,15 @@ export class JobService {
     options: { trackView?: boolean; include?: string[] } = {},
   ): Promise<Job> {
     const { trackView = false, include = [] } = options;
+
+    if (!isValidUUID(uuid)) {
+      throw createError(ErrorType.VALIDATION_FAILED, 'UUID validation failed');
+    }
+
     const job = await JobRepository.findJobByUUID(uuid, include);
 
     if (!job) {
       throw createError(ErrorType.RESOURCE_NOT_FOUND, 'Job Postings not found');
-    }
-
-    if (!isValidUUID(uuid)) {
-      throw createError(ErrorType.VALIDATION_FAILED, 'UUID validation failed');
     }
 
     if (trackView) {

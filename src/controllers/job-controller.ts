@@ -108,7 +108,12 @@ export class JobController {
 
       return sendErrorResponse(
         res,
-        createError(ErrorType[err.type as keyof typeof ErrorType], err.message),
+        createError(
+          Object.prototype.hasOwnProperty.call(ErrorType, err.type)
+            ? ErrorType[err.type as keyof typeof ErrorType]
+            : ErrorType.INTERNAL_SERVER_ERROR,
+          err.message,
+        ),
       );
     }
   }
