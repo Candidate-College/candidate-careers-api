@@ -48,10 +48,6 @@ export class JobCategoryController {
         data: toJobCategoryResource(jobCategory),
       });
     } catch (err: any) {
-      console.log('Error in create:', err);
-      console.log('Error type:', err.constructor.name);
-      console.log('Error appError:', err.appError);
-      
       // Handle custom error classes with appError property
       if (err.appError) {
         return sendErrorResponse(res as JsonResponse, err.appError);
@@ -156,10 +152,6 @@ export class JobCategoryController {
         data: toJobCategoryResource(jobCategory),
       });
     } catch (err: any) {
-      console.log('Error in update:', err);
-      console.log('Error type:', err.constructor.name);
-      console.log('Error appError:', err.appError);
-      
       // Handle custom error classes with appError property
       if (err.appError) {
         return sendErrorResponse(res as JsonResponse, err.appError);
@@ -199,10 +191,6 @@ export class JobCategoryController {
         data: toJobCategoryResource(jobCategory),
       });
     } catch (err: any) {
-      console.log('Error in delete:', err);
-      console.log('Error type:', err.constructor.name);
-      console.log('Error appError:', err.appError);
-      
       // Handle custom error classes with appError property
       if (err.appError) {
         return sendErrorResponse(res as JsonResponse, err.appError);
