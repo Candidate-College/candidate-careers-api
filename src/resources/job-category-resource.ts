@@ -31,23 +31,14 @@ export interface JobCategoryListResource {
  * @returns Formatted job category resource
  */
 export function toJobCategoryResource(cat: JobCategoryData): JobCategoryResource {
-  let jobPostingsCount = 0;
-  
-  if (cat.job_postings_count) {
-    if (Array.isArray(cat.job_postings_count)) {
-      jobPostingsCount = Number(cat.job_postings_count[0]?.count || 0);
-    } else if (typeof cat.job_postings_count === 'number') {
-      jobPostingsCount = cat.job_postings_count;
-    }
-  }
-  
   return {
     id: cat.id,
     name: cat.name,
     description: cat.description,
     status: cat.status,
     color_code: cat.color_code,
-    job_postings_count: jobPostingsCount,
+    // The count is now a reliable property after the repository fix
+    job_postings_count: Number(cat.job_postings_count || 0),
     created_by: cat.created_by,
     created_at: cat.created_at instanceof Date ? cat.created_at.toISOString() : String(cat.created_at),
     updated_at: cat.updated_at instanceof Date ? cat.updated_at.toISOString() : String(cat.updated_at),

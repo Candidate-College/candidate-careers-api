@@ -1,5 +1,5 @@
 import { JobCategory, JobCategoryData } from '@/models/job-category-model';
-import { QueryBuilder } from 'objection';
+import { QueryBuilder, raw } from 'objection';
 import { paginate, PaginatedResult } from '@/utilities/pagination';
 import { Job } from '@/models/job-model';
 
@@ -17,20 +17,12 @@ export class JobCategoryRepository {
   private static baseQuery(): QueryBuilder<JobCategory, JobCategoryData[]> {
     return JobCategory.query()
       .select(
-        'job_categories.id',
-        'job_categories.name',
-        'job_categories.description',
-        'job_categories.status',
-        'job_categories.color_code',
-        'job_categories.created_by',
-        'job_categories.created_at',
-        'job_categories.updated_at',
-        'job_categories.deleted_at',
-        // Subquery count job postings
-        JobCategory.relatedQuery('jobPostings')
-          .count()
-          .as('job_postings_count')
+        'job_categories.*',
+        // Count job postings using a join and group by
+        raw('COUNT(jobs.id) as job_postings_count')
       )
+      .leftJoin('jobs', 'job_categories.id', 'jobs.job_category_id')
+      .groupBy('job_categories.id')
       .withGraphFetched('creator');
   }
 
@@ -64,7 +56,18 @@ export class JobCategoryRepository {
 
   /** Get job category by id (join creator) */
   static async findById(id: number): Promise<JobCategoryData | undefined> {
-    return this.baseQuery().where('job_categories.id', id).first();
+    // The baseQuery now uses groupBy, so it's safer to have a dedicated findById
+    // that also performs the count efficiently.
+    const result = await JobCategory.query()
+      .findById(id)
+      .select('job_categories.*', raw('COUNT(jobs.id) as job_postings_count'))
+      .leftJoin('jobs', 'job_categories.id', 'jobs.job_category_id')
+      .groupBy('job_categories.id')
+      .withGraphFetched('creator');
+    
+    // The result from Objection might be an array-like object with extra properties.
+    // Ensure we return a plain object or undefined.
+    return result as JobCategoryData | undefined;
   }
 
   /** Create job category */
@@ -98,7 +101,9 @@ export class JobCategoryRepository {
       .where('job_category_id', jobCategoryId)
       .where('status', 'published')
       .whereNull('deleted_at')
-      .resultSize();
-    return count > 0;
+      .count('* as count')
+      .first();
+    
+    return Number(count?.count || 0) > 0;
   }
 } 

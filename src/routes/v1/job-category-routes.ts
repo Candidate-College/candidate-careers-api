@@ -57,5 +57,4 @@ router.delete(
   validate,
   JobCategoryController.delete
 );
-
-export default router; 
+module.exports = router;
