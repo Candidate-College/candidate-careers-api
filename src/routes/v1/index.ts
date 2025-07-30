@@ -8,5 +8,5 @@ router.use('/users', require('./user-routes'));
 router.use('/admin', require('./admin'));
 router.use('/jobs', require('./job-routes'));
 router.use('/jobs', require('./job-status-workflow-routes'));
-
+router.use('/public', require('./public-routes'));
 module.exports = router;

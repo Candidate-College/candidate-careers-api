@@ -7,11 +7,14 @@
  *
  * @module repositories/job-repository
  */
-import { Job } from '@/models/job-model';
-import { JobCategory } from '@/models/job-category-model';
 import { Department } from '@/models/department-model';
+import { JobCategory } from '@/models/job-category-model';
+import { Job } from '@/models/job-model';
 import { JobStatusTransition } from '@/models/job-status-transition-model';
-import { Transaction } from 'objection';
+import { User } from '@/models/user-model';
+import { createError, ErrorType } from '@/utilities/error-handler';
+import { isValidUUID } from '@/utilities/uuid-validator';
+import { QueryBuilder, Transaction } from 'objection';
 
 export class JobRepository {
   /**
@@ -146,14 +149,77 @@ export class JobRepository {
   }
 
   /**
-   * Retrieves all status transitions for a specific job posting.
+   * Retrieves a publicly accessible job posting by its slug.
+   * Only returns jobs with a 'published' status and selects public-safe fields.
    *
-   * @param {number} jobId - ID of the job posting.
-   * @returns {Promise<JobStatusTransition[]>} Array of job status transitions sorted chronologically.
+   * @param {string} slug - The slug of the job posting.
+   * @returns {Promise<Job | undefined>} The found job record, or undefined if not found/published.
    */
-  static async findTransitionsByJobId(jobId: number): Promise<JobStatusTransition[]> {
-    return await JobStatusTransition.query()
-      .where('job_posting_id', jobId)
-      .orderBy('created_at', 'asc');
+  static async findPublicJobBySlug(slug: string): Promise<Job | undefined> {
+    return await Job.query()
+      .findOne({ slug: slug, status: 'published' })
+      .withGraphFetched('[departments, job_categories]')
+      .modifyGraph('departments', (builder: QueryBuilder<Department>) => {
+        builder.select('name', 'description');
+      })
+      .modifyGraph('job_categories', (builder: QueryBuilder<JobCategory>) => {
+        builder.select('name');
+      });
+  }
+
+  /**
+   * Atomically increments the view count for a specific job posting.
+   *
+   * @param {number} jobId - The internal ID of the job posting.
+   * @returns {Promise<number>} The number of updated rows (should be 1).
+   */
+  static async incrementViewCount(jobId: number): Promise<number> {
+    return await Job.query().findById(jobId).increment('views_count', 1);
+  }
+
+  static async findJobByUUID(uuid: string, include: string[] = []): Promise<Job | undefined> {
+    if (!isValidUUID(uuid)) {
+      throw createError(ErrorType.VALIDATION_FAILED, 'Invalid UUID format provided');
+    }
+    let jobQuery = Job.query().findOne({ uuid });
+
+    const includeMap: Record<string, string> = {
+      department: 'departments',
+      category: 'job_categories',
+      creator: 'created_by_user',
+    };
+
+    const mappedIncludes = include
+      .map(key => includeMap[key])
+      .filter((relation): relation is string => !!relation);
+
+    if (mappedIncludes.length > 0) {
+      jobQuery = jobQuery.withGraphFetched(`[${mappedIncludes.join(', ')}]`);
+
+      mappedIncludes.forEach(relation => {
+        switch (relation) {
+          case 'departments':
+            jobQuery = jobQuery.modifyGraph('departments', (builder: QueryBuilder<Department>) => {
+              builder.select('id', 'name', 'description');
+            });
+            break;
+          case 'job_categories':
+            jobQuery = jobQuery.modifyGraph(
+              'job_categories',
+              (builder: QueryBuilder<JobCategory>) => {
+                builder.select('id', 'name', 'description');
+              },
+            );
+            break;
+          case 'created_by_user':
+            jobQuery = jobQuery.modifyGraph('created_by_user', (builder: QueryBuilder<User>) => {
+              builder.select('id', 'name', 'email', 'role_id');
+            });
+            break;
+        }
+      });
+    }
+
+    return await jobQuery;
   }
 }

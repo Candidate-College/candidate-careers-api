@@ -10,7 +10,12 @@
 import { JobResource } from '@/resources/job-posting-resource';
 import { JobService } from '@/services/job-service';
 import { AuthenticatedRequest, JsonResponse } from '@/types/express-extension';
-import { createInternalError, sendErrorResponse } from '@/utilities/error-handler';
+import {
+  createError,
+  createInternalError,
+  ErrorType,
+  sendErrorResponse,
+} from '@/utilities/error-handler';
 
 /**
  * Controller for managing job-related routes and logic.
@@ -65,18 +70,80 @@ export class JobController {
         data: JobResource.serialize(job),
       });
     } catch (err: any) {
-      // Handle known AppError (custom validation, etc.)
       if (err.appError) {
         return sendErrorResponse(res, err.appError);
       }
 
-      // Handle known error with category/type structure
       if (err.category && err.type) {
         return sendErrorResponse(res, err);
       }
 
-      // Fallback to internal server error
       return sendErrorResponse(res, createInternalError(err));
+    }
+  }
+
+  /**
+   * Handles the retrieval of a public job posting by its slug.
+   *
+   * @param {Request} req - The Express request object.
+   * @param {JsonResponse} res - The Express response object.
+   * @returns {Promise<void>}
+   */
+  static async getPublicJobBySlug(req: any, res: JsonResponse) {
+    try {
+      const { slug } = req.params;
+      const trackView = req.query.track_view === 'true';
+
+      const job = await JobService.getPublicJobBySlug(slug, { trackView });
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Job posting retrieved successfully',
+        data: JobResource.getPublicJobBySlugResponse(job),
+      });
+    } catch (err: any) {
+      if (err.appError) {
+        return sendErrorResponse(res, err.appError);
+      }
+
+      return sendErrorResponse(
+        res,
+        createError(
+          Object.prototype.hasOwnProperty.call(ErrorType, err.type)
+            ? ErrorType[err.type as keyof typeof ErrorType]
+            : ErrorType.INTERNAL_SERVER_ERROR,
+          err.message,
+        ),
+      );
+    }
+  }
+
+  static async getJobByUUID(req: AuthenticatedRequest, res: JsonResponse) {
+    try {
+      const { uuid } = req.params;
+      const trackView = req.query.track_view === 'true';
+      const include = (req.query.include as string)?.split(',').map(item => item.trim()) ?? [];
+
+      const job = await JobService.getJobByUUID(uuid, { trackView, include });
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Job posting retrieved successfully',
+        data: JobResource.getJobByUUIDResponse(job),
+      });
+    } catch (err: any) {
+      if (err.appError) {
+        return sendErrorResponse(res, err.appError);
+      }
+
+      return sendErrorResponse(
+        res,
+        createError(
+          ErrorType[err.type as keyof typeof ErrorType] || ErrorType.INTERNAL_SERVER_ERROR,
+          err?.message,
+          err.message,
+        ),
+      );
     }
   }
 }
