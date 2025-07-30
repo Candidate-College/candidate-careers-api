@@ -67,9 +67,9 @@ const setupMockRepository = (job: any, hasActiveApplications = false) => {
   mockRepo.restore.mockResolvedValue(1);
 };
 
-const verifyBasicDeletionFlow = (uuid: string, shouldCheckApplications = false) => {
+const verifyBasicDeletionFlow = (uuid: string, hasApplicationValidation  = false) => {
   expect(mockRepo.findJobPostingByUuid).toHaveBeenCalledWith(uuid);
-  if (shouldCheckApplications) {
+  if (hasApplicationValidation ) {
     expect(mockRepo.findWithActiveApplication).toHaveBeenCalledWith(uuid);
   } else {
     expect(mockRepo.findWithActiveApplication).not.toHaveBeenCalled();

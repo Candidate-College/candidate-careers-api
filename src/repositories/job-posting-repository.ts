@@ -15,23 +15,6 @@ export interface IJobPostingRepository {
  * Repository for job_postings table operations, focused on deletion and restoration logic.
  */
 export class JobPostingRepository implements IJobPostingRepository {
-  /**
-   * Private method to find job posting by UUID with optional field selection
-   * @param jobPostingUuid job posting uuid
-   * @param selectFields optional array of fields to select
-   * @returns JobPostingsData or null
-   */
-  private async findJobPostingByUuidWithSelect(
-    jobPostingUuid: string, 
-    selectFields?: (keyof JobPostingsData)[]
-  ): Promise<JobPostingsData | null> {
-    const query = JobPostings.query().findOne({ uuid: jobPostingUuid });
-    if (selectFields && selectFields.length > 0) {
-      query.select(...selectFields);
-    }
-    const result = await query;
-    return result ?? null;
-  }
 
   /**
    * Find a job posting by its uuid

@@ -163,18 +163,18 @@ export class JobDeletionService {
     }
 
     /**
+     * Add as a class property for consistency
+     */
+    private readonly RECOVERY_PERIOD_DAYS = 30;
+
+    /**
      * Calculate recovery deadline (30 days from deletion)
      */
     private calculateRecoveryDeadline(deletedAt: Date): Date {
         const recoveryDeadline = new Date(deletedAt);
-        recoveryDeadline.setDate(recoveryDeadline.getDate() + 30);
+        recoveryDeadline.setDate(recoveryDeadline.getDate() + this.RECOVERY_PERIOD_DAYS);
         return recoveryDeadline;
     }
-
-    /**
-     * Add as a class property for consistency
-     */
-    private readonly RECOVERY_PERIOD_DAYS = 30;
 
     /**
      * Restore a soft-deleted job posting with authorization and business rule checks
